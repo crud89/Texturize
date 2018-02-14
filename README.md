@@ -5,7 +5,7 @@ This repository is currently a placeholder, used to provide meaningful URL's wit
 
 ## What to expect?
 
-Currently I am researching methologies and concepts to extent example-based Texture Synthesis towards materials for Physically Based Rendering (PBR). The actual synthesizer is influenced by the papers of Sylvain Lefebvre and Hughues Hoppe [LH06][LH07], whose sample implementation does not seam to be around the web any longer. I based my research on their *Appearance Space Texture Synthesis* (ASTS) algorithm, so everybody who is interested in a reference implementation may find this helpful.
+Currently I am researching methologies and concepts to extent example-based Texture Synthesis towards materials for Physically Based Rendering (PBR). The actual synthesizer is influenced by the papers of Sylvain Lefebvre and Hugues Hoppe [LH06][LH07], whose sample implementation does not seam to be around the web any longer. I based my research on their *Appearance Space Texture Synthesis* (ASTS) algorithm, so everybody who is interested in a reference implementation may find this helpful.
 
 ## Bibliography
 
