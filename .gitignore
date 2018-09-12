@@ -288,6 +288,7 @@ __pycache__/
 *.xsd.cs
 .tfignore
 CMakeCache.txt
+install-manifest.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *Config.cmake
@@ -302,3 +303,6 @@ docs/xml/
 modules/hdf5/*
 samples/
 install/
+.vs
+.vs/
+*/.vs/
