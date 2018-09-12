@@ -1,0 +1,8 @@
+
+namespace Texturize {
+/** \page tutorial-filter Implementing custom filters
+\brief The example demonstrates how to create and use a custom filter implementation. The filter uses OpenCV to apply gaussian blur with a kernel of 5 to an input image.
+
+\include BlurFilter.cpp
+*/
+}

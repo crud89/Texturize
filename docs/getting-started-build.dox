@@ -1,0 +1,60 @@
+
+namespace Texturize {
+/** \page getting-started-build Building the project
+\brief There are several reasons, you may want to create a custom build of the framework. The most common one is to link it against
+different versions or builds of its dependencies. On this page, you will find information about the frameworks dependency builds 
+and how to build it on your own.
+
+\tableofcontents
+
+\section getting-started-build Creating the project using CMake
+
+Texturize requires certain dependencies to be installed on your system. All dependencies are listed below. The version represents 
+the latest build, the project has been successfully tested with. Higher versions may work, if they are compatible.
+
+| SDK/Framework |     Project URL     | Version | Source URL  |
+|---------------|-------------------|:-------:|:---:|
+| OpenCV        | https://opencv.org/ | 3.4.3   | [Link](https://github.com/opencv/opencv/tree/3.3.1) |
+| HDF5          | https://www.hdfgroup.org/ | 1.10.1 | [Link](https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/) |
+| TBB           | https://www.threadingbuildingblocks.org/ | 20170919 | [Link](https://github.com/01org/tbb/releases/tag/2018_U1) |
+| OpenEXR       | http://www.openexr.com/ | 2.3.0 | [Link](https://github.com/openexr/openexr) |
+
+
+\note **Custom OpenCV builds**
+
+\note The project does not compile with current pre-releases of OpenCV 4.0. Future releases probably break compatibility, so the new
+      framework must be ported. Currently only OpenCV 3.X is properly supported.
+      
+\note By default, the framework is linked against the following OpenCV modules: `core`, `imgproc`, `ximgproc`, `imgcodecs`, `highgui`, 
+      `features2d`, `calib3d` and `flann`. Do not forget to include them in your build as well! The other dependencies are build with 
+      default settings.
+
+Make sure all dependencies are build correctly for your target system. If you do not want to build them on your own, some provide 
+pre-compiled binaries. Copy the build of each dependency into the respective directory under `modules\` and run 
+
+\code{.ps1}
+cmake CMakeLists.txt -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE="Release"
+\endcode
+
+Of course you can change the generator or build type, however, remember to also build your dependencies according to those parameters.
+
+\subsection getting-started-build-ps Using Powershell script
+
+There is a `cmake.ps1` script inside the root of the repository. You can run it in order to specify dependencies, different from the
+default `modules\` directory. The skript can be called as follows:
+
+\code{.ps1}
+.\cmake.ps1 -x64:$true -config "Release" 
+            -OpenCV "<PathToOpenCVBuildDir>" 
+            -TBB "<PathToTbbBuildDir>\cmake" 
+            -OpenEXR "<PathToOpenExrBuildDir>" 
+            -HDF5 "<PathToHdf5BuildDir>"
+\endcode
+
+\section getting-started-building Building the solution
+
+After the skript has finished, open the `Texturize.sln` file and try building the `ALL_BUILD` and `INSTALL` projects. The binaries
+are available from the `install\` directory.
+
+**/
+}

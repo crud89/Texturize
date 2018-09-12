@@ -1,0 +1,284 @@
+
+namespace Texturize {
+/** \page getting-started Getting started
+\brief The following guide will show you how to setup and use the framework to build a simple synthesizer using the provided 
+implementations. The guide shows you how to implement a search space and use it to feed a synthesizer. It will familiarize
+you with the general workflow of the framework. 
+
+The guide assumes you are familiar with Visual Studio and basic C++ programming. The framework has been built using Visual
+Studio 2017, so it is recommended to use it too.
+
+\tableofcontents
+
+\section getting-started-setup Setting up your project
+
+Before you start writing actual code, you need to setup your project. If you haven't done it yet, create a new project for
+your application. Next, you have to tell the compiler where to find the *Texturize* library. Therefor, add the `include` and
+and `lib` directories to your project directories. You can do this by right-clicking it in Visual Studio and choosing 
+`Properties`. Under `VC++ Directories` add the `include` directory to the additional include directories and the `lib` 
+directory to the additional library directories. Next, go to `Linker` and `Input` and add the following libraries to 
+additional dependencies. 
+
+\code{.props}
+Texturize.Sampling.lib;Texturize.Analysis.lib;Texturize.Core.lib;Texturize.Codecs.lib;Texturize.Codecs.EXR.lib;%(AdditionalDependencies)
+\endcode
+
+Last but not least, we need to make sure that the framework binaries are copied to your application 
+directory after a build. For this you can add the following post-build event:
+
+\code{.bat}
+xcopy /y /d  "<framework directory>\lib\$(PlatformTarget)\$(Configuration)\*.dll" "$(OutDir)"
+\endcode
+
+\subsection getting-started-setup-manual Using a property sheet
+
+Alternatively to the manual approach above you add the property sheet `Texturize.props` from the framework directory to your
+project properties. To do this, open the Property Manager in Visual Studio and right click your project and choose "Add existing
+property sheet...". Select the `Texturize.props` file and you should be ready to go.
+
+\subsection getting-started-setup-opencv Using OpenCV and other dependencies
+
+\note You do not require OpenCV for this guide, but you might need it later. You can skip this section now and come back later,
+      when you require other libraries, if you want so.
+
+The framework is build upon <a href="https://opencv.org/">OpenCV</a>. If you want to use its types, you have to 
+also include the libraries of OpenCV. This is not done within the property sheet, but instead you can add the following code
+to the `stdafx.cpp` file of your project:
+
+\code{.cpp}
+#ifdef _DEBUG
+#pragma comment(lib, "opencv_core343d.lib")
+#pragma comment(lib, "opencv_imgproc343d.lib")
+#pragma comment(lib, "opencv_ximgproc343d.lib")
+#pragma comment(lib, "opencv_highgui343d.lib")
+#pragma comment(lib, "opencv_imgcodecs343d.lib")
+#else
+#pragma comment(lib, "opencv_core343.lib")
+#pragma comment(lib, "opencv_imgproc343.lib")
+#pragma comment(lib, "opencv_ximgproc343.lib")
+#pragma comment(lib, "opencv_highgui343.lib")
+#pragma comment(lib, "opencv_imgcodecs343.lib")
+#endif
+\endcode
+
+Of course you can select which OpenCV libraries you want to use. Other dependencies are <a href="https://hdfgroup.org/">hdf5</a>, 
+<a href="http://www.openexr.com/">OpenEXR</a>, <a href="https://zlib.net/">zlib</a> and 
+<a href="https://www.threadingbuildingblocks.org/">tbb</a>.
+
+\section getting-started-workflow Implementing synthesis workflow
+
+Now let's finally go into some code. The following headers contain the definitions of *Texturize* types, so make sure to include 
+to your projects main source file.
+
+\code{.cpp}
+#include <texturize.hpp>
+#include <analysis.hpp>
+#include <sampling.hpp>
+#include <codecs.hpp>
+#include <Codecs\exr.hpp>
+\endcode
+
+\subsection getting-started-workflow-analysis Analysing exemplars
+
+In the framework workflow the term *Image Analysis* describes the process of performing one-time calculations on an exemplar to create
+a search space with high information density. More simply speaking, you want to look over your images and find characteristics that 
+best describe it. The result is then stored as an asset, which is later used to repeatedly lookup the exemplar efficiently.
+
+A good example of such an offline pre-process is finding edges, since they describe a texture's global structure pretty well, especially 
+for near-regular exemplars.
+
+\note Texture regularity plays an important role in judging, how well a texture is suited to be synthesized. Regularity is a spectrum
+      to classify textures in. It is, however, not complete and still an open field of research. Simply speaking, there are five 
+      continuous classes of textures: Stochastic, Near-Stochastic, Irregular, Near-Regular, Regular. Those classes are fluent, which
+      means, no texture is fully quantizable into those classes. Instead they belong to a class somewhere between perfectly stochastic
+      and perfectly regular. Stochastic textures are ones, where no complete features can be made out. Good examples are stars, sand 
+      or skin. Regular textures on the other hand feature identical, regularly repeating features like for example checkerboards or
+      wallpapers. If you want to read more about regularity, take a look at my thesis 
+      <a href="https://github.com/Aschratt/Texturize-Thesis">thesis</a>, where I also link some papers about it.
+
+However, before we can start analysing images, we have to load them. Persistence is handled in detail more later on, for now, just add
+a `DefaultPersistence` instance to your code and you are ready to load images as shown in the following code:
+
+\code{.cpp}
+#include "stdafx.h"
+
+#include <string>
+
+#include <texturize.hpp>
+#include <analysis.hpp>
+#include <sampling.hpp>
+#include <codecs.hpp>
+#include <Codecs\exr.hpp>
+
+using namespace Texturize;
+
+DefaultPersistence _persistence;
+
+int main(int argc, const char** argv)
+{
+    // Get command line arguments.
+    std::string exemplarName(argv[0]);
+
+    // Load the sample.
+    Sample exemplar;
+	_persistence.loadSample(exemplarName, exemplar);
+
+    // Make sure it has three channels (RGB).
+	TEXTURIZE_ASSERT(exemplar.channels() == 3);
+}
+\endcode
+
+Next we can create an edge detector and apply it to our sample.
+
+\code{.cpp}
+// Get the model name from the second command line argument.
+std::string edgeDetectorModel(argv[1]);
+std::unique_ptr<EdgeDetector> detector = std::make_unique<StructuredEdgeDetector>(edgeDetectorModel);
+
+// Extract the edges.
+Sample edgeResponse;
+detector->apply(edgeResponse, exemplar);
+\endcode
+
+In your command line, you have to provide the location of your exemplar and an edge detector model. The 
+`StructuredEdgeDetector` implements an edge detector, based on *random decision forests*. It requires a model to work 
+on. *Texturize* provides a model under `./models/forest/modelFinal.yml`.
+
+\note The model has been trained by 
+      <a href="http://w-x.ch/publications/self-tuning-texture-optimization/">Kaspar et al</a>.
+
+\subsubsection getting-started-workflow-analysis-search-space Creating a search space
+
+The synthesizer of this tutorial works by repeatedly performing a search for the best fitting pixel for a neighborhood. 
+It does this by comparing the target pixel neighborhood to neighborhoods of the exemplar and then stores the coordinate 
+of it to the target pixel's position in the result. To do this, it needs to be able to compare pixels by their 
+neighborhoods. A neighborhood can be described by simply putting all neighbor pixels into a large vector of pixel
+color values. For each pixel, the value of the earlier generated edge map is attached in what is called a *guidance
+channel*. In total, a neighborhood therefore generates a vector with 81 dimensions, four channels per pixel of a 3x3
+pixel neighborhood. Calculating the difference distance between two vectors in such a high-dimensional space is neither
+efficient, nor meaningful. The framework therefore implements an `AppearanceSpace`, which applies Principal Component
+Analysis (PCA) to the vectors beforehand in order to reduce their dimensionality to 4.
+
+The following code shows how to mix the exemplar with the edge response to create an appearance space.
+
+\code{.cpp}
+// Create an appearance space with an dimensionality of 4.
+AppearanceSpace* searchSpace;
+AppearanceSpace::calculate({ exemplar, edgeResponse }, &searchSpace, 4);
+
+// It is recommended to use smart pointers to manage search space references.
+std::unique_ptr<AppearanceSpace> descriptors(searchSpace);
+
+// Transform the exemplar into the search space.
+Sample transformedExemplar;
+descriptors->sample(transformedExemplar);
+\endcode
+
+\subsubsection getting-started-workflow-analysis-persistence Storing analysis results
+
+The search space is what can be stored into an *asset* in order to re-use it multiple times later on. Since assets can have
+more pixel descriptors with more than four channels, there is a special asset format implemented to persist them. To use it, 
+a `StorageFactory` must be created. This factory can be used to implement different asset formats, but for now the default 
+implementation is used. It's based on the *hdf5* standard and stores meta-information about the search space along the 
+transformed exemplar.
+
+\code{.cpp}
+// Create an asset and store it.
+StorageFactory _storage;
+AppearanceSpaceAsset asset;
+
+asset.write("myasset.txa", descriptor.get(), _storage);
+\endcode
+
+\subsection getting-started-workflow-search-index Indexing pixel neighborhoods
+
+The synthesis code can basically be put in a different application, so you have an image analysis application and can write
+multiple synthesizer programms with different implementations. The first thing to do for a synthesizer is to load and index
+the search space. An `SearchIndex` is used for neighborhood matching. Runtime neighborhoods are provided to it in order to
+search for best matches inside the exemplar.
+
+The following code snippet implements a search index, that uses pixel coherencies to reduce neighborhood search performance.
+You can find more about its inner workings in the `RandomWalkIndex` documentation.
+
+\code{.cpp}
+#include "stdafx.h"
+
+#include <texturize.hpp>
+#include <analysis.hpp>
+#include <sampling.hpp>
+#include <codecs.hpp>
+#include <Codecs\exr.hpp>
+
+using namespace Texturize;
+
+SamplePersistence _persistence;
+StorageFactory _storage;
+
+int main(int argc, const char** argv)
+{
+    // Restore the asset.
+    AppearanceSpaceAsset asset;
+    AppearanceSpace* desc;
+    asset.read("myasset.txa", &desc, _storage);
+	std::unique_ptr<AppearanceSpace> descriptor = std::make_unique<AppearanceSpace>(desc);
+
+    // Index the search space.
+	RandomWalkIndex index(descriptor.get());    
+}
+\endcode
+
+\subsection getting-started-workflow-synthesizer Synthesizing textures
+
+The final step is to let a synthesizer use the search index to synthesize new textures from it. In this tutorial, we
+use a parallel synthesizer, that synthesizes textures in 2<sup>n</sup> sizes by growing an image pyramid. The
+`ParallelPyramidSynthesizer` is based on the *appearance space synthesizer*, described by 
+<a href="http://doi.acm.org/10.1145/1141911.1141921">Sylvain Lefebvre and Hugues Hoppe</a>.
+
+\code{.cpp}
+// Use the index to create a synthesizer.
+auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+
+// Get the exemplar and the kernel.
+Sample exemplar;
+descriptor->sample(kernel);
+int kernel;
+descriptor->getKernel(kernel);
+
+// Configure the synthesizer with a constant randomness of 0.1 and the kernel.
+PyramidSynthesisSettings config(exemplar.width(), 0.1f, kernel);
+
+// The progress is printed to the console.
+config._progressHandler.add([depth](int level, int pass, const cv::Mat& uv) -> void {
+    if (pass == -1)
+        std::cout << "Executed level " << level + 1 << "/" << depth << " (Correction pass skipped)" << std::endl;
+    else
+        std::cout << "Executed level " << level + 1 << "/" << depth << " (Correction pass " << pass + 1 << ")" << std::endl;
+});
+
+// Start synthesis.
+Sample resultUv;
+synthesizer->synthesize(exemplar.size(), resultUv, config);
+\endcode
+
+The synthesizer creates a new texture with two channels, which is called *UV Map*. It contains for each pixel, the x 
+and y coordinates of the exemplar pixel. To render a new texture from it, it needs to be sampled, as shown in the
+following snippet.
+
+\code{.cpp}
+// Sample the uv map.
+Sample result;
+exemplar.sample(resultUv, result);
+
+// Store the texture.
+_persistence.saveSample("result.png", result);
+\endcode
+
+\section getting-started-next Next steps
+
+Now that you familiarized yourself with the general workflow of the framework, you can start customizing it. There are 
+different tutorials available to help you designing and implementing modules. You can find them under \ref tutorial.
+
+If you just want to play around with the default implementations, there is a sandbox application. You can learn more about
+it under \ref getting-started-sandbox.
+*/
+}

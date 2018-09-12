@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Texturize::AppearanceSpace class | Texturize</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-texturize+doxygen.compiled.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">Texturize</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-dox-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path d="m6 0c-3.3144 0-6 2.6856-6 6 0 3.3144 2.6856 6 6 6 1.4858 0 2.8463-0.54083 3.8945-1.4355-0.0164 0.33797 0.14734 0.75854 0.5 1.1504l3.2227 3.7891c0.55185 0.6139 1.4517 0.66544 2.002 0.11524 0.55022-0.55022 0.49866-1.4501-0.11524-2.002l-3.7891-3.2246c-0.39184-0.35266-0.81242-0.51469-1.1504-0.5 0.89472-1.0482 1.4355-2.4088 1.4355-3.8945 0-3.3128-2.6856-5.998-6-5.998zm0 1.5625a4.4375 4.4375 0 0 1 4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375-4.4375 4.4375 4.4375 0 0 1 4.4375-4.4375z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li>
+              <a href="getting-started.html">Getting started</a>
+              <ol>
+                <li><a href="getting-started-build.html">Creating the project using CMake</a></li>
+                <li><a href="getting-started-sandbox.html">Using the Sandbox application</a></li>
+              </ol>
+            </li>
+            <li>
+              <a href="tutorial.html">Tutorials</a>
+              <ol>
+                <li><a href="tutorial-filter.html">Implementing custom filters</a></li>
+                <li><a href="tutorial-search-space.html">Creating a search space</a></li>
+                <li><a href="tutorial-search-index.html">Implementing a search index</a></li>
+                <li><a href="tutorial-synthesizer.html">Writing your own synthesizer</a></li>
+              </ol>
+            </li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="modules.html">Modules</a></li>
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+            <li class="m-show-m"><a href="#search" class="m-dox-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <path d="m6 0c-3.3144 0-6 2.6856-6 6 0 3.3144 2.6856 6 6 6 1.4858 0 2.8463-0.54083 3.8945-1.4355-0.0164 0.33797 0.14734 0.75854 0.5 1.1504l3.2227 3.7891c0.55185 0.6139 1.4517 0.66544 2.002 0.11524 0.55022-0.55022 0.49866-1.4501-0.11524-2.002l-3.7891-3.2246c-0.39184-0.35266-0.81242-0.51469-1.1504-0.5 0.89472-1.0482 1.4355-2.4088 1.4355-3.8945 0-3.3128-2.6856-5.998-6-5.998zm0 1.5625a4.4375 4.4375 0 0 1 4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375-4.4375 4.4375 4.4375 0 0 1 4.4375-4.4375z"/>
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <span class="m-breadcrumb"><a href="namespace_texturize.html">Texturize</a>::<wbr/></span>AppearanceSpace <span class="m-thin">class</span>
+        </h1>
+        <p>A search space implementation based on pixel neighborhood appearances.</p>
+        <div class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#base-classes">Base classes</a></li>
+                <li><a href="#pub-static-methods">Public static functions</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pro-static-methods">Protected static functions</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+<p>The <em>Appearance Space</em> has been first described by Sylvain Lefebvre and Hugues Hoppe and describes a search space, based on pixel neighborhood appearances, rather than color values. In their work they have shown that matching color values often results in poor quality. Furthermore, matching complex neighborhoods in a high-dimensional search space is a very time-consuming task.</p><p>The appearance space uses gaussian weighting for a 5 pixel kernel neighborhood and uses all sample neighborhoods to calculate principal components using <em>principal component analysis</em> (PCA). This projection allows to reduce the dimensionality of neighborhoods. The same projection matrix can be used during synthesis to speed up runtime descriptor extraction. For more information see <code><a href="class_texturize_1_1_descriptor_extractor.html" class="m-dox">Texturize::<wbr />DescriptorExtractor</a></code>.</p><p>The following figure describes the principle of reducing neighborhood dimensionality.</p><img class="m-image" src="pca.svg" alt="Image" /><p><strong>Example</strong></p><p>The following example shows how to calculate the appearance space for an exemplar sample.</p><pre class="m-code"><span class="cp">#include</span> <span class="cpf">&lt;analysis.hpp&gt;</span><span class="cp"></span>
+
+<span class="k">int</span> <span class="nf">main</span><span class="p">(</span><span class="k">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="k">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Read an image using OpenCV. The name of the image is provided within the first command line parameter.</span>
+    <span class="n">cv</span><span class="o">::</span><span class="kt">Mat</span> <span class="n">img</span> <span class="o">=</span> <span class="n">cv</span><span class="o">::</span><span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+
+    <span class="c1">// Create a sample that contains the image.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">exemplar</span><span class="p">(</span><span class="n">img</span><span class="p">);</span>
+
+    <span class="c1">// Calculate the appearance space. Neighborhoods will retain a dimensionality of 4, which is a suitable choice for RGB(A) exemplars.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">*</span> <span class="n">searchSpace</span><span class="p">;</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">::</span><span class="n">calculate</span><span class="p">(</span><span class="n">exemplar</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">searchSpace</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+    <span class="c1">// It is recommended to use smart pointers to manage search space references.</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span> <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span> <span class="o">&gt;</span> <span class="n">descriptors</span><span class="p">(</span><span class="n">searchSpace</span><span class="p">);</span>
+
+    <span class="c1">// Display the result.</span>
+    <span class="c1">// Note: Since the appearance space uses principal component analysis (PCA) to transform pixel neighborhoods, the result might be hard</span>
+    <span class="c1">//       to interpret for human observers. Also the retained dimensionality does not need to equal 4, which makes this visualization a</span>
+    <span class="c1">//       special case. Note that it may differ for different input exemplars!  </span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">transformedExemplar</span><span class="p">;</span>
+    <span class="n">descriptors</span><span class="o">-&gt;</span><span class="n">sample</span><span class="p">(</span><span class="n">transformedExemplar</span><span class="p">);</span>
+    <span class="n">cv</span><span class="o">::</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;Appearance Space&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">cv</span><span class="o">::</span><span class="kt">Mat</span><span class="p">)</span><span class="n">transformedExemplar</span><span class="p">);</span>
+    <span class="n">cv</span><span class="o">::</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span></pre><p><strong>Example</strong></p><p>The following example shows how to add guidance channels to the appearance space to further improve synthesis quality by using feature maps to support feature formation.</p><pre class="m-code"><span class="cp">#include</span> <span class="cpf">&lt;analysis.hpp&gt;</span><span class="cp"></span>
+
+<span class="k">int</span> <span class="nf">main</span><span class="p">(</span><span class="k">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="k">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Read an image using OpenCV. The name of the image is provided within the first command line parameter.</span>
+    <span class="n">cv</span><span class="o">::</span><span class="kt">Mat</span> <span class="n">img</span> <span class="o">=</span> <span class="n">cv</span><span class="o">::</span><span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+
+    <span class="c1">// The second command line parameter must contain the edge detector model.</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">string</span> <span class="n">edgeDetectorModel</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+
+    <span class="c1">// Create a sample that contains the image.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">exemplar</span><span class="p">(</span><span class="n">img</span><span class="p">);</span>
+
+    <span class="c1">// Run an edge detector on the exemplar.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">exemplarEdges</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span><span class="n">EdgeDetector</span><span class="o">&gt;</span> <span class="n">edgeDetector</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">StructuredEdgeDetector</span><span class="o">&gt;</span><span class="p">(</span><span class="n">edgeDetectorModel</span><span class="p">);</span>
+    <span class="n">edgeDetector</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">exemplarEdges</span><span class="p">,</span> <span class="n">exemplar</span><span class="p">);</span>
+
+    <span class="c1">// Calculate the feature distances that are used as guidance.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">exemplarFeatures</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span><span class="n">FeatureExtractor</span><span class="o">&gt;</span> <span class="n">featureExtractor</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">FeatureExtractor</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="n">featureExtractor</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">exemplarFeatures</span><span class="p">,</span> <span class="n">exemplarEdges</span><span class="p">);</span>
+
+    <span class="c1">// Calculate the appearance space. Neighborhoods will retain a dimensionality of 4, which is a suitable choice for RGB(A) exemplars.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">*</span> <span class="n">searchSpace</span><span class="p">;</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">::</span><span class="n">calculate</span><span class="p">({</span> <span class="n">exemplarFeatures</span><span class="p">,</span> <span class="n">exemplar</span><span class="p">},</span> <span class="o">&amp;</span><span class="n">searchSpace</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+    <span class="c1">// It is recommended to use smart pointers to manage search space references.</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span><span class="kt">AppearanceSpace</span><span class="o">&gt;</span> <span class="n">descriptors</span><span class="p">(</span><span class="n">searchSpace</span><span class="p">);</span>
+
+    <span class="c1">// Display the result.</span>
+    <span class="c1">// Note: Since the appearance space uses principal component analysis (PCA) to transform pixel neighborhoods, the result might be hard</span>
+    <span class="c1">//       to interpret for human observers. Also the retained dimensionality does not need to equal 4, which makes this visualization a</span>
+    <span class="c1">//       special case. Note that it may differ for different input exemplars!  </span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">transformedExemplar</span><span class="p">;</span>
+    <span class="n">descriptors</span><span class="o">-&gt;</span><span class="n">sample</span><span class="p">(</span><span class="n">transformedExemplar</span><span class="p">);</span>
+    <span class="n">cv</span><span class="o">::</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;Appearance Space&quot;</span><span class="p">,</span> <span class="n">transformedExemplar</span><span class="p">);</span>
+    <span class="n">cv</span><span class="o">::</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span></pre><aside class="m-note m-default"><h4>See also</h4><p>Sylvain Lefebvre and Hugues Hoppe. &quot;Parallel Controllable Texture Synthesis.&quot; In: ACM Trans. Graph. 24.3 (July 2005), pp. 777-786. issn: 0730-0301. doi: 10.1145/1073204.1073261. url: <a href="http://doi.acm.org/10.1145/1073204.1073261">http:/<wbr />/<wbr />doi.acm.org/<wbr />10.1145/<wbr />1073204.1073261</a></p><p>Sylvain Lefebvre and Hugues Hoppe. &quot;Appearance-space Texture Synthesis.&quot; In: ACM Trans. Graph. 25.3 (July 2006), pp. 541-548. issn: 0730-0301. doi: 10.1145/1141911.1141921. url: <a href="http://doi.acm.org/10.1145/1141911.1141921">http:/<wbr />/<wbr />doi.acm.org/<wbr />10.1145/<wbr />1141911.1141921</a>.</p><p><a href="class_texturize_1_1_i_search_index.html" class="m-dox">Texturize::<wbr />ISearchIndex</a></p><p><a href="class_texturize_1_1_descriptor_extractor.html" class="m-dox">Texturize::<wbr />DescriptorExtractor</a></p><p><a href="class_texturize_1_1_search_index.html" class="m-dox">Texturize::<wbr />SearchIndex</a></p></aside>
+        <section id="base-classes">
+          <h2><a href="#base-classes">Base classes</a></h2>
+          <dl class="m-dox">
+            <dt>
+              class <a href="class_texturize_1_1_i_search_space.html" class="m-dox">ISearchSpace</a>
+            </dt>
+            <dd>An interface that defines methods to create, transform and work with search spaces.</dd>
+          </dl>
+        </section>
+        <section id="pub-static-methods">
+          <h2><a href="#pub-static-methods">Public static functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper">static void <a href="#aaf97caf60a7c79f40665ec3d7c156fab" class="m-dox">calculate</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; exemplar,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              size_t resultDim = 3,
+              int kernelSize = 5)</span>
+            </dt>
+            <dd>Calculates the appearance space for an individual exemplar.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">static void <a href="#a3ca237907ed6bb71e155d44a85993a1c" class="m-dox">calculate</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; exemplar,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              float targetVariance = 0.9f,
+              int kernelSize = 5)</span>
+            </dt>
+            <dd>Calculates the appearance space for an individual exemplar.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">static void <a href="#afece59dd97b292daba11d4888880b3e5" class="m-dox">calculate</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&gt; exemplarMaps,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              size_t resultDim,
+              int kernelSize = 5)</span>
+            </dt>
+            <dd>Calculates the appearance space for a set of exemplar samples.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">static void <a href="#a963d2874e6a1a7d19666ccf4e490b03a" class="m-dox">calculate</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&gt; exemplarMaps,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              float targetVariance = 0.9f,
+              int kernelSize = 5)</span>
+            </dt>
+            <dd>Calculates the appearance space for a set of exemplar samples.</dd>
+          </dl>
+        </section>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper"><a href="#aa11d8a2fb62449bcf8c0ebea2a947c4b" class="m-dox">AppearanceSpace</a>(</span><span class="m-dox-wrap">const cv::PCA* projection,
+              <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>* exemplar,
+              const int kernelSize)</span>
+            </dt>
+            <dd>Initializes a new appearance space instance.</dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a9765c84666155a51b5162af360caf33d" class="m-dox">getProjector</a>(</span><span class="m-dox-wrap">const cv::PCA** projection) const</span>
+            </dt>
+            <dd>Gets a reference of the projection matrix used to project pixel neighborhoods into the search space.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a803623f93b68c6fd19990348e22df408" class="m-dox">getExemplar</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>** exemplar) const</span>
+            </dt>
+            <dd>Gets a copy of the sample, containing search space descriptors.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a873b2298b7622b889932c6c45da67d84" class="m-dox">getKernel</a>(</span><span class="m-dox-wrap">int&amp; kernel) const</span>
+            </dt>
+            <dd>Gets the kernel used to get the exemplar sample neighborhood descriptors.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a97f7dd0c051a87884a8ce78e2bc240a1" class="m-dox">transform</a>(</span><span class="m-dox-wrap">const std::vector&lt;float&gt;&amp; texel,
+              std::vector&lt;float&gt;&amp; desc) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Projects a texel into the search space.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a82f6da2d9fb7b66d5e810d9f8ea0c375" class="m-dox">transform</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; sample,
+              const int x,
+              const int y,
+              std::vector&lt;float&gt;&amp; desc) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Projects a texel into the search space.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a7a9ef3ef60a512d751383a5bb8e89fcd" class="m-dox">transform</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; sample,
+              const cv::Point&amp; texelCoords,
+              std::vector&lt;float&gt;&amp; desc) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Projects a texel into the search space.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a7c25f83f8962e1efdad04e76299c92bf" class="m-dox">sample</a>(</span><span class="m-dox-wrap"><a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; sample) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Gets a copy of the sample, containing search space descriptors.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a26bbaa11231dddc75980898817cef736" class="m-dox">sample</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>**const sample) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Gets a reference of the sample, containing search space descriptors.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a57fc8f41cf6d2b090504ebf0af7619f3" class="m-dox">kernel</a>(</span><span class="m-dox-wrap">int&amp; kernel) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Gets the kernel used to calculate the search space neighborhoods.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a8bccf704470a03fff10c7cf536f19b36" class="m-dox">sampleSize</a>(</span><span class="m-dox-wrap">cv::Size&amp; size) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Gets the size of the sample used to build up the search space.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#af89dbefe0f2b70054d2c54f14d074d25" class="m-dox">sampleSize</a>(</span><span class="m-dox-wrap">int&amp; width,
+              int&amp; height) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Gets the size of the sample used to build up the search space.</dd>
+          </dl>
+        </section>
+        <section id="pro-static-methods">
+          <h2><a href="#pro-static-methods">Protected static functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper">static auto <a href="#af7027f665d706b44f72c7198b34a8f79" class="m-dox">getComponents</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; exemplar,
+              int kernel) -&gt; cv::Mat</span>
+            </dt>
+            <dd>Returns a matrix, containing all the pixel neighborhoods of the provided exemplar.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">static auto <a href="#acc75a72a355cb925b8aab056ab55054d" class="m-dox">mergeSamples</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&gt;&amp; samples) -&gt; <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a></span>
+            </dt>
+            <dd>Merges multiple input samples into a single <code><a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a></code> instance.</dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-dox-details" id="aaf97caf60a7c79f40665ec3d7c156fab"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#aaf97caf60a7c79f40665ec3d7c156fab" class="m-dox-self">calculate</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; exemplar,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              size_t resultDim = 3,
+              int kernelSize = 5)</span></span>
+            </h3>
+            <p>Calculates the appearance space for an individual exemplar.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">exemplar</td>
+                  <td>The exemplar sample to calculate the seach space for.</td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A pointer that will be initialized with the calculated search space instance.</td>
+                </tr>
+                <tr>
+                  <td>resultDim</td>
+                  <td>The number of dimensionality retained after transforming pixel neighborhoods into search space.</td>
+                </tr>
+                <tr>
+                  <td>kernelSize</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a3ca237907ed6bb71e155d44a85993a1c"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a3ca237907ed6bb71e155d44a85993a1c" class="m-dox-self">calculate</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; exemplar,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              float targetVariance = 0.9f,
+              int kernelSize = 5)</span></span>
+            </h3>
+            <p>Calculates the appearance space for an individual exemplar.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">exemplar</td>
+                  <td>The exemplar sample to calculate the seach space for.</td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A pointer that will be initialized with the calculated search space instance.</td>
+                </tr>
+                <tr>
+                  <td>targetVariance</td>
+                  <td>The variance retained by the search space transform.</td>
+                </tr>
+                <tr>
+                  <td>kernelSize</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="afece59dd97b292daba11d4888880b3e5"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#afece59dd97b292daba11d4888880b3e5" class="m-dox-self">calculate</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&gt; exemplarMaps,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              size_t resultDim,
+              int kernelSize = 5)</span></span>
+            </h3>
+            <p>Calculates the appearance space for a set of exemplar samples.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">exemplarMaps</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A pointer that will be initialized with the calculated search space instance.</td>
+                </tr>
+                <tr>
+                  <td>resultDim</td>
+                  <td>The number of dimensionality retained after transforming pixel neighborhoods into search space.</td>
+                </tr>
+                <tr>
+                  <td>kernelSize</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a963d2874e6a1a7d19666ccf4e490b03a"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a963d2874e6a1a7d19666ccf4e490b03a" class="m-dox-self">calculate</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&gt; exemplarMaps,
+              <a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a>** desc,
+              float targetVariance = 0.9f,
+              int kernelSize = 5)</span></span>
+            </h3>
+            <p>Calculates the appearance space for a set of exemplar samples.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">exemplarMaps</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A pointer that will be initialized with the calculated search space instance.</td>
+                </tr>
+                <tr>
+                  <td>targetVariance</td>
+                  <td>The variance retained by the search space transform.</td>
+                </tr>
+                <tr>
+                  <td>kernelSize</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="aa11d8a2fb62449bcf8c0ebea2a947c4b"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper"> Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#aa11d8a2fb62449bcf8c0ebea2a947c4b" class="m-dox-self">AppearanceSpace</a>(</span><span class="m-dox-wrap">const cv::PCA* projection,
+              <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>* exemplar,
+              const int kernelSize)</span></span>
+            </h3>
+            <p>Initializes a new appearance space instance.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">projection</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>exemplar</td>
+                  <td>The exemplar sample that has been used to calculate the projection.</td>
+                </tr>
+                <tr>
+                  <td>kernelSize</td>
+                  <td>The size of the pixel neighborhood that has been used to calculate the projection.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>Note: typically you do not want to directly construct an <code><a href="class_texturize_1_1_appearance_space.html" class="m-dox">AppearanceSpace</a></code> instance. Instead use the <code><a href="class_texturize_1_1_appearance_space.html#aaf97caf60a7c79f40665ec3d7c156fab" class="m-dox">Texturize::<wbr />AppearanceSpace::<wbr />calculate</a></code> methods to get a newly created instance or load them from a persistent asset.</p>
+          </div></section>
+          <section class="m-dox-details" id="a9765c84666155a51b5162af360caf33d"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a9765c84666155a51b5162af360caf33d" class="m-dox-self">getProjector</a>(</span><span class="m-dox-wrap">const cv::PCA** projection) const</span></span>
+            </h3>
+            <p>Gets a reference of the projection matrix used to project pixel neighborhoods into the search space.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">projection</td>
+                  <td>A pointer to a reference that will contain the projection matrix after the method returns.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a803623f93b68c6fd19990348e22df408"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a803623f93b68c6fd19990348e22df408" class="m-dox-self">getExemplar</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>** exemplar) const</span></span>
+            </h3>
+            <p>Gets a copy of the sample, containing search space descriptors.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">exemplar</td>
+                  <td>A pointer to a sample that will be initialized with a copy of the exemplar descriptor sample.</td>
+                </tr>
+              </tbody>
+            </table>
+<aside class="m-note m-default"><h4>See also</h4><p><a href="class_texturize_1_1_i_search_space.html#aa0fc0d97d9829619be3655e3b2849f70" class="m-dox">Texturize::<wbr />ISearchSpace::<wbr />sample</a></p></aside>
+          </div></section>
+          <section class="m-dox-details" id="a873b2298b7622b889932c6c45da67d84"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a873b2298b7622b889932c6c45da67d84" class="m-dox-self">getKernel</a>(</span><span class="m-dox-wrap">int&amp; kernel) const</span></span>
+            </h3>
+            <p>Gets the kernel used to get the exemplar sample neighborhood descriptors.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">kernel</td>
+                  <td>The kernel used to get the exemplar sample neighborhood descriptors.</td>
+                </tr>
+              </tbody>
+            </table>
+<aside class="m-note m-default"><h4>See also</h4><p><a href="class_texturize_1_1_i_search_space.html#ac42030bb1baa0ceef6f9991459aa7f28" class="m-dox">Texturize::<wbr />ISearchSpace::<wbr />kernel</a></p></aside>
+          </div></section>
+          <section class="m-dox-details" id="a97f7dd0c051a87884a8ce78e2bc240a1"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a97f7dd0c051a87884a8ce78e2bc240a1" class="m-dox-self">transform</a>(</span><span class="m-dox-wrap">const std::vector&lt;float&gt;&amp; texel,
+              std::vector&lt;float&gt;&amp; desc) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Projects a texel into the search space.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">texel</td>
+                  <td>The pixel values that should be projected into the search space.</td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A descriptor, that describes the projected texel.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a82f6da2d9fb7b66d5e810d9f8ea0c375"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a82f6da2d9fb7b66d5e810d9f8ea0c375" class="m-dox-self">transform</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; sample,
+              const int x,
+              const int y,
+              std::vector&lt;float&gt;&amp; desc) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Projects a texel into the search space.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>The sample, containing the texel that should be projected.</td>
+                </tr>
+                <tr>
+                  <td>x</td>
+                  <td>The x coordinate of the texel to project.</td>
+                </tr>
+                <tr>
+                  <td>y</td>
+                  <td>The y coordinate of the texel to project.</td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A descriptor, that describes the projected texel.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a7a9ef3ef60a512d751383a5bb8e89fcd"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a7a9ef3ef60a512d751383a5bb8e89fcd" class="m-dox-self">transform</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; sample,
+              const cv::Point&amp; texelCoords,
+              std::vector&lt;float&gt;&amp; desc) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Projects a texel into the search space.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>The sample, containing the texel that should be projected.</td>
+                </tr>
+                <tr>
+                  <td>texelCoords</td>
+                  <td>The x and y coordinates of the texel to project.</td>
+                </tr>
+                <tr>
+                  <td>desc</td>
+                  <td>A descriptor, that describes the projected texel.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a7c25f83f8962e1efdad04e76299c92bf"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a7c25f83f8962e1efdad04e76299c92bf" class="m-dox-self">sample</a>(</span><span class="m-dox-wrap"><a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; sample) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Gets a copy of the sample, containing search space descriptors.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>A buffer to copy the sample to.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a26bbaa11231dddc75980898817cef736"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a26bbaa11231dddc75980898817cef736" class="m-dox-self">sample</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>**const sample) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Gets a reference of the sample, containing search space descriptors.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>A pointer to store the sample reference to.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a57fc8f41cf6d2b090504ebf0af7619f3"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a57fc8f41cf6d2b090504ebf0af7619f3" class="m-dox-self">kernel</a>(</span><span class="m-dox-wrap">int&amp; kernel) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Gets the kernel used to calculate the search space neighborhoods.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">kernel</td>
+                  <td>A reference, the kernel gets stored to.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a8bccf704470a03fff10c7cf536f19b36"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a8bccf704470a03fff10c7cf536f19b36" class="m-dox-self">sampleSize</a>(</span><span class="m-dox-wrap">cv::Size&amp; size) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Gets the size of the sample used to build up the search space.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">size</td>
+                  <td>A reference, the size gets stored to.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="af89dbefe0f2b70054d2c54f14d074d25"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#af89dbefe0f2b70054d2c54f14d074d25" class="m-dox-self">sampleSize</a>(</span><span class="m-dox-wrap">int&amp; width,
+              int&amp; height) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Gets the size of the sample used to build up the search space.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">width</td>
+                  <td>A reference, the width gets stored to.</td>
+                </tr>
+                <tr>
+                  <td>height</td>
+                  <td>A reference, the height gets stored to.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="af7027f665d706b44f72c7198b34a8f79"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static cv::Mat Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#af7027f665d706b44f72c7198b34a8f79" class="m-dox-self">getComponents</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; exemplar,
+              int kernel) <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Returns a matrix, containing all the pixel neighborhoods of the provided exemplar.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">exemplar</td>
+                  <td>The exemplar sample, of which the pixel neighborhoods should be extracted.</td>
+                </tr>
+                <tr>
+                  <td>kernel</td>
+                  <td>The kernel size of the neighborhood window.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>A column-major matrix containing high-dimensional vectors, that describe a pixel neighborhood. Each column represents a single pixel of the input exemplar.</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="acc75a72a355cb925b8aab056ab55054d"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a> Texturize::<wbr />AppearanceSpace::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#acc75a72a355cb925b8aab056ab55054d" class="m-dox-self">mergeSamples</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&gt;&amp; samples) <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Merges multiple input samples into a single <code><a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a></code> instance.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">samples</td>
+                  <td>A list of samples to merge.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>A single <code><a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a></code> instance, containing all channels of all input samples.</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-dox-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-dox-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-dox-search-content">
+          <input type="search" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" />
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            Search for symbols, directories, files, pages or modules. You can omit any
+            prefix from the symbol or file path; adding a <code>:</code> or <code>/</code>
+            suffix lists all members of given symbol or directory. Navigate through the
+            list using <span class="m-label m-dim">&darr;</span> and
+            <span class="m-label m-dim">&uarr;</span>, press
+            <span class="m-label m-dim">Enter</span> to go.
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search.js"></script>
+<script src="searchdata.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>Texturize. Created by <a href="http://doxygen.org/">Doxygen</a> 1.8.13 and <a href="http://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>

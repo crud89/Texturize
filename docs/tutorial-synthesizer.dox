@@ -1,0 +1,12 @@
+
+namespace Texturize {
+/** \page tutorial-synthesizer Writing your own synthesizer
+
+This example demonstrates how to implement a custom synthesizer. The following code implements a synthesizer, that generates a new texture by naive sampling, as
+described by Efros and Leung.
+
+\include NaiveSamplingSynthesizer.cpp
+
+\see Alexei A. Efros and Thomas K. Leung. "Texture Synthesis by Non Parametric Sampling." In: Proceedings of the International Conference on Computer Vision - Volume 2. ICCV '99. Washington, DC, USA: IEEE Computer Society, 1999. isbn: 0-7695-0164-8. url: http://dl.acm.org/citation.cfm?id=850924.851569.
+*/
+}
