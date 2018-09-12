@@ -288,7 +288,7 @@ __pycache__/
 *.xsd.cs
 .tfignore
 CMakeCache.txt
-install-manifest.txt
+install_manifest.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *Config.cmake
