@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Texturize::PyramidSynthesizer class | Texturize</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-texturize+doxygen.compiled.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">Texturize</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-dox-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path d="m6 0c-3.3144 0-6 2.6856-6 6 0 3.3144 2.6856 6 6 6 1.4858 0 2.8463-0.54083 3.8945-1.4355-0.0164 0.33797 0.14734 0.75854 0.5 1.1504l3.2227 3.7891c0.55185 0.6139 1.4517 0.66544 2.002 0.11524 0.55022-0.55022 0.49866-1.4501-0.11524-2.002l-3.7891-3.2246c-0.39184-0.35266-0.81242-0.51469-1.1504-0.5 0.89472-1.0482 1.4355-2.4088 1.4355-3.8945 0-3.3128-2.6856-5.998-6-5.998zm0 1.5625a4.4375 4.4375 0 0 1 4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375-4.4375 4.4375 4.4375 0 0 1 4.4375-4.4375z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li>
+              <a href="getting-started.html">Getting started</a>
+              <ol>
+                <li><a href="getting-started-build.html">Creating the project using CMake</a></li>
+                <li><a href="getting-started-sandbox.html">Using the Sandbox application</a></li>
+              </ol>
+            </li>
+            <li>
+              <a href="tutorial.html">Tutorials</a>
+              <ol>
+                <li><a href="tutorial-filter.html">Implementing custom filters</a></li>
+                <li><a href="tutorial-search-space.html">Creating a search space</a></li>
+                <li><a href="tutorial-search-index.html">Implementing a search index</a></li>
+                <li><a href="tutorial-synthesizer.html">Writing your own synthesizer</a></li>
+              </ol>
+            </li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="modules.html">Modules</a></li>
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+            <li class="m-show-m"><a href="#search" class="m-dox-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <path d="m6 0c-3.3144 0-6 2.6856-6 6 0 3.3144 2.6856 6 6 6 1.4858 0 2.8463-0.54083 3.8945-1.4355-0.0164 0.33797 0.14734 0.75854 0.5 1.1504l3.2227 3.7891c0.55185 0.6139 1.4517 0.66544 2.002 0.11524 0.55022-0.55022 0.49866-1.4501-0.11524-2.002l-3.7891-3.2246c-0.39184-0.35266-0.81242-0.51469-1.1504-0.5 0.89472-1.0482 1.4355-2.4088 1.4355-3.8945 0-3.3128-2.6856-5.998-6-5.998zm0 1.5625a4.4375 4.4375 0 0 1 4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375-4.4375 4.4375 4.4375 0 0 1 4.4375-4.4375z"/>
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <span class="m-breadcrumb"><a href="namespace_texturize.html">Texturize</a>::<wbr/></span>PyramidSynthesizer <span class="m-thin">class</span>
+        </h1>
+        <p>Implements a pyramid-bases, non-parametric, per-pixel synthesizer.</p>
+        <div class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#base-classes">Base classes</a></li>
+                <li><a href="#derived-classes">Derived classes</a></li>
+                <li><a href="#pub-static-methods">Public static functions</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pro-methods">Protected functions</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+<p>The synthesizer implements an algorithm, that uses an indexed exemplar and synthesizes a result sample by traversing an image pyramid. The algorithm follows the one, that has originally been described by Sylvain Lefebvre and Hugues Hoppe. Note that this implementation works sequentially. For a parallel version use the <code><a href="class_texturize_1_1_parallel_pyramid_synthesizer.html" class="m-dox">ParallelPyramidSynthesizer</a></code> class.</p><p>Lefebvre and Hoppe originally based their synthesizer on image pyramids and later introduced an hierarchy, called &quot;gaussian stack&quot;, that, instead of traversing a pyramidal hierarchy, uses a stack of increasingly blurred samples. This implementation does not use the stack, but instead uses simple pyramids.</p><p><strong>Example</strong></p><p>The following example shows how to create a synthesizer and synthesize a new texture from an indexed exemplar.</p><pre class="m-code"><span class="cp">#include</span> <span class="cpf">&lt;sampling.hpp&gt;</span><span class="cp"></span>
+
+<span class="k">int</span> <span class="nf">main</span><span class="p">(</span><span class="k">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="k">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Read an image using OpenCV. The name of the image is provided within the first command line parameter.</span>
+    <span class="n">cv</span><span class="o">::</span><span class="kt">Mat</span> <span class="n">img</span> <span class="o">=</span> <span class="n">cv</span><span class="o">::</span><span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+
+    <span class="c1">// Create a sample that contains the image.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">exemplar</span><span class="p">(</span><span class="n">img</span><span class="p">);</span>
+    <span class="k">int</span> <span class="n">width</span> <span class="o">=</span> <span class="n">exemplar</span><span class="p">.</span><span class="n">width</span><span class="p">();</span>
+    <span class="k">int</span> <span class="n">height</span> <span class="o">=</span> <span class="n">exemplar</span><span class="p">.</span><span class="n">height</span><span class="p">();</span>
+    <span class="k">int</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">log2</span><span class="p">(</span><span class="n">width</span><span class="p">);</span>
+
+    <span class="c1">// Calculate the appearance space. Neighborhoods will retain a dimensionality of 4, which is a suitable choice for RGB(A) exemplars.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">*</span> <span class="n">searchSpace</span><span class="p">;</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">::</span><span class="n">calculate</span><span class="p">(</span><span class="n">exemplar</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">searchSpace</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+    <span class="c1">// It is recommended to use smart pointers to manage search space references.</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span><span class="n">Texturize</span><span class="o">::</span><span class="kt">AppearanceSpace</span><span class="o">&gt;</span> <span class="n">descriptors</span><span class="p">(</span><span class="n">searchSpace</span><span class="p">);</span>
+
+    <span class="c1">// Index the neighborhood descriptors. Neighborhood matching is performed based on random march.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">RandomWalkIndex</span> <span class="n">index</span><span class="p">(</span><span class="n">descriptors</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+
+    <span class="c1">// Setup a pyramid synthesizer. The synthesizer is configured with a constant randomness of 0.1, a 5 pixel kernel and a constant seed.</span>
+    <span class="k">auto</span> <span class="n">synthesizer</span> <span class="o">=</span> <span class="n">Texturize</span><span class="o">::</span><span class="kt">PyramidSynthesizer</span><span class="o">::</span><span class="n">createSynthesizer</span><span class="p">(</span><span class="o">&amp;</span><span class="n">index</span><span class="p">);</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="n">PyramidSynthesisSettings</span> <span class="n">config</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">cv</span><span class="o">::</span><span class="kt">Point2f</span><span class="p">(</span><span class="mf">0.f</span><span class="p">,</span> <span class="mf">0.f</span><span class="p">),</span> <span class="mf">0.1f</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+    <span class="c1">// Start synthesis.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="kt">Sample</span> <span class="n">uvMap</span><span class="p">,</span> <span class="n">result</span><span class="p">;</span>
+    <span class="n">synthesizer</span><span class="o">-&gt;</span><span class="n">synthesize</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">uvMap</span><span class="p">,</span> <span class="n">config</span><span class="p">);</span>
+
+    <span class="c1">// Display the result</span>
+    <span class="n">exemplar</span><span class="p">.</span><span class="n">sample</span><span class="p">((</span><span class="n">cv</span><span class="o">::</span><span class="kt">Mat</span><span class="p">)</span><span class="n">uvMap</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+    <span class="n">cv</span><span class="o">::</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;Result&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">cv</span><span class="o">::</span><span class="kt">Mat</span><span class="p">)</span><span class="n">result</span><span class="p">);</span>
+    <span class="n">cv</span><span class="o">::</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span></pre><aside class="m-note m-default"><h4>See also</h4><p>Sylvain Lefebvre and Hugues Hoppe. &quot;Parallel Controllable Texture Synthesis.&quot; In: ACM Trans. Graph. 24.3 (July 2005), pp. 777-786. issn: 0730-0301. doi: 10.1145/1073204.1073261. url: <a href="http://doi.acm.org/10.1145/1073204.1073261">http:/<wbr />/<wbr />doi.acm.org/<wbr />10.1145/<wbr />1073204.1073261</a></p><p>Sylvain Lefebvre and Hugues Hoppe. &quot;Appearance-space Texture Synthesis.&quot; In: ACM Trans. Graph. 25.3 (July 2006), pp. 541-548. issn: 0730-0301. doi: 10.1145/1141911.1141921. url: <a href="http://doi.acm.org/10.1145/1141911.1141921">http:/<wbr />/<wbr />doi.acm.org/<wbr />10.1145/<wbr />1141911.1141921</a>.</p></aside>
+        <section id="base-classes">
+          <h2><a href="#base-classes">Base classes</a></h2>
+          <dl class="m-dox">
+            <dt>
+              class <a href="class_texturize_1_1_synthesizer_base.html" class="m-dox">SynthesizerBase</a>
+            </dt>
+            <dd>A base implementation for exemplar-based synthesizers.</dd>
+          </dl>
+        </section>
+        <section id="derived-classes">
+          <h2><a href="#derived-classes">Derived classes</a></h2>
+          <dl class="m-dox">
+            <dt>
+              class <a href="class_texturize_1_1_parallel_pyramid_synthesizer.html" class="m-dox">ParallelPyramidSynthesizer</a>
+            </dt>
+            <dd>Implements a parallel, pyramid-bases, non-parametric, per-pixel synthesizer.</dd>
+          </dl>
+        </section>
+        <section id="pub-static-methods">
+          <h2><a href="#pub-static-methods">Public static functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper">static auto <a href="#a1e5daceb95f42423c5ca0294d27b74eb" class="m-dox">createSynthesizer</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_search_index.html" class="m-dox">SearchIndex</a>* catalog) -&gt; std::unique_ptr&lt;<a href="class_texturize_1_1_i_synthesizer.html" class="m-dox">ISynthesizer</a>&gt;</span>
+            </dt>
+            <dd>A factory method that creates a new synthesizer and initializes with a search index, that provides access to exemplar neighborhoods.</dd>
+          </dl>
+        </section>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper"><a href="#ac8f5549715558ac24d4d7acde727e529" class="m-dox">PyramidSynthesizer</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_search_index.html" class="m-dox">SearchIndex</a>* catalog) <span class="m-label m-flat m-warning">protected</span></span>
+            </dt>
+            <dd>Creates a new synthesizer instance.</dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#afa9203efe6df161458a9631cd2a8da02" class="m-dox">synthesize</a>(</span><span class="m-dox-wrap">int width,
+              int height,
+              <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; result,
+              const <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>&amp; config = <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>()) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Synthesizes a new texture.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a3d9cab27055b45bd12c917a71394e243" class="m-dox">synthesize</a>(</span><span class="m-dox-wrap">const cv::Size&amp; size,
+              <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; result,
+              const <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>&amp; config = <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>()) const override <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Synthesizes a new texture.</dd>
+          </dl>
+        </section>
+        <section id="pro-methods">
+          <h2><a href="#pro-methods">Protected functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#acd93ba2614b61c2964107dd2917cdd15" class="m-dox">synthesizeLevel</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Performs synthesis for the next level of the image pyramid.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a5c8193c66dd8ad9c61f952cb4a74bbdc" class="m-dox">upsample</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Doubles the effective resolution of the result sample.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#abb98737f3187164fa748c4f2f0e4fbbc" class="m-dox">jitter</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Introduces spatial randomness to the current result sample.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a07724cb359e395b32dcdf82a50af2b22" class="m-dox">correct</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Corrects the current result sample by searching for close pixel neighborhoods for each texel.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">auto <a href="#af67527a27e4be6af1182ab49266fb8e7" class="m-dox">scaleTexel</a>(</span><span class="m-dox-wrap">const cv::Vec2f&amp; uv,
+              const cv::Vec2f&amp; delta,
+              float spacing) const -&gt; cv::Vec2f <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Interpolates a pixel coordinate to fill the space created during upsampling.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">auto <a href="#ae442c62dacc533761a3c749add258a59" class="m-dox">translateTexel</a>(</span><span class="m-dox-wrap">const cv::Point2i&amp; at,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const -&gt; cv::Vec2f <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Jitters a pixel at a given coordinate.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">auto <a href="#ac42fa484c0754e28c6bfb237a0cd06a6" class="m-dox">getNeighborhoodDescriptor</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>* exemplar,
+              const cv::Mat&amp; sample,
+              const cv::Point2i&amp; uv,
+              int kernel,
+              bool weight = true) const -&gt; std::vector&lt;float&gt; <span class="m-label m-danger">deprecated</span> <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd>Calculates the runtime neighborhood descriptor of a texel.</dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-dox-details" id="a1e5daceb95f42423c5ca0294d27b74eb"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">static std::unique_ptr&lt;<a href="class_texturize_1_1_i_synthesizer.html" class="m-dox">ISynthesizer</a>&gt; Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a1e5daceb95f42423c5ca0294d27b74eb" class="m-dox-self">createSynthesizer</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_search_index.html" class="m-dox">SearchIndex</a>* catalog)</span></span>
+            </h3>
+            <p>A factory method that creates a new synthesizer and initializes with a search index, that provides access to exemplar neighborhoods.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">catalog</td>
+                  <td>An search index, that provides access to exemplar neighborhoods and provides runtime pixel neighborhood matching.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>An instance of a synthesizer.</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="ac8f5549715558ac24d4d7acde727e529"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper"> Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#ac8f5549715558ac24d4d7acde727e529" class="m-dox-self">PyramidSynthesizer</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_search_index.html" class="m-dox">SearchIndex</a>* catalog) <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Creates a new synthesizer instance.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">catalog</td>
+                  <td>An index, that provides access to exemplar pixel neighborhoods and implements neighborhood matching.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="afa9203efe6df161458a9631cd2a8da02"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#afa9203efe6df161458a9631cd2a8da02" class="m-dox-self">synthesize</a>(</span><span class="m-dox-wrap">int width,
+              int height,
+              <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; result,
+              const <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>&amp; config = <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>()) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Synthesizes a new texture.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">width</td>
+                  <td>The width of the result sample.</td>
+                </tr>
+                <tr>
+                  <td>height</td>
+                  <td>The height of the result sample.</td>
+                </tr>
+                <tr>
+                  <td>result</td>
+                  <td>A reference to the result sample.</td>
+                </tr>
+                <tr>
+                  <td>config</td>
+                  <td>The configuration to initialize the synthesizer with.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a3d9cab27055b45bd12c917a71394e243"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a3d9cab27055b45bd12c917a71394e243" class="m-dox-self">synthesize</a>(</span><span class="m-dox-wrap">const cv::Size&amp; size,
+              <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>&amp; result,
+              const <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>&amp; config = <a href="class_texturize_1_1_synthesis_settings.html" class="m-dox">SynthesisSettings</a>()) const override <span class="m-label m-warning">virtual</span></span></span>
+            </h3>
+            <p>Synthesizes a new texture.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">size</td>
+                  <td>The width and height of the result sample.</td>
+                </tr>
+                <tr>
+                  <td>result</td>
+                  <td>A reference to the result sample.</td>
+                </tr>
+                <tr>
+                  <td>config</td>
+                  <td>The configuration to initialize the synthesizer with.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="acd93ba2614b61c2964107dd2917cdd15"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#acd93ba2614b61c2964107dd2917cdd15" class="m-dox-self">synthesizeLevel</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Performs synthesis for the next level of the image pyramid.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>The current result sample.</td>
+                </tr>
+                <tr>
+                  <td>state</td>
+                  <td>An object, that provides access to the runtime state of the synthesizer.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a5c8193c66dd8ad9c61f952cb4a74bbdc"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a5c8193c66dd8ad9c61f952cb4a74bbdc" class="m-dox-self">upsample</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Doubles the effective resolution of the result sample.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>The current result sample.</td>
+                </tr>
+                <tr>
+                  <td>state</td>
+                  <td>An object, that provides access to the runtime state of the synthesizer.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>The method is responsible of traversing the image pyramid one level upwards. It aligns the current coordinates along the upsampled map and interpolates the space between.</p>
+          </div></section>
+          <section class="m-dox-details" id="abb98737f3187164fa748c4f2f0e4fbbc"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#abb98737f3187164fa748c4f2f0e4fbbc" class="m-dox-self">jitter</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Introduces spatial randomness to the current result sample.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>The current result sample.</td>
+                </tr>
+                <tr>
+                  <td>state</td>
+                  <td>An object, that provides access to the runtime state of the synthesizer.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>The method disturbs the image in order to create randomness at different scales. The amplitude of the introduced randomness is provided by the jitter configuration of the <code>PyramidSynthesizerConfig</code>.</p>
+          </div></section>
+          <section class="m-dox-details" id="a07724cb359e395b32dcdf82a50af2b22"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a07724cb359e395b32dcdf82a50af2b22" class="m-dox-self">correct</a>(</span><span class="m-dox-wrap">cv::Mat&amp; sample,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Corrects the current result sample by searching for close pixel neighborhoods for each texel.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">sample</td>
+                  <td>The current result sample.</td>
+                </tr>
+                <tr>
+                  <td>state</td>
+                  <td>An object, that provides access to the runtime state of the synthesizer.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>This method is called multiple times in order to let the result sample converge agains a &quot;best match&quot;. The number of correction passes can be configured within the <code>PyramidSynthesizerConfig</code>. For each texel, it asks the search index for a good candidate to replace it with, based on the current neighborhood. This process is not done sequentially, but rather the method divides the image into a set of sub-passes that are then executed sequentially. The number of sub-passes can be configured within the <code>PyramidSynthesizerConfig</code>.</p>
+          </div></section>
+          <section class="m-dox-details" id="af67527a27e4be6af1182ab49266fb8e7"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">cv::Vec2f Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#af67527a27e4be6af1182ab49266fb8e7" class="m-dox-self">scaleTexel</a>(</span><span class="m-dox-wrap">const cv::Vec2f&amp; uv,
+              const cv::Vec2f&amp; delta,
+              float spacing) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Interpolates a pixel coordinate to fill the space created during upsampling.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">uv</td>
+                  <td>The uv coordinates of the origin texel from the previous pyramid level.</td>
+                </tr>
+                <tr>
+                  <td>delta</td>
+                  <td>The offset from the origin pixel in the current pyramid level to the target pixel.</td>
+                </tr>
+                <tr>
+                  <td>spacing</td>
+                  <td>The scale factor that is used to linearily interpolate the pixel coordinates.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>The new coordinates for the pixel at the current pyramid level.</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="ae442c62dacc533761a3c749add258a59"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">cv::Vec2f Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#ae442c62dacc533761a3c749add258a59" class="m-dox-self">translateTexel</a>(</span><span class="m-dox-wrap">const cv::Point2i&amp; at,
+              const <a href="class_texturize_1_1_pyramid_synthesizer_state.html" class="m-dox">PyramidSynthesizerState</a>&amp; state) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Jitters a pixel at a given coordinate.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">at</td>
+                  <td>The x and y coordinate of the pixel to disturb.</td>
+                </tr>
+                <tr>
+                  <td>state</td>
+                  <td>An object, that provides access to the runtime state of the synthesizer.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="ac42fa484c0754e28c6bfb237a0cd06a6"><div>
+            <h3>
+              <span class="m-dox-wrap-bumper">std::vector&lt;float&gt; Texturize::<wbr />PyramidSynthesizer::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#ac42fa484c0754e28c6bfb237a0cd06a6" class="m-dox-self">getNeighborhoodDescriptor</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_sample.html" class="m-dox">Sample</a>* exemplar,
+              const cv::Mat&amp; sample,
+              const cv::Point2i&amp; uv,
+              int kernel,
+              bool weight = true) const <span class="m-label m-warning">virtual</span> <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+            <p>Calculates the runtime neighborhood descriptor of a texel.</p>
+<aside class="m-note m-danger"><h4><a href="deprecated.html#_deprecated000007" class="m-dox">Deprecated</a></h4><p>This method is deprecated and not called by any built-in synthesizer. It does only exist for compatibility reasons, and will be removed in future releases. Consider using <code><a href="class_texturize_1_1_i_search_index.html#ab5b8b56d1ff61881c2cacf5f84b9e230" class="m-dox">SearchIndex::<wbr />findNearestNeighbor</a></code> directly.</p></aside>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-dox-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-dox-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-dox-search-content">
+          <input type="search" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" />
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            Search for symbols, directories, files, pages or modules. You can omit any
+            prefix from the symbol or file path; adding a <code>:</code> or <code>/</code>
+            suffix lists all members of given symbol or directory. Navigate through the
+            list using <span class="m-label m-dim">&darr;</span> and
+            <span class="m-label m-dim">&uarr;</span>, press
+            <span class="m-label m-dim">Enter</span> to go.
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search.js"></script>
+<script src="searchdata.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>Texturize. Created by <a href="http://doxygen.org/">Doxygen</a> 1.8.13 and <a href="http://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Texturize::EventDispatcher class | Texturize</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-texturize+doxygen.compiled.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">Texturize</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-dox-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path d="m6 0c-3.3144 0-6 2.6856-6 6 0 3.3144 2.6856 6 6 6 1.4858 0 2.8463-0.54083 3.8945-1.4355-0.0164 0.33797 0.14734 0.75854 0.5 1.1504l3.2227 3.7891c0.55185 0.6139 1.4517 0.66544 2.002 0.11524 0.55022-0.55022 0.49866-1.4501-0.11524-2.002l-3.7891-3.2246c-0.39184-0.35266-0.81242-0.51469-1.1504-0.5 0.89472-1.0482 1.4355-2.4088 1.4355-3.8945 0-3.3128-2.6856-5.998-6-5.998zm0 1.5625a4.4375 4.4375 0 0 1 4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375-4.4375 4.4375 4.4375 0 0 1 4.4375-4.4375z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li>
+              <a href="getting-started.html">Getting started</a>
+              <ol>
+                <li><a href="getting-started-build.html">Creating the project using CMake</a></li>
+                <li><a href="getting-started-sandbox.html">Using the Sandbox application</a></li>
+              </ol>
+            </li>
+            <li>
+              <a href="tutorial.html">Tutorials</a>
+              <ol>
+                <li><a href="tutorial-filter.html">Implementing custom filters</a></li>
+                <li><a href="tutorial-search-space.html">Creating a search space</a></li>
+                <li><a href="tutorial-search-index.html">Implementing a search index</a></li>
+                <li><a href="tutorial-synthesizer.html">Writing your own synthesizer</a></li>
+              </ol>
+            </li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="modules.html">Modules</a></li>
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+            <li class="m-show-m"><a href="#search" class="m-dox-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <path d="m6 0c-3.3144 0-6 2.6856-6 6 0 3.3144 2.6856 6 6 6 1.4858 0 2.8463-0.54083 3.8945-1.4355-0.0164 0.33797 0.14734 0.75854 0.5 1.1504l3.2227 3.7891c0.55185 0.6139 1.4517 0.66544 2.002 0.11524 0.55022-0.55022 0.49866-1.4501-0.11524-2.002l-3.7891-3.2246c-0.39184-0.35266-0.81242-0.51469-1.1504-0.5 0.89472-1.0482 1.4355-2.4088 1.4355-3.8945 0-3.3128-2.6856-5.998-6-5.998zm0 1.5625a4.4375 4.4375 0 0 1 4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375 4.4375 4.4375 4.4375 0 0 1-4.4375-4.4375 4.4375 4.4375 0 0 1 4.4375-4.4375z"/>
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <div class="m-dox-template">template&lt;typename TResult, typename... TArgs&gt;</div>
+          <span class="m-breadcrumb"><a href="namespace_texturize.html">Texturize</a>::<wbr/></span>EventDispatcher <span class="m-thin">class</span>
+        </h1>
+        <p>A class that can be used to report events.</p>
+        <table class="m-table m-fullwidth m-flat">
+          <thead>
+            <tr><th colspan="2">Template parameters</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="width: 1%">TResult</td>
+              <td>The return type of a function, events can be reported to.</td>
+            </tr>
+            <tr>
+              <td>TArgs</td>
+              <td>The parameters of a function, events can be reported to.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#pub-types">Public types</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+<p>The <code><a href="class_texturize_1_1_event_dispatcher.html" class="m-dox">EventDispatcher</a></code> class is designed to be used by objects in order to provide callback functionality on certain events. Typically an object provides an <code><a href="class_texturize_1_1_event_dispatcher.html" class="m-dox">EventDispatcher</a></code> instance to other objects, that can register callback functions on it. The arguments and return value of those callbacks are stated by the <code>TArgs</code> and <code>TResult</code> parameters.</p><p><strong>Example</strong></p><pre class="m-code"><span class="cp">#include</span> <span class="cpf">&lt;events.hpp&gt;</span><span class="cp"></span>
+
+<span class="k">class</span> <span class="err">Producer {</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="c1">// An event dispatcher that calls back the progress to functions using an integer parameter and returning a boolean.</span>
+    <span class="n">Texturize</span><span class="o">::</span><span class="n">EventDispatcher</span><span class="o">&lt;</span><span class="k">bool</span><span class="p">,</span> <span class="k">int</span><span class="o">&gt;</span> <span class="n">ProgressHandler</span><span class="p">;</span>
+
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">void</span> <span class="n">DoWork</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        
+        <span class="k">for</span> <span class="p">(</span><span class="k">int</span> <span class="n">i</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">// ...do something...</span>
+            
+            <span class="c1">// If some callback does not want the work to continue, return.</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">ProgressHandler</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// Define the callback function.</span>
+<span class="k">int</span> <span class="nf">OnProgress</span><span class="p">(</span><span class="k">int</span> <span class="n">progress</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Progress: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">progress</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;%&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Create a producer instance.</span>
+<span class="n">Producer</span> <span class="n">producer</span><span class="p">;</span>
+
+<span class="k">int</span> <span class="nf">main</span><span class="p">(</span><span class="k">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="k">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// The producer will call the OnProgress function with each iteration.</span>
+    <span class="n">producer</span><span class="p">.</span><span class="n">ProgressHandler</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">OnProgress</span><span class="p">);</span>
+
+    <span class="c1">// The same can be achieved inline using a lambda expression.    </span>
+    <span class="n">producer</span><span class="p">.</span><span class="n">ProgressHandler</span><span class="p">.</span><span class="n">add</span><span class="p">([](</span><span class="k">int</span> <span class="n">progress</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">bool</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Progress: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">progress</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;%&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="p">});</span>
+<span class="p">}</span></pre><p>The example demonstrates how a <code>Producer</code> class provides an <code><a href="class_texturize_1_1_event_dispatcher.html" class="m-dox">EventDispatcher</a></code> instance, that consumers can add event listeners to. Event listeners can be provided as functions, methods or lambdas. In the example, the boolean return value of an event listener can be used to cancel the producers workflow by returning <code>false</code>.</p><aside class="m-note m-default"><h4>See also</h4><p><a href="class_texturize_1_1_pyramid_synthesis_settings.html#ade2191147c3fa89ddeddc138a8153a9b" class="m-dox">Texturize::<wbr />PyramidSynthesisSettings::<wbr />ProgressHandler</a></p></aside>
+        <section id="pub-types">
+          <h2><a href="#pub-types">Public types</a></h2>
+          <dl class="m-dox">
+            <dt>
+              using <a href="#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox-self" name="a4ffb5e57d71f545ab8cf47242334e179">Callback</a> = std::function&lt;TResult(TArgs...)&gt;
+            </dt>
+            <dd>Defines a function suitable to be used as a callback.</dd>
+          </dl>
+        </section>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <span class="m-dox-wrap-bumper"><a href="#a900c7647af4a900bc7fc033eb1745de3" class="m-dox-self" name="a900c7647af4a900bc7fc033eb1745de3">EventDispatcher</a>(</span><span class="m-dox-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
+            </dt>
+            <dd>Creates a new event dispatcher instance.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper"><a href="#a7a75dd9994fcd99bd7d4f25bfc04e989" class="m-dox">EventDispatcher</a>(</span><span class="m-dox-wrap"><a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a> callback)</span>
+            </dt>
+            <dd>Creates a new event dispatcher instance.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper"><a href="#a239182517da80084179150b4bfebcdc9" class="m-dox">EventDispatcher</a>(</span><span class="m-dox-wrap">const std::vector&lt;<a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a>&gt;&amp; callbacks)</span>
+            </dt>
+            <dd>Creates a new event dispatcher instance.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper"><a href="#a7c58fcdb9f02fffa9909ce2cdeee5af6" class="m-dox">EventDispatcher</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;<a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a>&gt; callbacks)</span>
+            </dt>
+            <dd>Creates a new event dispatcher instance.</dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-dox">
+            <dt>
+              <div class="m-dox-template">template&lt;typename TFunctor&gt;</div>
+              <span class="m-dox-wrap-bumper">void <a href="#a6e97f76fe328f5123e2fcec1521813b7" class="m-dox">add</a>(</span><span class="m-dox-wrap">TFunctor functor)</span>
+            </dt>
+            <dd>Adds a callback to the event dispatcher.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a94e5484f72aac2d3905daf656963f957" class="m-dox">add</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a> callback)</span>
+            </dt>
+            <dd>Adds a callback to the event dispatcher.</dd>
+            <dt>
+              <span class="m-dox-wrap-bumper">void <a href="#a167b670fb5d5ca996a57679c9e797378" class="m-dox">remove</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a> callback)</span>
+            </dt>
+            <dd>Removes a callback from the event dispatcher.</dd>
+            <dt>
+              <div class="m-dox-template">template&lt;typename = typename std::enable_if&lt;std::is_void&lt;TResult&gt;::value&gt;::type&gt;</div>
+              <span class="m-dox-wrap-bumper">void <a href="#ae68f1956235f20399a3529b9b6d27120" class="m-dox">execute</a>(</span><span class="m-dox-wrap">TArgs... args) const</span>
+            </dt>
+            <dd>Sends the arguments to all callbacks.</dd>
+            <dt>
+              <div class="m-dox-template">template&lt;typename = typename std::enable_if&lt;!std::is_void&lt;TResult&gt;::value&gt;::type&gt;</div>
+              <span class="m-dox-wrap-bumper">void <a href="#a0e520794677bd5ff635f2567f4dbaa46" class="m-dox">execute</a>(</span><span class="m-dox-wrap">std::vector&lt;TResult&gt;&amp; results,
+              TArgs... args) const</span>
+            </dt>
+            <dd>Sends the arguments to all callbacks.</dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-dox-details" id="a7a75dd9994fcd99bd7d4f25bfc04e989"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+              </div>
+              <span class="m-dox-wrap-bumper"> Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a7a75dd9994fcd99bd7d4f25bfc04e989" class="m-dox-self">EventDispatcher</a>(</span><span class="m-dox-wrap"><a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a> callback)</span></span>
+            </h3>
+            <p>Creates a new event dispatcher instance.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">callback</td>
+                  <td>A callback to initialize the instance with.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a239182517da80084179150b4bfebcdc9"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+              </div>
+              <span class="m-dox-wrap-bumper"> Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a239182517da80084179150b4bfebcdc9" class="m-dox-self">EventDispatcher</a>(</span><span class="m-dox-wrap">const std::vector&lt;<a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a>&gt;&amp; callbacks)</span></span>
+            </h3>
+            <p>Creates a new event dispatcher instance.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">callbacks</td>
+                  <td>A set of callbacks to initialize the instance with.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a7c58fcdb9f02fffa9909ce2cdeee5af6"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+              </div>
+              <span class="m-dox-wrap-bumper"> Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a7c58fcdb9f02fffa9909ce2cdeee5af6" class="m-dox-self">EventDispatcher</a>(</span><span class="m-dox-wrap">std::initializer_list&lt;<a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a>&gt; callbacks)</span></span>
+            </h3>
+            <p>Creates a new event dispatcher instance.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">callbacks</td>
+                  <td>A set of callbacks to initialize the instance with.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>This constructor uses the <code>std::initializer_list</code> to provide multiple callbacks using the simplified syntax <code><a href="class_texturize_1_1_event_dispatcher.html" class="m-dox">EventDispatcher</a>({ CallbackA, CallbackB, CallbackC })</code>.</p>
+          </div></section>
+          <section class="m-dox-details" id="a6e97f76fe328f5123e2fcec1521813b7"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+                template&lt;typename TFunctor&gt;
+              </div>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a6e97f76fe328f5123e2fcec1521813b7" class="m-dox-self">add</a>(</span><span class="m-dox-wrap">TFunctor functor)</span></span>
+            </h3>
+            <p>Adds a callback to the event dispatcher.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Template parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">TFunctor</td>
+                  <td>A function definition that must be compatible to the <code>Callback</code> type.</td>
+                </tr>
+              </tbody>
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>functor</td>
+                  <td>The callback function to add to the dispatcher.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a94e5484f72aac2d3905daf656963f957"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+              </div>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a94e5484f72aac2d3905daf656963f957" class="m-dox-self">add</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a> callback)</span></span>
+            </h3>
+            <p>Adds a callback to the event dispatcher.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">callback</td>
+                  <td>The callback function to add to the dispatcher.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="a167b670fb5d5ca996a57679c9e797378"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+              </div>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a167b670fb5d5ca996a57679c9e797378" class="m-dox-self">remove</a>(</span><span class="m-dox-wrap">const <a href="class_texturize_1_1_event_dispatcher.html#a4ffb5e57d71f545ab8cf47242334e179" class="m-dox">Callback</a> callback)</span></span>
+            </h3>
+            <p>Removes a callback from the event dispatcher.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">callback</td>
+                  <td>The callback to remove.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div></section>
+          <section class="m-dox-details" id="ae68f1956235f20399a3529b9b6d27120"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+                template&lt;typename = typename std::enable_if&lt;std::is_void&lt;TResult&gt;::value&gt;::type&gt;
+              </div>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#ae68f1956235f20399a3529b9b6d27120" class="m-dox-self">execute</a>(</span><span class="m-dox-wrap">TArgs... args) const</span></span>
+            </h3>
+            <p>Sends the arguments to all callbacks.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">args</td>
+                  <td>The arguments to send to all callbacks.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>This function is only provided, if <code>TResult</code> is defined <code>void</code>.</p>
+          </div></section>
+          <section class="m-dox-details" id="a0e520794677bd5ff635f2567f4dbaa46"><div>
+            <h3>
+              <div class="m-dox-template">
+                template&lt;typename TResult, typename... TArgs&gt;
+                template&lt;typename = typename std::enable_if&lt;!std::is_void&lt;TResult&gt;::value&gt;::type&gt;
+              </div>
+              <span class="m-dox-wrap-bumper">void Texturize::<wbr />EventDispatcher&lt;TResult, TArgs&gt;::<wbr /></span><span class="m-dox-wrap"><span class="m-dox-wrap-bumper"><a href="#a0e520794677bd5ff635f2567f4dbaa46" class="m-dox-self">execute</a>(</span><span class="m-dox-wrap">std::vector&lt;TResult&gt;&amp; results,
+              TArgs... args) const</span></span>
+            </h3>
+            <p>Sends the arguments to all callbacks.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">results</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>args</td>
+                  <td>The arguments to send to all callbacks.</td>
+                </tr>
+              </tbody>
+            </table>
+<p>This function is only provided, if <code>TResult</code> is <em>not</em> defined <code>void</code>.</p>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-dox-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-dox-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-dox-search-content">
+          <input type="search" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" />
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            Search for symbols, directories, files, pages or modules. You can omit any
+            prefix from the symbol or file path; adding a <code>:</code> or <code>/</code>
+            suffix lists all members of given symbol or directory. Navigate through the
+            list using <span class="m-label m-dim">&darr;</span> and
+            <span class="m-label m-dim">&uarr;</span>, press
+            <span class="m-label m-dim">Enter</span> to go.
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search.js"></script>
+<script src="searchdata.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>Texturize. Created by <a href="http://doxygen.org/">Doxygen</a> 1.8.13 and <a href="http://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>

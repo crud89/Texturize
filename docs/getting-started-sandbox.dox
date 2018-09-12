@@ -1,0 +1,333 @@
+
+namespace Texturize {
+/** \page getting-started-sandbox Using the Sandbox application
+\brief The framework comes with a reference implementation, called *Sandbox*. This application basically implements a parallel,
+pixel-based, appearance space synthesizer. To run it, simply run 
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>\bin\Texturize.Sandbox.exe --help
+\endcode
+
+This page introduces you into the different parameters, that can be used to control the sandbox application.
+
+\section getting-started-sandbox-parameters Sandbox parameters
+
+\subsection getting-started-sandbox-parameters-proc --proc
+
+Set this parameter to tell the sandbox, which programs to execute. Multiple programs can be provided, when separated by the `|`
+character. The sandbox will then execute them in the order they are provided. The following programs are currently allowed:
+
+- `fm` runs an edge detector on an exemplar.
+- `fd` runs a distance transform on an edge response (produced by `fm`).
+- `as` transforms a set of exemplar maps into an appearance space asset.
+- `s` synthesizes a texture from an appearance space asset (produced by `as`).
+
+\b Example:
+
+\code{.ps1}
+# Runs edge detector and distance transform and transform the result into appearance space.
+<FrameworkPath>\bin\Texturize.Sandbox.exe -proc="fm|fd|as"
+\endcode
+
+\subsection getting-started-sandbox-parameters-ex --ex
+
+Provides one or more exemplar maps. Multiple maps should be separated by `;` characters. Furthermore, each map requires a unique
+name to reference it. The syntax for providing maps is as follows: `<MapName>:<ImageFile>;[...]`
+
+\b Example:
+
+\code{.ps1}
+# Runs edge detector on a RGB exemplar.
+# If only one map is provided, it's automatically named "albedo".
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm" -ex="./samples/albedo.png"
+
+# Runs appearance space transform on multiple exemplar maps.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as" -m=1
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+\endcode
+
+See \ref getting-started-sandbox-parameters-mat for more information on providing multiple maps.
+
+\subsection getting-started-sandbox-parameters-fm --fm
+
+Set this parameter to control the output of the `fm` program and the input of the `fd` program.
+
+\b Example:
+
+\code{.ps1}
+# Runs edge detector on a RGB exemplar.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm" 
+    -ex="./samples/albedo.png" 
+    -fm="./samples/albedo_features.txr"
+\endcode
+
+\note The `.txr` extension is a custom extension, defined by the `Texturize.Codecs.EXR` codec. It produces an OpenEXR image file.
+
+\subsection getting-started-sandbox-parameters-fd --fd
+
+Set this parameter to control the output of the `fd` program or as input for the *feature distance guidance channel* of the `as` 
+program.
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd" 
+    -ex="./samples/albedo.png" 
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+\endcode
+
+\subsection getting-started-sandbox-parameters-ds --ds
+
+Set this parameter to control the output of the descriptor asset, produced by the `as` program, or the input of the `s` program.
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as" 
+    -ex="./samples/albedo.png" 
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+\endcode
+
+\note The `.txa` extension is used to create an HDF5 based file to store the `SearchSpace` to.
+
+\subsection getting-started-sandbox-parameters-em --em
+
+Defines the model for the edge detector (program `fm`).
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm" 
+    -ex="./samples/albedo.png" 
+    -fm="./samples/albedo_features.txr"
+    -em="../models/forest/modelFinal.yml"
+\endcode
+
+\note The framework comes with a pre-trained model, tranined by *Kaspar et al.* ([Link](http://w-x.ch/publications/self-tuning-texture-optimization/)).
+
+\subsection getting-started-sandbox-parameters-r --r
+
+Use this parameter to control the synthesis output of the `s` program. You can control, which maps to output, similar to the `--ex` parameter.
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as|s" -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="./samples/albedo.png" 
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -r="./samples/result.png"
+    
+# Only output albedo and normal.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as" -m=1 -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -ex="albedo:./samples/result_a.png;normal:./samples/result_n.png"
+\endcode
+
+See \ref getting-started-sandbox-parameters-mat for more information on providing multiple maps.
+
+\subsection getting-started-sandbox-parameters-uv --uv
+
+Similar to `r`, this controls the synthesis output of the `s` program. However, this defines only one image, that will contain
+a UV map. Applied to the exemplar maps, this UV map can be used to render the whole result.
+
+\b Example:
+
+\code{.ps1}
+# Only output UV map.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as|s" -m=1 -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+\endcode
+
+\subsection getting-started-sandbox-parameters-rsize --rw --rh
+
+Set this parameter to control the dimensions of the synthesis result. It is recommendet to set those to a *power-of-two* number.
+In case, this is set to a non-PoT number, the result may be cropped from a larger image, breaking tiling capabilities.
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as|s" -m=1
+    -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+\endcode
+
+\subsection getting-started-sandbox-parameters-dr --dr
+
+Displays the result of a program, after it has finished and waits for the user to continue.
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as|s" 
+    -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -dr=1
+\endcode
+
+\subsection getting-started-sandbox-parameters-mat --mat
+
+Set this parameter to **1** if there are multiple maps provided in \ref getting-started-sandbox-parameters-ex or \ref getting-started-sandbox-parameters-r .
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as|s"
+    -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -m=1
+\endcode
+
+\subsection getting-started-sandbox-parameters-w --w
+
+Specifies the weight for a set of exemplar maps. If no weight is specified for a map, **1.0** is assumed. The weight is used
+to multiply pixel-values per channel when calculating the search space.
+
+\b Example:
+
+\code{.ps1}
+# Albedo and normal maps are weighted with double importance.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as" -m=1
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -w="normal:2;albedo:2"
+\endcode
+
+\subsection getting-started-sandbox-parameters-rnd --rnd
+
+Set this to specify a constant jitter amplitudes over all synthesis pyramid levels. For more information, see 
+`Texturize::PyramidSynthesisSettings::_randomnessSelector`. 
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as|s" -m=1 -dw=2048 -r=2048
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -w="normal:2;albedo:2"
+    -rnd="0.5"
+\endcode
+
+\note This setting is overwritten by the \ref getting-started-sandbox-parameters-g and \ref getting-started-sandbox-parameters-j
+      settings.
+
+\subsection getting-started-sandbox-parameters-j --j
+
+Specifies jitter amplitudes for each synthesis pyramid level. For more information, see 
+`Texturize::PyramidSynthesisSettings::_randomnessSelector`. 
+
+\b Example:
+
+\code{.ps1}
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as|s" -m=1 -dw=2048 -r=2048
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -w="normal:2;albedo:2"
+    -j="0;0.1;0.2;0.3;0.4;0.5;0.6;0.7;0.8;0.9;1.0"
+\endcode
+
+\note This setting is overwritten by the \ref getting-started-sandbox-parameters-g setting.
+
+\subsection getting-started-sandbox-parameters-g --g
+
+Calculates a gaussian jitter distribution function, where the value of this setting equals the peak at **1.0**.
+
+\code{.ps1}
+# JDF peaks at pyramid level 3.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as|s" -m=1 -dw=2048 -r=2048
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -g=3
+\endcode
+
+\subsection getting-started-sandbox-parameters-gs --gs
+
+By default, the jitter distribution function assumes, that all feature scales should be disturbed. The amount of jitter depends
+on the levels between the peak (\ref getting-started-sandbox-parameters-g) and the current synthesis level and shrinks 
+exponentially with each level. Some textures, however, produce better results with symmetric jitter distributions, i.e. normal
+distributions. Whilst by default jitter equals **0.0** for the smallest and largest levels, the setting `gs` to `1` will 
+generate a symmetric distribution, where jitter amplitudes at those levels are not required to be zero.
+
+\code{.ps1}
+# Symmetric JDF peaks at pyramid level 3.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as|s" -m=1 -dw=2048 -r=2048
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -g=3 -gs=1
+\endcode
+
+\subsection getting-started-sandbox-parameters-dont-s --s
+
+Set the seed of all random number generators using this parameter.
+
+\subsection getting-started-sandbox-parameters-dont-d --d
+
+This parameter controls the search space dimensionality.
+
+\code{.ps1}
+# By default, RGB-only exemplars produce a 4d search space. This call produces a 8d space.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="as"
+    -ex="./samples/albedo.png"
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -d=8
+\endcode
+
+\subsection getting-started-sandbox-parameters-dont-wait --dontWait
+
+By setting this parameter to **1**, the sandbox will not wait for any user input after finishing. This can be used when called 
+from scripts.
+
+\b Example:
+
+\code{.ps1}
+# Only output albedo and normal.
+<FrameworkPath>/bin/Texturize.Sandbox.exe -proc="fm|fd|as|s" -m=1 -rw=2048 -rh=2048
+    -em="../models/forest/modelFinal.yml"
+    -ex="albedo:./samples/albedo.png;normal:./samples/normal.png;height:./samples/height.png"
+    -fm="./samples/albedo_features.txr" 
+    -fd="./samples/albedo_guidance.txr" 
+    -ds="./samples/albedo.txa"
+    -uv="./samples/result_uv.png"
+    -dontWait=1
+\endcode
+**/
+}

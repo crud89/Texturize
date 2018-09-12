@@ -1,0 +1,8 @@
+
+namespace Texturize {
+/** \page tutorial-search-space Creating a search space
+\brief The example demonstrates how to implement a custom search space, that builds simple neighborhood descriptors from pixel color values.
+
+\include ColorSearchSpace.cpp
+*/
+}

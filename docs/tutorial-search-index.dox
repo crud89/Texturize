@@ -1,0 +1,24 @@
+
+namespace Texturize {
+/** \page tutorial-search-index Implementing a search index
+
+This example demonstrates how to implement a search index. The implementation matches pixel neighborhoods by calculating the 
+euclidean distance between pixel neighborhood descriptors. This basically resembles the naive sampling algorithm, described by
+Efros and Leung. It is simple to implement, but comes with a certain runtime cost. The `init` method, thus indexes pixel 
+neighborhoods by using dimensionality reduction to minimize the number of descriptor components. The 
+`Texturize::DescriptorExtractor` base class uses Principal Component Analysis (PCA) for this. Other approaches could use Local 
+Linear Embedding (LLE) or Isomaps. Note that this dimensionality reduction was not done in naive sampling.
+
+The search index is also responsible for matching pixel neighborhoods during runtime. In this example, each pixel neighborhood
+of the exemplar is compared against the requested descriptor. This corresponds to an overall cost of 
+\f$ \mathcal{O} (n \times m) \f$, which is not ideal. More satisfied approaches may use quantized search trees or coherencies.
+The `Texturize::CoherentIndex` uses a pre-calculated set of coherent pixel candidates, from which a random selection is chosen.
+
+\see Alexei A. Efros and Thomas K. Leung. "Texture Synthesis by Non Parametric Sampling." In: Proceedings of the International Conference on Computer Vision - Volume 2. ICCV '99. Washington, DC, USA: IEEE Computer Society, 1999. isbn: 0-7695-0164-8. url: http://dl.acm.org/citation.cfm?id=850924.851569.
+\see Li-Yi Wei and Marc Levoy. "Fast Texture Synthesis Using Tree-structured Vector Quantization." In: Proceedings of the 27th Annual Conference on Computer Graphics and Interactive Techniques. SIGGRAPH '00. New York, NY, USA: ACM Press/Addison-Wesley Publishing Co., 2000, pp. 479-488. isbn: 1-58113-208-5. doi: 10.1145/344779.345009. url: http://dx.doi.org/10.1145/344779.345009. 
+\see Michael Ashikhmin. "Synthesizing Natural Textures." In: Proceedings of the 2001 Symposium on Interactive 3D Graphics. I3D '01. New York, NY, USA: ACM, 2001, pp. 217-226. isbn: 1-58113-292-1. doi: 10.1145/364338.364405. url: http://doi.acm.org/10.1145/364338.364405. 
+\see Xin Tong et al. "Synthesis of Bidirectional Texture Functionson Arbitrary Surfaces." In: ACM Trans. Graph. 21.3 (July 2002), pp. 665-672. issn: 07300301. doi: 10.1145/566654.566634. url: http://doi.acm.org/10.1145/566654.566634. 
+
+\include TrivialSearchIndex.cpp
+*/
+}

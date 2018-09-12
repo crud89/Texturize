@@ -1,0 +1,11 @@
+
+namespace Texturize {
+/** \page tutorial Tutorials
+\brief The following tutorials help you to understand how to customize different modules of the *Texturize* workflow.
+
+- \ref tutorial-filter
+- \ref tutorial-search-space
+- \ref tutorial-search-index
+- \ref tutorial-synthesizer
+*/
+}
