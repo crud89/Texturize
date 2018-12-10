@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(PROJECT_NAME Texturize.Analysis)
 project(${PROJECT_NAME})
 set(CONFIG_NAME ${PROJECT_NAME}Config)
