@@ -1,10 +1,12 @@
 #include "stdafx.h"
 
 #include <codecs.hpp>
+#include <filestorage.hpp>
+
 #include <opencv2\opencv.hpp>
-#include <ipersistence.hpp>
 
 using namespace Texturize;
+using namespace Texturize::Persistence;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// OpenCV File Storage (XML, YAML, JSON) implementation                                    /////

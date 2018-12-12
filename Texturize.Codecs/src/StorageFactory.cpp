@@ -20,9 +20,9 @@ void StorageFactory::createStorage(const std::string& fileName, IFileStorage** s
 	{
 		// Also take into account the provided file mode.
 		if (mode & FSM_READ)
-			s = std::make_unique<Hdf5FileStorage>(fileName, cv2::FileStorage::READ | cv2::FileStorage::FORMAT_H5, encoding);
+			s = std::make_unique<Hdf5FileStorage>(fileName, FileStorage::READ | FileStorage::FORMAT_H5, encoding);
 		else if (mode & FSM_WRITE)
-			s = std::make_unique<Hdf5FileStorage>(fileName, cv2::FileStorage::WRITE | cv2::FileStorage::FORMAT_H5, encoding);
+			s = std::make_unique<Hdf5FileStorage>(fileName, FileStorage::WRITE | FileStorage::FORMAT_H5, encoding);
 		else
 			TEXTURIZE_ERROR(TEXTURIZE_ERROR_IO, "Unsupported file storage mode provided. Only read or write are allowed.");
 	}

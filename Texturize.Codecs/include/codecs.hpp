@@ -2,8 +2,7 @@
 
 #include <texturize.hpp>
 #include <analysis.hpp>
-
-#include <ipersistence.hpp>
+#include <filestorage.hpp>
 
 #include <string>
 #include <iostream>
@@ -11,6 +10,7 @@
 #include <typeindex>
 
 namespace Texturize {
+	using namespace Persistence;
 
 	/// \defgroup codecs Persistence codecs
 	/// Contains types that implement codecs for images and assets.
@@ -123,16 +123,16 @@ namespace Texturize {
 	///
 	/// \see Texturize::IFileStorage
 	class TEXTURIZE_API Hdf5FileStorage :
-		public FileStorageWrapper<cv2::FileStorage>
+		public FileStorageWrapper<Texturize::Persistence::FileStorage>
 	{
 	public:
 		Hdf5FileStorage() :
-			FileStorageWrapper<cv2::FileStorage>()
+			FileStorageWrapper<Texturize::Persistence::FileStorage>()
 		{
 		}
 
 		Hdf5FileStorage(const std::string &fileName, int flags, const std::string &encoding = std::string()) :
-			FileStorageWrapper<cv2::FileStorage>(fileName, flags, encoding)
+			FileStorageWrapper<Texturize::Persistence::FileStorage>(fileName, flags, encoding)
 		{
 		}
 	};
