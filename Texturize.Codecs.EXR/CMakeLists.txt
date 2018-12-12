@@ -83,24 +83,24 @@ list(APPEND OpenEXR_DLLS
 
 )
 
-#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#        "${OPENEXR_LOCATION}/../OpenEXR/IlmImf/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll"
-#        "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${OPENEXR_LOCATION}/../OpenEXR/IlmImf/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll"
+        "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll")
 
-#foreach(OpenEXR_DLL
-#  Half-2_3.dll
-#  Iex-2_3.dll
-#  IexMath-2_3.dll
-#  IlmImfUtil-2_3.dll
-#  IlmThread-2_3.dll
-#  Imath-2_3.dll
-#)
-#  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#          "${OPENEXR_LOCATION}/bin/${OpenEXR_DLL}"
-#          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${OpenEXR_DLL}")
-#endforeach(OpenEXR_DLL)
+foreach(OpenEXR_DLL
+  Half-2_3.dll
+  Iex-2_3.dll
+  IexMath-2_3.dll
+  IlmImfUtil-2_3.dll
+  IlmThread-2_3.dll
+  Imath-2_3.dll
+)
+  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${OPENEXR_LOCATION}/bin/${OpenEXR_DLL}"
+          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${OpenEXR_DLL}")
+endforeach(OpenEXR_DLL)
 
 target_link_libraries(${PROJECT_NAME} Texturize.Codecs ${OpenCV_LIBS} ${OPENEXR_LIBRARIES})
 
