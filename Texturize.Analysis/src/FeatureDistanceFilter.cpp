@@ -15,11 +15,11 @@ void FeatureDistanceFilter::apply(Sample& result, const Sample& sample) const
 	cv::Mat n(s.size(), CV_8UC1);
 
 	s.convertTo(s, CV_8UC1);
-	cv::threshold(s, n, 0, 255, CV_THRESH_BINARY_INV);
+	cv::threshold(s, n, 0, 255, cv::THRESH_BINARY_INV);
 
 	cv::Mat dist, distNeg;
-	cv::distanceTransform(s, dist, CV_DIST_L2, 5);
-	cv::distanceTransform(n, distNeg, CV_DIST_L2, 5);
+	cv::distanceTransform(s, dist, cv::DIST_L2, 5);
+	cv::distanceTransform(n, distNeg, cv::DIST_L2, 5);
 	
 	cv::Mat rn = distNeg - dist;
 	cv::normalize(rn, s, 255, 0, cv::NORM_MINMAX);
