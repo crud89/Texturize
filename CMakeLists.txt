@@ -4,7 +4,12 @@ project(Texturize)
 set (Texturize_VERSION_MAJOR 1)
 set (Texturize_VERSION_MINOR 0)
 
-set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install")
+if (NOT DEFINED CMAKE_INSTALL_PREFIX)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
+endif()
+
+message("Installing to ${CMAKE_INSTALL_PREFIX}")
+
 set(CMAKE_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/bin/")
@@ -44,12 +49,6 @@ else()
     set(HDF5_ROOT "${CMAKE_MODULE_PATH}/hdf5/cmake")
     message("No hdf5 directory provided, defaulting to '${HDF5_ROOT}'...")
 endif()
-
-if (NOT DEFINED CMAKE_INSTALL_PREFIX)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
-endif()
-
-message("Installing to ${CMAKE_INSTALL_PREFIX}")
 
 add_subdirectory(Texturize.Core)
 add_subdirectory(Texturize.Codecs)

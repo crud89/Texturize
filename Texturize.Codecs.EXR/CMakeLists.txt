@@ -72,21 +72,16 @@ file(GLOB SRC_FILES
     ${INCLUDE_DIR}/*.hpp
     ${PROJECT_DIR}/*.h
     ${PROJECT_DIR}/*.cpp
-    ${CMAKE_MODULE_PATH}/cvBinaryStorage/ipersistence.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
    ${SRC_FILES}
 )
 
-list(APPEND OpenEXR_DLLS
-
-)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${OPENEXR_LOCATION}/../OpenEXR/IlmImf/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll"
-        "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll")
+#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#        "${OPENEXR_LOCATION}/bin/IlmImf-2_3.dll"
+#        "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll")
 
 foreach(OpenEXR_DLL
   Half-2_3.dll
@@ -121,6 +116,5 @@ install(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
 set(TXTRZ_CODECS_EXR_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include 
                                   ${TXTRZ_CODECS_INCLUDE_DIRS}
                                   ${OPENEXR_INCLUDE_DIRS}
-                                  ${CMAKE_MODULE_PATH}/cvBinaryStorage/
   CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
 )

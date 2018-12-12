@@ -13,7 +13,7 @@ Param(
 # Build up a command to invoke.
 $invoke = "cmake CMakeLists.txt "
 
-if (![string]::IsNullOrEmpty($buildTo)) {
+if (![String]::IsNullOrEmpty($buildTo)) {
     $invoke += "-B`"$($buildTo)`" "
 }
 
