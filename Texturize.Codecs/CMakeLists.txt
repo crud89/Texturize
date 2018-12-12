@@ -81,7 +81,6 @@ include_directories(
   include
   ${TXTRZ_ANALYSIS_INCLUDE_DIRS}
   ${HDF5_INCLUDE_DIRS}
-  ${CMAKE_MODULE_PATH}/cvBinaryStorage/
 )
 
 file(GLOB SRC_FILES
@@ -89,7 +88,6 @@ file(GLOB SRC_FILES
     ${INCLUDE_DIR}/*.hpp
     ${PROJECT_DIR}/*.h
     ${PROJECT_DIR}/*.cpp
-    ${CMAKE_MODULE_PATH}/cvBinaryStorage/ipersistence.cpp
 )
 
 add_definitions(-DH5_BUILT_AS_DYNAMIC_LIB -D_HDF5USEDLL_)
@@ -124,7 +122,6 @@ install(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
 set(TXTRZ_CODECS_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include 
                               ${TXTRZ_ANALYSIS_INCLUDE_DIRS}
                               ${HDF5_INCLUDE_DIRS}
-                              ${CMAKE_MODULE_PATH}/cvBinaryStorage/
   CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
 )
 

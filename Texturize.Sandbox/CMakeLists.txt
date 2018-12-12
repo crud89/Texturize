@@ -63,7 +63,6 @@ file(GLOB SRC_FILES
     ${INCLUDE_DIR}/*.hpp
     ${PROJECT_DIR}/*.h
     ${PROJECT_DIR}/*.cpp
-    ${CMAKE_MODULE_PATH}/cvBinaryStorage/ipersistence.cpp
 )
 
 add_definitions(-D_USE_MATH_DEFINES)

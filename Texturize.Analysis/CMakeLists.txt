@@ -115,7 +115,7 @@ add_library(${PROJECT_NAME} SHARED
 foreach(OpenCV_DLL ${OpenCV_DLLS})
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${OpenCV_DIR}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}"
+          "${OpenCV_DIR}/${OpenCV_ARCH}/${OpenCV_RUNTIME}/bin/${OpenCV_DLL}"
           "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}")
 endforeach()
 
