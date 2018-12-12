@@ -63,7 +63,7 @@ add_library(${PROJECT_NAME} SHARED
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include>
+    ${PROJECT_DIR}/include
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 
