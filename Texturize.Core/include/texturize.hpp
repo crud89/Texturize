@@ -56,3 +56,19 @@ typedef unsigned char			TX_BYTE;
 typedef unsigned short			TX_WORD;
 typedef unsigned long			TX_DWORD;
 typedef unsigned long long		TX_QWORD;
+
+#ifndef BYTE
+#define BYTE TX_BYTE
+#endif
+
+#ifndef WORD
+#define WORD TX_WORD
+#endif
+
+#ifndef DWORD
+#define DWORD TX_DWORD
+#endif
+
+#ifndef QWORD
+#define QWORD TX_QWORD
+#endif
