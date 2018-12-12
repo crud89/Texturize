@@ -72,7 +72,7 @@ add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME} Texturize.Analysis ${OpenCV_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include>
+    ${PROJECT_DIR}/include
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 

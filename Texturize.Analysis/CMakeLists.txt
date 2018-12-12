@@ -112,26 +112,26 @@ add_library(${PROJECT_NAME} SHARED
    ${SRC_FILES}
 )
 
-foreach(OpenCV_DLL ${OpenCV_DLLS})
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${OpenCV_DIR}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}"
-          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}")
-endforeach()
+#foreach(OpenCV_DLL ${OpenCV_DLLS})
+#  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#          "${OpenCV_DIR}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}"
+#          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}")
+#endforeach()
 
-foreach(TBB_DLL ${TBB_DLLS})
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${TBB_DLL}"
-          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/")
-endforeach()
+#foreach(TBB_DLL ${TBB_DLLS})
+#  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#          "${TBB_DLL}"
+#          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/")
+#endforeach()
 
 target_link_libraries(${PROJECT_NAME} Texturize.Core 
     ${OpenCV_LIBS} 
     ${TBB_IMPORTED_TARGETS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include>
+    ${PROJECT_DIR}/include
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 

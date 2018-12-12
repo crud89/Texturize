@@ -98,17 +98,17 @@ add_library(${PROJECT_NAME} SHARED
    ${SRC_FILES}
 )
 
-foreach(HDF5_DLL ${HDF5_DLLS})
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${HDF5_ROOT}/../bin/${HDF5_DLL}"
-          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${HDF5_DLL}")
-endforeach()
+#foreach(HDF5_DLL ${HDF5_DLLS})
+#  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#          "${HDF5_ROOT}/../bin/${HDF5_DLL}"
+#          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${HDF5_DLL}")
+#endforeach()
 
 target_link_libraries(${PROJECT_NAME} Texturize.Analysis ${LINK_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include>
+    ${PROJECT_DIR}/include
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 

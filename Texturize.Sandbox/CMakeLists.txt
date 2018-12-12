@@ -73,7 +73,7 @@ add_executable(${PROJECT_NAME} Texturize.Sandbox.cpp ${SRC_FILES})
 target_link_libraries(${PROJECT_NAME} Texturize.Sampling Texturize.Codecs Texturize.Codecs.EXR ${OpenCV_LIBS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include>
+    ${PROJECT_DIR}/include
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 
