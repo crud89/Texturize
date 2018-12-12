@@ -1,6 +1,7 @@
 # Script parameters.
 Param(
-    [String]$installTo,
+    [String]$installTo = "install/",        # Relative path (CMAKE_INSTALL_PREFIX)
+    [String]$buildTo = "",                  # Relative path to source directory
     [String]$OpenCV,
     [String]$OpenEXR,
     [String]$TBB,
@@ -9,9 +10,14 @@ Param(
     [String]$config = "Release"
 )
 
-
 # Build up a command to invoke.
-$invoke = "cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=`"$($config)`" "
+$invoke = "cmake CMakeLists.txt "
+
+if (![string]::IsNullOrEmpty($buildTo)) {
+    $invoke += "-B`"$($buildTo)`" "
+}
+
+$invoke += "-DCMAKE_BUILD_TYPE=`"$($config)`" "
 
 if ($x64) {
     $invoke += "-G `"Visual Studio 15 2017 Win64`" "
