@@ -14,16 +14,13 @@ the latest build, the project has been successfully tested with. Higher versions
 
 | SDK/Framework |     Project URL     | Version | Source URL  |
 |---------------|-------------------|:-------:|:---:|
-| OpenCV        | https://opencv.org/ | 3.4.3   | [Link](https://github.com/opencv/opencv/tree/3.3.1) |
+| OpenCV        | https://opencv.org/ | 4.0   | [Link](https://github.com/opencv/opencv/tree/4.0.0) |
 | HDF5          | https://www.hdfgroup.org/ | 1.10.1 | [Link](https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/) |
 | TBB           | https://www.threadingbuildingblocks.org/ | 20170919 | [Link](https://github.com/01org/tbb/releases/tag/2018_U1) |
 | OpenEXR       | http://www.openexr.com/ | 2.3.0 | [Link](https://github.com/openexr/openexr) |
 
 
 \note **Custom OpenCV builds**
-
-\note The project does not compile with current pre-releases of OpenCV 4.0. Future releases probably break compatibility, so the new
-      framework must be ported. Currently only OpenCV 3.X is properly supported.
       
 \note By default, the framework is linked against the following OpenCV modules: `core`, `imgproc`, `ximgproc`, `imgcodecs`, `highgui`, 
       `features2d`, `calib3d` and `flann`. Do not forget to include them in your build as well! The other dependencies are build with 
@@ -44,17 +41,24 @@ There is a `cmake.ps1` script inside the root of the repository. You can run it 
 default `modules\` directory. The skript can be called as follows:
 
 \code{.ps1}
-.\cmake.ps1 -x64:$true -config "Release" 
+.\cmake.ps1 -x64:$true -config "Release"
+            -buildTo "../x64/"
+            -installTo "install/"
             -OpenCV "<PathToOpenCVBuildDir>" 
             -TBB "<PathToTbbBuildDir>\cmake" 
             -OpenEXR "<PathToOpenExrBuildDir>" 
             -HDF5 "<PathToHdf5BuildDir>"
 \endcode
 
+You can create x86 builds by settings the `-x64` switch to false. In case you omit target configuration, `Release` is assumed by 
+default. Note that in-source builds are not allowed, i.e. the `buildTo` directory needs to be different from your source directory.
+This also includes sub-directories created within the source directory. Use the `installTo` parameter to either specify an absolute
+path to drop the artifacts after build, or a relative path to the build directory.
+
 \section getting-started-building Building the solution
 
 After the skript has finished, open the `Texturize.sln` file and try building the `ALL_BUILD` and `INSTALL` projects. The binaries
-are available from the `install\` directory.
+are available from the `install\` directory, or the directory specified earlier during the build.
 
 **/
 }
