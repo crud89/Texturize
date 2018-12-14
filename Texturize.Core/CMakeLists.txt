@@ -1,21 +1,28 @@
+###################################################################################################
+#####                                                                                         #####
+##### Core library, defining common types, like exports, exceptions and so on.                #####
+#####                                                                                         #####
+###################################################################################################
+
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-set(PROJECT_NAME Texturize.Core)
-project(${PROJECT_NAME})
-set(CONFIG_NAME ${PROJECT_NAME}Config)
-
-# Folders files
-set(INCLUDE_DIR include)
-set(SOURCES_DIR src)
-set(PROJECT_DIR )
-
+SET(PROJECT_NAME Texturize.Core)
 project(${PROJECT_NAME} CXX)
+SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release")
-  message(STATUS "Build type not specified: Use Release by default.")
-endif(NOT CMAKE_BUILD_TYPE)
+MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Setting up project: ${PROJECT_NAME}...")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+# Specify source folders, relative to the project sources directory.
+SET(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
+SET(SOURCES_DIR "${PROJECT_SOURCE_DIR}/src")
+
+MESSAGE(STATUS "  Include directory:    ${INCLUDE_DIR}")
+MESSAGE(STATUS "  Source directory:     ${SOURCES_DIR}")
+MESSAGE(STATUS "")
+
+# Build type specific preprocessor definitions.
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(
    -DTEXTURIZE_EXPORTS 
    -D_DEBUG 
@@ -25,7 +32,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
    -DUNICODE
    -D_UNICODE
   )
-else()
+ELSE()
   add_definitions(
    -DTEXTURIZE_EXPORTS
    -D_WINDOWS 
@@ -34,48 +41,42 @@ else()
    -DUNICODE
    -D_UNICODE
   )
-endif()
+ENDIF()
 
-if(MSVC)
-   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W3 /MD /Od /EHsc")
-   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /GL /Od /Oi /Gy /EHsc")
-endif(MSVC)
+# Set header directory.
+include_directories(INCLUDE_DIR)
 
-if(NOT MSVC)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-   endif()
-endif(NOT MSVC)
-
-include_directories(include)
-
+# Lookup source files.
 file(GLOB SRC_FILES
     ${SOURCES_DIR}/*.cpp
     ${INCLUDE_DIR}/*.hpp
     ${INCLUDE_DIR}/errors.mc
-    ${PROJECT_DIR}/*.h
-    ${PROJECT_DIR}/*.cpp
+    ${PROJECT_SOURCE_DIR}/*.h
+    ${PROJECT_SOURCE_DIR}/*.cpp
 )
 
+# Make the project a shared library.
 add_library(${PROJECT_NAME} SHARED
    ${SRC_FILES}
 )
 
+# Setup target includes.
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include
+    ${INCLUDE_DIR}
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 
+# Install artifacts.
 install(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
     ARCHIVE  DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
     LIBRARY  DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
     RUNTIME  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
-    
+
+# Install headers
 install(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
+# Export configuration.
 export(TARGETS ${PROJECT_NAME} FILE "${CONFIG_NAME}.cmake")
 
-set(TXTRZ_CORE_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include 
-  CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
-)
+# Store the include directories.
+SET(TXTRZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} CACHE INTERNAL "${PROJECT_NAME}: Include directory" FORCE)

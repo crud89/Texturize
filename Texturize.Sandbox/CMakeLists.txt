@@ -1,20 +1,27 @@
+###################################################################################################
+#####                                                                                         #####
+##### Sandbox application to play around with the framework.                                  #####
+#####                                                                                         #####
+###################################################################################################
+
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(PROJECT_NAME Texturize.Sandbox)
-project(${PROJECT_NAME})
+project(${PROJECT_NAME} CXX)
 set(CONFIG_NAME ${PROJECT_NAME}Config)
 
-# Folders files
-set(INCLUDE_DIR include)
-set(SOURCES_DIR src)
-set(PROJECT_DIR )
+MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Setting up project: ${PROJECT_NAME}...")
 
-project(${PROJECT_NAME} CXX)
+# Specify source folders, relative to the project sources directory.
+SET(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
+SET(SOURCES_DIR "${PROJECT_SOURCE_DIR}/src")
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release")
-  message(STATUS "Build type not specified: Use Release by default.")
-endif(NOT CMAKE_BUILD_TYPE)
+MESSAGE(STATUS "  Include directory:    ${INCLUDE_DIR}")
+MESSAGE(STATUS "  Source directory:     ${SOURCES_DIR}")
+MESSAGE(STATUS "")
 
+# Build type specific preprocessor definitions.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(
     -DTEXTURIZE_EXPORTS 
@@ -36,23 +43,14 @@ else()
   )
 endif()
 
-if(MSVC)
-   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W3 /MD /Od /EHsc")
-   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /GL /Od /Oi /Gy /EHsc")
-endif(MSVC)
-
-if(NOT MSVC)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-   endif()
-endif(NOT MSVC)
+add_definitions(-D_USE_MATH_DEFINES)
 
 # Finding packages from <ModuleName>_ROOT variables first.
 cmake_policy(SET CMP0074 NEW)
 
+# Set header directories.
 include_directories(
-  include
+  ${INCLUDE_DIR}
   ${TXTRZ_SAMPLING_INCLUDE_DIRS}
   ${TXTRZ_CODECS_INCLUDE_DIRS}
   ${TXTRZ_CODECS_EXR_INCLUDE_DIRS}
@@ -65,26 +63,29 @@ file(GLOB SRC_FILES
     ${PROJECT_DIR}/*.cpp
 )
 
-add_definitions(-D_USE_MATH_DEFINES)
-
+# Make the project an executable.
 add_executable(${PROJECT_NAME} Texturize.Sandbox.cpp ${SRC_FILES})
 
+# Setup target dependencies.
 target_link_libraries(${PROJECT_NAME} Texturize.Sampling Texturize.Codecs Texturize.Codecs.EXR ${OpenCV_LIBS})
 
+# Setup target includes.
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_DIR}/include
+    ${INCLUDE_DIR}
     $<INSTALL_INTERFACE:include>
     PRIVATE ${SOURCES_DIR})
 
+# Install artifacts.
 install(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
     ARCHIVE  DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
     LIBRARY  DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
     RUNTIME  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
 
+# Install ressources.
 install(
     CODE "file( GLOB MODEL_FILES \"${CMAKE_SOURCE_DIR}/models\" )"
     CODE "file( INSTALL \${MODEL_FILES} DESTINATION \"${CMAKE_INSTALL_PREFIX}\" )"
     CODE "file( INSTALL \"${CMAKE_SOURCE_DIR}/Texturize.props\" DESTINATION \"${CMAKE_INSTALL_PREFIX}\" )"
 )
-
+# Export configuration.
 export(TARGETS ${PROJECT_NAME} FILE ${CONFIG_NAME}.cmake)
