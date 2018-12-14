@@ -60,7 +60,38 @@
         <h1>
           Getting started
         </h1>
-<p>The following guide will show you how to setup and use the framework to build a simple synthesizer using the provided implementations. The guide shows you how to implement a search space and use it to feed a synthesizer. It will familiarize you with the general workflow of the framework.</p><p>The guide assumes you are familiar with Visual Studio and basic C++ programming. The framework has been built using Visual Studio 2017, so it is recommended to use it too.</p><section id="getting-started-setup"><h2><a href="#getting-started-setup">Setting up your project</a></h2><p>Before you start writing actual code, you need to setup your project. If you haven&#x27;t done it yet, create a new project for your application. Next, you have to tell the compiler where to find the <em><a href="namespace_texturize.html" class="m-dox">Texturize</a></em> library. Therefor, add the <code>include</code> and and <code>lib</code> directories to your project directories. You can do this by right-clicking it in Visual Studio and choosing <code>Properties</code>. Under <code>VC++ Directories</code> add the <code>include</code> directory to the additional include directories and the <code>lib</code> directory to the additional library directories. Next, go to <code>Linker</code> and <code>Input</code> and add the following libraries to additional dependencies.</p><pre class="m-code"><span class="n">Texturize</span><span class="p">.</span><span class="n">Sampling</span><span class="p">.</span><span class="n">lib</span><span class="p">;</span><span class="n">Texturize</span><span class="p">.</span><span class="n">Analysis</span><span class="p">.</span><span class="n">lib</span><span class="p">;</span><span class="n">Texturize</span><span class="p">.</span><span class="n">Core</span><span class="p">.</span><span class="n">lib</span><span class="p">;</span><span class="n">Texturize</span><span class="p">.</span><span class="n">Codecs</span><span class="p">.</span><span class="n">lib</span><span class="p">;</span><span class="n">Texturize</span><span class="p">.</span><span class="n">Codecs</span><span class="p">.</span><span class="n">EXR</span><span class="p">.</span><span class="n">lib</span><span class="p">;</span><span class="o">%</span><span class="p">(</span><span class="n">AdditionalDependencies</span><span class="p">)</span></pre><p>Last but not least, we need to make sure that the framework binaries are copied to your application directory after a build. For this you can add the following post-build event:</p><pre class="m-code"><span class="n">xcopy</span> <span class="o">/</span><span class="n">y</span> <span class="o">/</span><span class="n">d</span>  <span class="s">&quot;&lt;framework directory&gt;\lib\$(PlatformTarget)\$(Configuration)\*.dll&quot;</span> <span class="s">&quot;$(OutDir)&quot;</span></pre><section id="getting-started-setup-manual"><h3><a href="#getting-started-setup-manual">Using a property sheet</a></h3><p>Alternatively to the manual approach above you add the property sheet <code>Texturize.props</code> from the framework directory to your project properties. To do this, open the Property Manager in Visual Studio and right click your project and choose &quot;Add existing
+        <p>The following guide will show you how to setup and use the framework to build a simple synthesizer using the provided implementations. The guide shows you how to implement a search space and use it to feed a synthesizer. It will familiarize you with the general workflow of the framework.</p>
+        <div class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              <a href="#getting-started-setup">Setting up your project</a>
+              <ul>
+                <li><a href="#getting-started-setup-manual">Using a property sheet</a></li>
+                <li><a href="#getting-started-setup-opencv">Using OpenCV and other dependencies</a></li>
+
+              </ul>
+            </li>
+            <li>
+              <a href="#getting-started-workflow">Implementing synthesis workflow</a>
+              <ul>
+                <li>
+                  <a href="#getting-started-workflow-analysis">Analysing exemplars</a>
+                  <ul>
+                    <li><a href="#getting-started-workflow-analysis-search-space">Creating a search space</a></li>
+                    <li><a href="#getting-started-workflow-analysis-persistence">Storing analysis results</a></li>
+
+                  </ul>
+                </li>
+                <li><a href="#getting-started-workflow-search-index">Indexing pixel neighborhoods</a></li>
+                <li><a href="#getting-started-workflow-synthesizer">Synthesizing textures</a></li>
+
+              </ul>
+            </li>
+            <li><a href="#getting-started-next">Next steps</a></li>
+          </ul>
+        </div>
+<p>The guide assumes you are familiar with Visual Studio and basic C++ programming. The framework has been built using Visual Studio 2017, so it is recommended to use it too.</p><section id="getting-started-setup"><h2><a href="#getting-started-setup">Setting up your project</a></h2><p>Before you start writing actual code, you need to setup your project. If you haven&#x27;t done it yet, create a new project for your application. Next, you have to tell the compiler where to find the <em><a href="namespace_texturize.html" class="m-dox">Texturize</a></em> library. Therefor, add the <code>include</code> and and <code>lib</code> directories to your project directories. You can do this by right-clicking it in Visual Studio and choosing <code>Properties</code>. Under <code>VC++ Directories</code> add the <code>include</code> directory to the additional include directories and the <code>lib</code> directory to the additional library directories. Next, go to <code>Linker</code> and <code>Input</code> and add the following libraries to additional dependencies.</p><pre class="m-code">Texturize.Sampling.lib;Texturize.Analysis.lib;Texturize.Core.lib;Texturize.Codecs.lib;Texturize.Codecs.EXR.lib;%(AdditionalDependencies)</pre><p>Last but not least, we need to make sure that the framework binaries are copied to your application directory after a build. For this you can add the following post-build event:</p><pre class="m-code">xcopy /y /d  <span class="s2">&quot;&lt;framework directory&gt;\lib\$(PlatformTarget)\$(Configuration)\*.dll&quot;</span> <span class="s2">&quot;$(OutDir)&quot;</span></pre><section id="getting-started-setup-manual"><h3><a href="#getting-started-setup-manual">Using a property sheet</a></h3><p>Alternatively to the manual approach above you add the property sheet <code>Texturize.props</code> from the framework directory to your project properties. To do this, open the Property Manager in Visual Studio and right click your project and choose &quot;Add existing
 property sheet...&quot;. Select the <code>Texturize.props</code> file and you should be ready to go.</p></section><section id="getting-started-setup-opencv"><h3><a href="#getting-started-setup-opencv">Using OpenCV and other dependencies</a></h3><aside class="m-note m-info"><h4>Note</h4><p>You do not require OpenCV for this guide, but you might need it later. You can skip this section now and come back later, when you require other libraries, if you want so.</p></aside><p>The framework is build upon <a href="https://opencv.org/">OpenCV</a>. If you want to use its types, you have to also include the libraries of OpenCV. This is not done within the property sheet, but instead you can add the following code to the <code>stdafx.cpp</code> file of your project:</p><pre class="m-code"><span class="cp">#ifdef _DEBUG</span>
 <span class="cp">#pragma comment(lib, &quot;opencv_core343d.lib&quot;)</span>
 <span class="cp">#pragma comment(lib, &quot;opencv_imgproc343d.lib&quot;)</span>
@@ -94,7 +125,7 @@ property sheet...&quot;. Select the <code>Texturize.props</code> file and you sh
 <span class="k">int</span> <span class="nf">main</span><span class="p">(</span><span class="k">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="k">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// Get command line arguments.</span>
-    <span class="n">std</span><span class="o">::</span><span class="kt">string</span> <span class="n">exemplarName</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">exemplarName</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
 
     <span class="c1">// Load the sample.</span>
     <span class="kt">Sample</span> <span class="n">exemplar</span><span class="p">;</span>
@@ -103,7 +134,7 @@ property sheet...&quot;. Select the <code>Texturize.props</code> file and you sh
     <span class="c1">// Make sure it has three channels (RGB).</span>
     <span class="n">TEXTURIZE_ASSERT</span><span class="p">(</span><span class="n">exemplar</span><span class="p">.</span><span class="n">channels</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
 <span class="p">}</span></pre><p>Next we can create an edge detector and apply it to our sample.</p><pre class="m-code"><span class="c1">// Get the model name from the second command line argument.</span>
-<span class="n">std</span><span class="o">::</span><span class="kt">string</span> <span class="n">edgeDetectorModel</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">edgeDetectorModel</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
 <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span><span class="n">EdgeDetector</span><span class="o">&gt;</span> <span class="n">detector</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">StructuredEdgeDetector</span><span class="o">&gt;</span><span class="p">(</span><span class="n">edgeDetectorModel</span><span class="p">);</span>
 
 <span class="c1">// Extract the edges.</span>
@@ -118,8 +149,8 @@ property sheet...&quot;. Select the <code>Texturize.props</code> file and you sh
 <span class="c1">// Transform the exemplar into the search space.</span>
 <span class="kt">Sample</span> <span class="n">transformedExemplar</span><span class="p">;</span>
 <span class="n">descriptors</span><span class="o">-&gt;</span><span class="n">sample</span><span class="p">(</span><span class="n">transformedExemplar</span><span class="p">);</span></pre></section><section id="getting-started-workflow-analysis-persistence"><h4><a href="#getting-started-workflow-analysis-persistence">Storing analysis results</a></h4><p>The search space is what can be stored into an <em>asset</em> in order to re-use it multiple times later on. Since assets can have more pixel descriptors with more than four channels, there is a special asset format implemented to persist them. To use it, a <code><a href="class_texturize_1_1_storage_factory.html" class="m-dox">StorageFactory</a></code> must be created. This factory can be used to implement different asset formats, but for now the default implementation is used. It&#x27;s based on the <em>hdf5</em> standard and stores meta-information about the search space along the transformed exemplar.</p><pre class="m-code"><span class="c1">// Create an asset and store it.</span>
-<span class="kt">StorageFactory</span> <span class="n">_storage</span><span class="p">;</span>
-<span class="kt">AppearanceSpaceAsset</span> <span class="n">asset</span><span class="p">;</span>
+<span class="n">StorageFactory</span> <span class="n">_storage</span><span class="p">;</span>
+<span class="n">AppearanceSpaceAsset</span> <span class="n">asset</span><span class="p">;</span>
 
 <span class="n">asset</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;myasset.txa&quot;</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">_storage</span><span class="p">);</span></pre></section></section><section id="getting-started-workflow-search-index"><h3><a href="#getting-started-workflow-search-index">Indexing pixel neighborhoods</a></h3><p>The synthesis code can basically be put in a different application, so you have an image analysis application and can write multiple synthesizer programms with different implementations. The first thing to do for a synthesizer is to load and index the search space. An <code><a href="class_texturize_1_1_search_index.html" class="m-dox">SearchIndex</a></code> is used for neighborhood matching. Runtime neighborhoods are provided to it in order to search for best matches inside the exemplar.</p><p>The following code snippet implements a search index, that uses pixel coherencies to reduce neighborhood search performance. You can find more about its inner workings in the <code><a href="class_texturize_1_1_random_walk_index.html" class="m-dox">RandomWalkIndex</a></code> documentation.</p><pre class="m-code"><span class="cp">#include</span> <span class="cpf">&quot;stdafx.h&quot;</span><span class="cp"></span>
 
@@ -132,12 +163,12 @@ property sheet...&quot;. Select the <code>Texturize.props</code> file and you sh
 <span class="k">using</span> <span class="k">namespace</span> <span class="n">Texturize</span><span class="p">;</span>
 
 <span class="n">SamplePersistence</span> <span class="n">_persistence</span><span class="p">;</span>
-<span class="kt">StorageFactory</span> <span class="n">_storage</span><span class="p">;</span>
+<span class="n">StorageFactory</span> <span class="n">_storage</span><span class="p">;</span>
 
 <span class="k">int</span> <span class="nf">main</span><span class="p">(</span><span class="k">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="k">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// Restore the asset.</span>
-    <span class="kt">AppearanceSpaceAsset</span> <span class="n">asset</span><span class="p">;</span>
+    <span class="n">AppearanceSpaceAsset</span> <span class="n">asset</span><span class="p">;</span>
     <span class="kt">AppearanceSpace</span><span class="o">*</span> <span class="n">desc</span><span class="p">;</span>
     <span class="n">asset</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="s">&quot;myasset.txa&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">desc</span><span class="p">,</span> <span class="n">_storage</span><span class="p">);</span>
     <span class="n">std</span><span class="o">::</span><span class="kt">unique_ptr</span><span class="o">&lt;</span><span class="kt">AppearanceSpace</span><span class="o">&gt;</span> <span class="n">descriptor</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="kt">AppearanceSpace</span><span class="o">&gt;</span><span class="p">(</span><span class="n">desc</span><span class="p">);</span>
@@ -209,7 +240,7 @@ property sheet...&quot;. Select the <code>Texturize.props</code> file and you sh
   <div class="m-container">
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
-        <p>Texturize. Created by <a href="http://doxygen.org/">Doxygen</a> 1.8.13 and <a href="http://mcss.mosra.cz/">m.css</a>.</p>
+        <p>Texturize. Created by <a href="https://doxygen.org/">Doxygen</a> 1.8.14 and <a href="https://mcss.mosra.cz/">m.css</a>.</p>
       </div>
     </div>
   </div>
