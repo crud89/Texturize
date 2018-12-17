@@ -76,12 +76,6 @@ add_library(${PROJECT_NAME} SHARED
    ${SRC_FILES}
 )
 
-# Copy dependency libraries post build.
-#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#        "${OPENEXR_LOCATION}/bin/IlmImf-2_3.dll"
-#        "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/IlmImf-2_3.dll")
-
 FOREACH(OpenEXR_DLL
   Half-2_3.dll
   Iex-2_3.dll
@@ -89,6 +83,7 @@ FOREACH(OpenEXR_DLL
   IlmImfUtil-2_3.dll
   IlmThread-2_3.dll
   Imath-2_3.dll
+  IlmImf-2_3.dll
 )
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
