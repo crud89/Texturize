@@ -13,6 +13,7 @@ static inline uint32_t log2(const uint32_t x) {
 	return y;
 }
 
+#ifdef _WIN64
 /// \brief Approximates the log2 of an integral 64-bit value, by counting the index of the most significant bit of the input.
 static inline uint32_t log2(const uint64_t x) {
 	unsigned long y(0);
@@ -22,6 +23,12 @@ static inline uint32_t log2(const uint64_t x) {
 
 	return y;
 }
+#else
+/// \brief Approximates the log2 of an integral 64-bit value, by counting the index of the most significant bit of the input.
+static inline uint32_t log2(const uint64_t x) {
+	return x > 0 ? std::log2l(x) : 0;
+}
+#endif
 
 /// \brief If the parameter \p from already is a *power-of-two* number, it will be returned unchanged, otherwise the next highest number within the power-of-two is calculated.
 ///
