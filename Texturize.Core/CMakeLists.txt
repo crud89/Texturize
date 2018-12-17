@@ -21,6 +21,15 @@ MESSAGE(STATUS "  Include directory:    ${INCLUDE_DIR}")
 MESSAGE(STATUS "  Source directory:     ${SOURCES_DIR}")
 MESSAGE(STATUS "")
 
+# Configure
+MESSAGE(STATUS "  Configuring version.hpp...")
+MESSAGE(STATUS "")
+
+configure_file (
+  "${INCLUDE_DIR}/version.hpp.template"
+  "${INCLUDE_DIR}/version.hpp"
+)
+
 # Build type specific preprocessor definitions.
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(

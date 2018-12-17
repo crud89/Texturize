@@ -424,7 +424,7 @@ int main(int argc, const char** argv)
 {
 	// Parse the command line.
 	cv::CommandLineParser parser(argc, argv, parameters);
-	parser.about("Texturize Sandbox 1.0");
+	parser.about(cv::format("Texturize Sandbox %d.%d", TEXTURIZE_VER_MAJOR, TEXTURIZE_VER_MINOR));
 
 	if (parser.has("help") || argc == 1)
 	{
