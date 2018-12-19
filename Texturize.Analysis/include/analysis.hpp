@@ -628,6 +628,29 @@ namespace Texturize {
 		virtual void apply(Sample& result, const Sample& sample) const override;
 	};
 
+	/// \brief Implements a gaussian blur filter.
+	class TEXTURIZE_API GaussianBlurFilter :
+		public IFilter
+	{
+	private:
+		float _deviation;
+		int _kernel;
+
+	public:
+		/// \brief Creates a new gaussian blur filter.
+		/// \param deviation The standard deviation \f$ \sigma \f$ that defines the amount of blur.
+		GaussianBlurFilter(const float& deviation);
+
+		/// \brief Creates a new gaussian blur filter.
+		/// \param deviation The standard deviation \f$ \sigma \f$ that defines the amount of blur.
+		/// \param kernel The size of the blur kernel into each direction.
+		GaussianBlurFilter(const float& deviation, const int& kernel);
+
+	public:
+		/// \copydoc Texturize::IFilter::apply
+		virtual void apply(Sample& result, const Sample& sample) const override;
+	};
+
 	/// \brief Implements a filter that calculates a *feature map*
 	///
 	/// A feature map is the result of the consecutive execution of an \ref `EdgeDetector` and a `FeatureDistanceFilter`. The result describes the distance
