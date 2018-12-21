@@ -37,8 +37,8 @@ const char* parameters =
 	"{model em          |    | Edge detector model name}"
 	"{result r          |    | Result file name}"
 	"{uv                |    | Result UV map name}"
-	"{width rw          |-1  | Result width}"
-	"{height rh         |-1  | Result height}"
+	"{width rw          |0   | Result width}"
+	"{height rh         |0   | Result height}"
 	"{displayResult dr  |0   | Displays the result of the currently executed program, after it has finished.}"
 	"{mat m             |0   | Flag: Exemplar and result are treated as material (1) or texture (0).}"
 	"{weight w          |    | Specifies weights for individual exemplar material maps. Only applies to material maps.}"
@@ -500,29 +500,6 @@ int main(int argc, const char** argv)
 	std::unordered_map<std::string, float> mapWeights;
 	parseWeights(weights, mapWeights);
 
-	// Parse the jitter.
-	std::vector<float> jitter;
-	
-	if (gaussian != 0)
-	{
-		int depth = log2(width);
-
-		for (size_t j(0); j < depth; ++j)
-			jitter.push_back(symGauss ? 
-				normalDistSym<float>(static_cast<float>(j), static_cast<float>(depth), static_cast<float>(gaussian)) :
-				normalDistAssym<float>(static_cast<float>(j), static_cast<float>(depth), static_cast<float>(gaussian)));
-	}
-	else
-	{
-		parseJitter(jitters, jitter);
-
-		// Fill the rest of the jitter from the provided randomness.
-		int depth = log2(width);
-
-		for (size_t j = jitter.size(); j < depth; ++j)
-			jitter.push_back(randomness);
-	}
-
 	// Execute the programs, if provided.
 	int result = EXIT_FAILURE;
 	std::string program;
@@ -587,11 +564,36 @@ int main(int argc, const char** argv)
 			for each (auto map in resultMaps)
 				std::cout << "\tResult " << map.first << ": " << map.second << " (" << width << "x" << height << "px)" << std::endl;
 
-			auto start = std::chrono::high_resolution_clock::now();
-			result = synthesize(exemplarMaps, resultMaps, uvMap, descriptorAsset, jitter, width, height, seed, cv::Point2f(-1, -1), 5, showResult);
-			auto end = std::chrono::high_resolution_clock::now();
+			if (width < 0 || height < 0) {
+				std::cout << "\tError: Invalid result width or height. Dimensions must be positive." << std::endl;
+				result = EXIT_FAILURE;
+			} else {			
+				// Parse the jitter.
+				std::vector<float> jitter;
 
-			std::cout << "\ts:Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+				if (gaussian != 0) {
+					int depth = log2(width);
+
+					for (size_t j(0); j < depth; ++j)
+						jitter.push_back(symGauss ?
+							normalDistSym<float>(static_cast<float>(j), static_cast<float>(depth), static_cast<float>(gaussian)) :
+							normalDistAssym<float>(static_cast<float>(j), static_cast<float>(depth), static_cast<float>(gaussian)));
+				} else {
+					parseJitter(jitters, jitter);
+
+					// Fill the rest of the jitter from the provided randomness.
+					int depth = log2(width);
+
+					for (size_t j = jitter.size(); j < depth; ++j)
+						jitter.push_back(randomness);
+				}
+
+				auto start = std::chrono::high_resolution_clock::now();
+				result = synthesize(exemplarMaps, resultMaps, uvMap, descriptorAsset, jitter, width, height, seed, cv::Point2f(-1, -1), 5, showResult);
+				auto end = std::chrono::high_resolution_clock::now();
+
+				std::cout << "\ts:Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+			}
 		}
 
 		if (result != 0)
