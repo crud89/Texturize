@@ -4,10 +4,10 @@
 #####                                                                                         #####
 ###################################################################################################
 
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-set(PROJECT_NAME Texturize.Sampling)
-project(${PROJECT_NAME} CXX)
-set(CONFIG_NAME ${PROJECT_NAME}Config)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12 FATAL_ERROR)
+SET(PROJECT_NAME Texturize.Sampling)
+PROJECT(${PROJECT_NAME} CXX)
+SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
 MESSAGE(STATUS "")
@@ -21,74 +21,74 @@ MESSAGE(STATUS "  Include directory:    ${INCLUDE_DIR}")
 MESSAGE(STATUS "  Source directory:     ${SOURCES_DIR}")
 MESSAGE(STATUS "")
 
-# Build type specific preprocessor definitions.
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions(
-    -DTEXTURIZE_EXPORTS 
-    -D_DEBUG 
-    -D_WINDOWS 
-    -D_USRDLL 
-    -DTEXTURIZECORE_EXPORTS 
-    -DUNICODE
-    -D_UNICODE
-  )
-else()
-  add_definitions(
-    -DTEXTURIZE_EXPORTS 
-    -D_WINDOWS 
-    -D_USRDLL 
-    -DTEXTURIZECORE_EXPORTS 
-    -DUNICODE
-    -D_UNICODE
-  )
-endif()
+###################################################################################################
+##### Build type specific preprocessor definitions.                                           #####
+###################################################################################################
 
-add_definitions(-D_USE_MATH_DEFINES)
+ADD_DEFINITIONS(
+  -DTEXTURIZE_EXPORTS 
+  -D_WINDOWS 
+  -D_USRDLL
+  -DTEXTURIZECORE_EXPORTS 
+  -DUNICODE 
+  -D_UNICODE
+)
 
-# Finding packages from <ModuleName>_ROOT variables first.
-cmake_policy(SET CMP0074 NEW)
+IF(BUILD_TYPE STREQUAL DEBUG)
+  ADD_DEFINITIONS(-D_DEBUG)
+ENDIF(BUILD_TYPE STREQUAL DEBUG)
+
+ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+
+###################################################################################################
+##### Define build output.                                                                    #####
+###################################################################################################
 
 # Set header directories.
-include_directories(
+INCLUDE_DIRECTORIES(
   ${INCLUDE_DIR}
   ${TXTRZ_ANALYSIS_INCLUDE_DIRS}
 )
 
-file(GLOB SRC_FILES
-    ${SOURCES_DIR}/*.cpp
-    ${INCLUDE_DIR}/*.hpp
-    ${PROJECT_SOURCE_DIR}/*.h
-    ${PROJECT_SOURCE_DIR}/*.cpp
+FILE(GLOB SRC_FILES
+  ${SOURCES_DIR}/*.cpp
+  ${INCLUDE_DIR}/*.hpp
+  ${PROJECT_SOURCE_DIR}/*.h
+  ${PROJECT_SOURCE_DIR}/*.cpp
 )
 
 # Make the project a shared library.
-add_library(${PROJECT_NAME} SHARED
-   ${SRC_FILES}
-)
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRC_FILES})
 
 # Setup target dependencies.
-target_link_libraries(${PROJECT_NAME} Texturize.Analysis ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Analysis)
 
 # Setup target includes.
-target_include_directories(${PROJECT_NAME} PUBLIC
-    ${INCLUDE_DIR}
-    $<INSTALL_INTERFACE:include>
-    PRIVATE ${SOURCES_DIR})
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} 
+  PUBLIC ${INCLUDE_DIR} $<INSTALL_INTERFACE:include>
+  PRIVATE ${SOURCES_DIR}
+)
 
-# Install artifacts.
-install(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
-    ARCHIVE  DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
-    LIBRARY  DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
-    RUNTIME  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
+###################################################################################################
+##### Define installer image.                                                                 #####
+###################################################################################################
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+)
 
 # Install headers.
-install(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
+INSTALL(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-# Export configuration.
-export(TARGETS ${PROJECT_NAME} FILE ${CONFIG_NAME}.cmake)
+###################################################################################################
+##### Define export package.                                                                  #####
+###################################################################################################
+EXPORT(TARGETS ${PROJECT_NAME} FILE ${CONFIG_NAME}.cmake)
 
 # Store the include directories.
-set(TXTRZ_SAMPLING_INCLUDE_DIRS ${INCLUDE_DIR} 
-                                ${TXTRZ_ANALYSIS_INCLUDE_DIRS}
+SET(TXTRZ_SAMPLING_INCLUDE_DIRS 
+  ${INCLUDE_DIR} 
+  ${TXTRZ_ANALYSIS_INCLUDE_DIRS}
   CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE
 )

@@ -4,9 +4,9 @@
 #####                                                                                         #####
 ###################################################################################################
 
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-set(PROJECT_NAME Texturize.Analysis)
-project(${PROJECT_NAME} CXX)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12 FATAL_ERROR)
+SET(PROJECT_NAME Texturize.Analysis)
+PROJECT(${PROJECT_NAME} CXX)
 SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
@@ -21,136 +21,119 @@ MESSAGE(STATUS "  Include directory:    ${INCLUDE_DIR}")
 MESSAGE(STATUS "  Source directory:     ${SOURCES_DIR}")
 MESSAGE(STATUS "")
 
-# Build type specific preprocessor definitions.
-IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions(
-   -DTEXTURIZE_EXPORTS 
-   -D_DEBUG 
-   -D_WINDOWS 
-   -D_USRDLL 
-   -DTEXTURIZECORE_EXPORTS 
-   -DUNICODE
-   -D_UNICODE
-  )
-ELSE()
-  add_definitions(
-   -DTEXTURIZE_EXPORTS
-   -D_WINDOWS 
-   -D_USRDLL 
-   -DTEXTURIZECORE_EXPORTS 
-   -DUNICODE
-   -D_UNICODE
-  )
-ENDIF()
+###################################################################################################
+##### Build type specific preprocessor definitions.                                           #####
+###################################################################################################
 
-# Find modules.
-find_package(OpenCV REQUIRED core imgproc ximgproc imgcodecs highgui features2d calib3d flann)
-find_package(TBB REQUIRED tbb)
+ADD_DEFINITIONS(
+  -DTEXTURIZE_EXPORTS 
+  -D_WINDOWS 
+  -D_USRDLL
+  -DTEXTURIZECORE_EXPORTS 
+  -DUNICODE 
+  -D_UNICODE
+)
+
+IF(BUILD_TYPE STREQUAL DEBUG)
+  ADD_DEFINITIONS(-D_DEBUG)
+ENDIF(BUILD_TYPE STREQUAL DEBUG)
+
+###################################################################################################
+##### Resolve package dependencies.                                                           #####
+###################################################################################################
+
+# Finding packages from <ModuleName>_ROOT variables first.
+CMAKE_POLICY(SET CMP0074 NEW)
+SET(MODULE_NAMES)
+SET(MODULE_INSTALLER)
+SET(MODULE_INCLUDES)
+
+###################################################################################################
+##### Find OpenCV.                                                                            #####
+###################################################################################################
+FIND_PACKAGE(OpenCV REQUIRED core imgproc ximgproc imgcodecs highgui features2d calib3d flann)
 
 IF(OpenCV_FOUND)
   MESSAGE(STATUS "  OpenCV modules:       ${OpenCV_LIBS}...")
+  LIST(APPEND MODULE_NAMES ${OpenCV_LIBS})
 ELSE()
   MESSAGE(FATAL_ERROR "  ERROR: Required OpenCV modules have not been found.")
 ENDIF()
 
+###################################################################################################
+##### Find TBB.                                                                               #####
+###################################################################################################
+FIND_PACKAGE(TBB REQUIRED tbb)
+
 if(TBB_FOUND)
   MESSAGE(STATUS "  TBB modules:          ${TBB_IMPORTED_TARGETS}")
+  LIST(APPEND MODULE_NAMES ${TBB_IMPORTED_TARGETS})
 ELSE()
   MESSAGE(FATAL_ERROR "  ERROR: Required TBB modules have not been found.")
 ENDIF()
 
-# Link to the right libraries.
-IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list (APPEND OpenCV_DLLS 
-        "opencv_core${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_imgproc${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_ximgproc${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_imgcodecs${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_highgui${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_features2d${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_calib3d${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-        "opencv_flann${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}d.dll"
-  )
-ELSE()
-  list (APPEND OpenCV_DLLS  
-        "opencv_core${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_imgproc${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_ximgproc${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_imgcodecs${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_highgui${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_features2d${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_calib3d${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-        "opencv_flann${OpenCV_VERSION_MAJOR}${OpenCV_VERSION_MINOR}${OpenCV_VERSION_PATCH}.dll"
-  )
-ENDIF()
+GET_PACKAGE_INFO("${MODULE_NAMES}" MODULE_INCLUDES MODULE_INSTALLER)
+MESSAGE(STATUS "")
 
-IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  get_target_property(TBB_DLLS ${TBB_IMPORTED_TARGETS} IMPORTED_LOCATION_DEBUG)
-ELSE()
-  get_target_property(TBB_DLLS ${TBB_IMPORTED_TARGETS} IMPORTED_LOCATION_RELEASE)
-ENDIF()
+###################################################################################################
+##### Define build output.                                                                    #####
+###################################################################################################
 
 # Set header directories.
-include_directories(
+INCLUDE_DIRECTORIES(
   ${INCLUDE_DIR}
   ${TXTRZ_CORE_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
-  ${TBB_INCLUDE_DIRS}
+  ${MODULE_INCLUDES}
 )
 
-file(GLOB SRC_FILES
-    ${SOURCES_DIR}/*.cpp
-    ${INCLUDE_DIR}/*.hpp
-    ${PROJECT_SOURCE_DIR}/*.h
-    ${PROJECT_SOURCE_DIR}/*.cpp
+FILE(GLOB SRC_FILES
+  ${SOURCES_DIR}/*.cpp
+  ${INCLUDE_DIR}/*.hpp
+  ${PROJECT_SOURCE_DIR}/*.h
+  ${PROJECT_SOURCE_DIR}/*.cpp
 )
 
 # Make the project a shared library.
-add_library(${PROJECT_NAME} SHARED
-   ${SRC_FILES}
-)
-
-# Copy dependency libraries post build.
-FOREACH(OpenCV_DLL ${OpenCV_DLLS})
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${OpenCV_DIR}/${OpenCV_ARCH}/${OpenCV_RUNTIME}/bin/${OpenCV_DLL}"
-          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/${OpenCV_DLL}")
-ENDFOREACH()
-
-FOREACH(TBB_DLL ${TBB_DLLS})
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${TBB_DLL}"
-          "${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_BUILD_TYPE}/")
-ENDFOREACH()
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRC_FILES})
 
 # Setup target dependencies.
-target_link_libraries(${PROJECT_NAME} Texturize.Core 
-    ${OpenCV_LIBS} 
-    ${TBB_IMPORTED_TARGETS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Core ${MODULE_NAMES})
 
 # Setup target includes.
-target_include_directories(${PROJECT_NAME} PUBLIC
-    ${INCLUDE_DIR}
-    $<INSTALL_INTERFACE:include>
-    PRIVATE ${SOURCES_DIR})
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} 
+  PUBLIC ${INCLUDE_DIR} $<INSTALL_INTERFACE:include>
+  PRIVATE ${SOURCES_DIR}
+)
 
-# Install artifacts.
-install(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
-    ARCHIVE  DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
-    LIBRARY  DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}
-    RUNTIME  DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
+###################################################################################################
+##### Define installer image.                                                                 #####
+###################################################################################################
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+  RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+)
 
 # Install headers.
-install(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
+INSTALL(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-# Export configuration.
-export(TARGETS ${PROJECT_NAME} FILE ${CONFIG_NAME}.cmake)
+# Install 3rd party assemblies.
+INSTALL(FILES ${MODULE_INSTALLER} DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+
+###################################################################################################
+##### Define export package.                                                                  #####
+###################################################################################################
+EXPORT(TARGETS ${PROJECT_NAME} FILE ${CONFIG_NAME}.cmake)
 
 # Store the include directories.
-SET(TXTRZ_ANALYSIS_INCLUDE_DIRS ${INCLUDE_DIR}
-                                ${TXTRZ_CORE_INCLUDE_DIRS}
-                                ${OpenCV_INCLUDE_DIRS}
+SET(TXTRZ_ANALYSIS_INCLUDE_DIRS 
+  ${INCLUDE_DIR}
+  ${TXTRZ_CORE_INCLUDE_DIRS}
+  ${MODULE_INCLUDES}
   CACHE INTERNAL "${PROJECT_NAME}: Include directories" FORCE
 )
+
+# Cleanup.
+UNSET(MODULE_NAMES)
+UNSET(MODULE_INSTALLER)
+UNSET(MODULE_INCLUDES)

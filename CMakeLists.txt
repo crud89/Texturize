@@ -5,11 +5,12 @@
 #####                                                                                         #####
 ###################################################################################################
 
-cmake_minimum_required(VERSION 3.12)
-project(Texturize)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
+PROJECT(Texturize)
 
+# Major and minor project version.
 SET(Texturize_VERSION_MAJOR 1)
-SET(Texturize_VERSION_MINOR 1)
+SET(Texturize_VERSION_MINOR 2)
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
 MESSAGE(STATUS "Building Texturize Version ${Texturize_VERSION_MAJOR}.${Texturize_VERSION_MINOR}")
@@ -21,31 +22,33 @@ IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Release")
   MESSAGE(STATUS "  Build type not specified: Defaulting to `Release`.")
   MESSAGE(STATUS "")
-ENDIF()
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+# Get the config string from the build profile.
+STRING(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 
 # Set compiler flags
 IF(MSVC)
-   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W3 /MD /Od /EHsc")
-   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /GL /Od /Oi /Gy /EHsc")
-ENDIF()
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W3 /MD /Od /EHsc")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /GL /Od /Oi /Gy /EHsc")
+ELSE(MSVC)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-#IF(NOT MSVC)
-#   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#   IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-#       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-#   ENDIF()
-#ENDIF()
+  IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+  ENDIF(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+ENDIF(MSVC)
 
 # Ensure that the build is out of source.
 STRING(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" IS_IN_SOURCE_BUILD)
 
 IF(NOT IS_IN_SOURCE_BUILD)
-    GET_FILENAME_COMPONENT(PARENT_DIR ${CMAKE_SOURCE_DIR} PATH)
-    STRING(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${PARENT_DIR}" IS_IN_SOURCE_BUILD)
+  GET_FILENAME_COMPONENT(PARENT_DIR ${CMAKE_SOURCE_DIR} PATH)
+  STRING(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${PARENT_DIR}" IS_IN_SOURCE_BUILD)
 ENDIF(NOT IS_IN_SOURCE_BUILD)
 
 IF(IS_IN_SOURCE_BUILD)
-    MESSAGE(FATAL_ERROR "FATAL: ")
+  MESSAGE(FATAL_ERROR "FATAL: In source builds are not allowed.")
 ENDIF(IS_IN_SOURCE_BUILD)
 
 # Builds appear to be good, setup environment variables.
@@ -53,23 +56,29 @@ ENDIF(IS_IN_SOURCE_BUILD)
 # If it is set, but relative, append it to the binary directory.
 # If it is set to an absolute path, don't change anything.
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
-    SET(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Install directory")
+  SET(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Install directory")
 ELSEIF(NOT IS_ABSOLUTE CMAKE_INSTALL_PREFIX)
-    SET(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX}")
-ENDIF()
+  SET(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX}")
+ENDIF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 
-SET(CMAKE_INSTALL_INCLUDEDIR            "${CMAKE_INSTALL_PREFIX}/include")
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY      "${CMAKE_INSTALL_PREFIX}/lib/")
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY      "${CMAKE_INSTALL_PREFIX}/bin/")
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY      "${CMAKE_INSTALL_PREFIX}/bin/")
-SET(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY   "${CMAKE_INSTALL_PREFIX}/bin/")
-SET(CMAKE_PDB_OUTPUT_DIRECTORY          "${CMAKE_INSTALL_PREFIX}/bin/")
+# Setup output directories.
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY      "${CMAKE_BINARY_DIR}/build/lib/")
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY      "${CMAKE_BINARY_DIR}/build/bin/")
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY      "${CMAKE_BINARY_DIR}/build/bin/")
+SET(CMAKE_EXECUTABLE_OUTPUT_DIRECTORY   "${CMAKE_BINARY_DIR}/build/bin/")
+SET(CMAKE_PDB_OUTPUT_DIRECTORY          "${CMAKE_BINARY_DIR}/build/bin/")
 
 LIST(APPEND CMAKE_MODULE_PATH           "${CMAKE_SOURCE_DIR}/modules")
 
 MESSAGE(STATUS "  Source directory:     ${CMAKE_SOURCE_DIR}")
 MESSAGE(STATUS "  Build directory:      ${CMAKE_BINARY_DIR}")
 MESSAGE(STATUS "  Install directory:    ${CMAKE_INSTALL_PREFIX}")
+MESSAGE(STATUS "")
+
+# Include macros and functions
+MESSAGE(STATUS "  Looking up macros and functions...")
+MESSAGE(STATUS "  > ${CMAKE_SOURCE_DIR}/GetModuleInfo.cmake")
+INCLUDE("${CMAKE_SOURCE_DIR}/GetPackageInfo.cmake")
 MESSAGE(STATUS "")
 
 # Searching for modules.
@@ -81,34 +90,34 @@ MESSAGE(STATUS "  Modules directory:    ${CMAKE_MODULE_PATH}")
 MESSAGE(STATUS "")
 
 IF(OpenCV_FOUND)
-    MESSAGE(STATUS "  OpenCV:               Found")
-ELSE()
-    SET(OpenCV_DIR "${CMAKE_MODULE_PATH}/opencv")
-    MESSAGE(STATUS "  OpenCV:               Not found")
-ENDIF()
+  MESSAGE(STATUS "  OpenCV:               Found")
+ELSE(OpenCV_FOUND)
+  SET(OpenCV_DIR "${CMAKE_MODULE_PATH}/opencv")
+  MESSAGE(STATUS "  OpenCV:               Not found")
+ENDIF(OpenCV_FOUND)
 
 IF(OpenEXR_FOUND)
-    MESSAGE(STATUS "  OpenEXR:              Found")
-    SET(ILMBASE_LOCATION ${OPENEXR_LOCATION})
-ELSE()
-    SET(OPENEXR_LOCATION "${CMAKE_MODULE_PATH}")
-    SET(ILMBASE_LOCATION "${CMAKE_MODULE_PATH}")
-    MESSAGE(STATUS "  OpenEXR:              Not found")
-ENDIF()
+  MESSAGE(STATUS "  OpenEXR:              Found")
+  SET(ILMBASE_LOCATION ${OPENEXR_LOCATION})
+ELSE(OpenEXR_FOUND)
+  SET(OPENEXR_LOCATION "${CMAKE_MODULE_PATH}")
+  SET(ILMBASE_LOCATION "${CMAKE_MODULE_PATH}")
+  MESSAGE(STATUS "  OpenEXR:              Not found")
+ENDIF(OpenEXR_FOUND)
 
 IF(TBB_FOUND)
-    MESSAGE(STATUS "  TBB:                  Found")
-ELSE()
-    SET(TBB_DIR "${CMAKE_MODULE_PATH}/tbb")
-    MESSAGE(STATUS "  TBB:                  Not found")
-ENDIF()
+  MESSAGE(STATUS "  TBB:                  Found")
+ELSE(TBB_FOUND)
+  SET(TBB_DIR "${CMAKE_MODULE_PATH}/tbb")
+  MESSAGE(STATUS "  TBB:                  Not found")
+ENDIF(TBB_FOUND)
 
 IF(HDF5_FOUND)
-    MESSAGE(STATUS "  HDF5:                 Found")
-ELSE()
-    SET(HDF5_ROOT "${CMAKE_MODULE_PATH}/hdf5/cmake")
-    MESSAGE(STATUS "  HDF5:                 Not found")
-ENDIF()
+  MESSAGE(STATUS "  HDF5:                 Found")
+ELSE(HDF5_FOUND)
+  SET(HDF5_ROOT "${CMAKE_MODULE_PATH}/hdf5/cmake")
+  MESSAGE(STATUS "  HDF5:                 Not found")
+ENDIF(HDF5_FOUND)
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
@@ -123,25 +132,28 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
 MESSAGE(STATUS "Configuring projects...")
 
-# Setup project hierarchy.
-add_subdirectory(Texturize.Core)
-add_subdirectory(Texturize.Codecs)
-add_subdirectory(Texturize.Analysis)
-add_subdirectory(Texturize.Sampling)
-add_subdirectory(Texturize.Codecs.EXR)
+###################################################################################################
+##### Setup project hierarchy.                                                                #####
+###################################################################################################
 
-add_subdirectory(Texturize.Sandbox)
+ADD_SUBDIRECTORY(Texturize.Core)
+ADD_SUBDIRECTORY(Texturize.Codecs)
+ADD_SUBDIRECTORY(Texturize.Analysis)
+ADD_SUBDIRECTORY(Texturize.Sampling)
+ADD_SUBDIRECTORY(Texturize.Codecs.EXR)
 
-add_dependencies(Texturize.Codecs 		        Texturize.Core)
-add_dependencies(Texturize.Analysis 		    Texturize.Core)
-add_dependencies(Texturize.Sampling 		    Texturize.Core)
-add_dependencies(Texturize.Codecs		        Texturize.Analysis)
-add_dependencies(Texturize.Codecs.EXR 		    Texturize.Core)
-add_dependencies(Texturize.Codecs.EXR 		    Texturize.Codecs)
-add_dependencies(Texturize.Sampling 		    Texturize.Analysis)
+ADD_SUBDIRECTORY(Texturize.Sandbox)
 
-add_dependencies(Texturize.Sandbox 		        Texturize.Core)
-add_dependencies(Texturize.Sandbox 		        Texturize.Codecs)
-add_dependencies(Texturize.Sandbox   		    Texturize.Codecs.EXR)
-add_dependencies(Texturize.Sandbox 		        Texturize.Analysis)
-add_dependencies(Texturize.Sandbox 		        Texturize.Sampling)
+ADD_DEPENDENCIES(Texturize.Codecs 		        Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Analysis 		    Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Sampling 		    Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Codecs		        Texturize.Analysis)
+ADD_DEPENDENCIES(Texturize.Codecs.EXR 		    Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Codecs.EXR 		    Texturize.Codecs)
+ADD_DEPENDENCIES(Texturize.Sampling 		    Texturize.Analysis)
+
+ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Codecs)
+ADD_DEPENDENCIES(Texturize.Sandbox   		    Texturize.Codecs.EXR)
+ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Analysis)
+ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Sampling)
