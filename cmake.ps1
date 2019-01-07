@@ -6,8 +6,11 @@ Param(
     [String]$OpenEXR,
     [String]$TBB,
     [String]$HDF5,
+    [String]$config = "Release",
     [Boolean]$x64 = $true,
-    [String]$config = "Release"
+    [Boolean]$verbose = $false,
+    [String]$logFile = "",
+    [String]$options = ""                   # CMake options (i.e. --debug-output or --trace[-expand])
 )
 
 # Build up a command to invoke.
@@ -45,5 +48,15 @@ if (![String]::IsNullOrEmpty($HDF5)) {
     $invoke += "-DHDF5_ROOT:STRING=`"$($HDF5)`" -DHDF5_FOUND:BOOL=ON "
 }
 
+if ($verbose) {
+    $invoke += "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON "
+}
+
+$invoke += "$($options) "
+
 Write-Host "Invoking $($invoke)..."
-Invoke-Expression $invoke
+if (![String]::IsNullOrEmpty($logFile)) {
+    Invoke-Expression $invoke | Tee-Object -FilePath $logFile
+} else {
+    Invoke-Expression $invoke
+}
