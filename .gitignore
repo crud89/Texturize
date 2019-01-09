@@ -286,6 +286,8 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# Others
 .tfignore
 .cmake
 */.cmake
@@ -308,3 +310,4 @@ install/
 .vs
 .vs/
 */.vs/
+CMakeSettings.json
