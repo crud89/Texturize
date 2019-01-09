@@ -1,4 +1,3 @@
-
 # adapted from FindOpenEXR.cmake in Pixar's USD distro.
 # 
 # The original license is as follows:
@@ -26,173 +25,140 @@
 # language governing permissions and limitations under the Apache License.
 #
 
-find_path(OPENEXR_INCLUDE_DIR
-    OpenEXR/ImfHeader.h
-
-HINTS
-    "${OPENEXR_LOCATION}"
-    "${ILMBASE_LOCATION}"
-    "$ENV{OPENEXR_LOCATION}"
-    "$ENV{OPENEXR_ROOT}"
-    "$ENV{ILMBASE_LOCATION}"
-    "$ENV{ILMBASE_ROOT}"
-
-PATH_SUFFIXES
-    include/
-
-NO_DEFAULT_PATH
-NO_SYSTEM_ENVIRONMENT_PATH
-
-DOC
-    "OpenEXR headers path"
+###################################################################################################
+##### Lookup the installation directory of OpenEXR.                                           #####
+###################################################################################################
+FIND_PATH(OPENEXR_INCLUDE_DIR "OpenEXR/ImfHeader.h"
+  HINTS "${OPENEXR_LOCATION}" "$ENV{OPENEXR_LOCATION}" "$ENV{OPENEXR_ROOT}"
+  PATH_SUFFIXES "include/"
+  NO_DEFAULT_PATH
+  NO_SYSTEM_ENVIRONMENT_PATH
+  DOC "OpenEXR installation directory"
 )
 
-if(OPENEXR_INCLUDE_DIR)
-  set(openexr_config_file "${OPENEXR_INCLUDE_DIR}/OpenEXR/OpenEXRConfig.h")
-  if(EXISTS ${openexr_config_file})
-      file(STRINGS
-           ${openexr_config_file}
-           TMP
-           REGEX "#define OPENEXR_VERSION_STRING.*$")
-      string(REGEX MATCHALL "[0-9.]+" OPENEXR_VERSION ${TMP})
+# In case the directory has not been found, print a warning.
+IF(NOT EXISTS ${OPENEXR_INCLUDE_DIR})
+  MESSAGE(WARNING "  WARNING: OpenEXR headers have not been found.")
+ELSE(NOT EXISTS ${OPENEXR_INCLUDE_DIR})
+  SET(OPENEXR_CONFIG_FILE "${OPENEXR_INCLUDE_DIR}/OpenEXR/OpenEXRConfig.h")
 
-      file(STRINGS
-           ${openexr_config_file}
-           TMP
-           REGEX "#define OPENEXR_VERSION_MAJOR.*$")
-      string(REGEX MATCHALL "[0-9]" OPENEXR_MAJOR_VERSION ${TMP})
+  # The configuration header should be existing under this location, if the directory is valid. If so,
+  # extract the framework version from it.
+  IF(EXISTS ${OPENEXR_CONFIG_FILE})
+    FILE(STRINGS ${OPENEXR_CONFIG_FILE} TMP REGEX "#define OPENEXR_VERSION_STRING.*$")
+    STRING(REGEX MATCHALL "[0-9.]+" OPENEXR_VERSION ${TMP})
+    FILE(STRINGS ${OPENEXR_CONFIG_FILE} TMP REGEX "#define OPENEXR_VERSION_MAJOR.*$")
+    STRING(REGEX MATCHALL "[0-9]" OPENEXR_MAJOR_VERSION ${TMP})
+    FILE(STRINGS ${OPENEXR_CONFIG_FILE} TMP REGEX "#define OPENEXR_VERSION_MINOR.*$")
+    STRING(REGEX MATCHALL "[0-9]" OPENEXR_MINOR_VERSION ${TMP})
+  ENDIF(EXISTS ${OPENEXR_CONFIG_FILE})
+ENDIF(NOT EXISTS ${OPENEXR_INCLUDE_DIR})
 
-      file(STRINGS
-           ${openexr_config_file}
-           TMP
-           REGEX "#define OPENEXR_VERSION_MINOR.*$")
-      string(REGEX MATCHALL "[0-9]" OPENEXR_MINOR_VERSION ${TMP})
-  endif()
-else()
-    message(WARNING, " OpenEXR headers not found")
-endif()
+###################################################################################################
+##### Lookup the existing libraries for OpenEXR.                                              #####
+###################################################################################################
+FOREACH(OPENEXR_LIB
+  Half
+  Imath
+  Iex
+  IexMath
+  IlmThread
+  IlmImf 
+  IlmImfUtil
+)
+  # Lookup the library by its name.
+  FIND_LIBRARY(OPENEXR_${OPENEXR_LIB}_LIBRARY 
+    NAMES ${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}  ${OPENEXR_LIB}
+    HINTS "${OPENEXR_LOCATION}" "$ENV{OPENEXR_LOCATION}"
+    PATH_SUFFIXES "lib/"
+    NO_DEFAULT_PATH
+    NO_SYSTEM_ENVIRONMENT_PATH
+    DOC "OPENEXR '${OPENEXR_LIB}' library path."
+  )
 
-foreach(OPENEXR_LIB
-    IlmImf
-    IlmImfUtil)
+  # If the library has been found, remember it for later processing.
+  IF(OPENEXR_${OPENEXR_LIB}_LIBRARY)
+    LIST(APPEND OPENEXR_LIBRARIES ${OPENEXR_${OPENEXR_LIB}_LIBRARY})
+  ENDIF(OPENEXR_${OPENEXR_LIB}_LIBRARY)
 
-    # OpenEXR libraries may be suffixed with the version number, so we search
-    # using both versioned and unversioned names.
-    find_library(OPENEXR_${OPENEXR_LIB}_LIBRARY
-        NAMES
-            ${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}
-            ${OPENEXR_LIB}
-        HINTS
-            "${OPENEXR_LOCATION}"
-            "$ENV{OPENEXR_LOCATION}"
-        PATH_SUFFIXES
-            lib/
-        NO_DEFAULT_PATH
-        NO_SYSTEM_ENVIRONMENT_PATH
-        DOC
-            "OPENEXR's ${OPENEXR_LIB} library path"
-    )
-    #mark_as_advanced(OPENEXR_${OPENEXR_LIB}_LIBRARY)
+  # Lookup the debug version.
+  FIND_LIBRARY(OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY
+    NAMES ${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}_d  ${OPENEXR_LIB}_d
+    HINTS "${OPENEXR_LOCATION}" "$ENV{OPENEXR_LOCATION}"
+    PATH_SUFFIXES "lib/" "debug/lib/"
+    NO_DEFAULT_PATH
+    NO_SYSTEM_ENVIRONMENT_PATH
+    DOC "OPENEXR's ${OPENEXR_LIB} debug library path"
+  )
 
-    if(OPENEXR_${OPENEXR_LIB}_LIBRARY)
-        list(APPEND OPENEXR_LIBRARIES ${OPENEXR_${OPENEXR_LIB}_LIBRARY})
-    endif()
-
-    # OpenEXR libraries may be suffixed with the version number, so we search
-    # using both versioned and unversioned names.
-    find_library(OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY
-        NAMES
-            ${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}_d
-            ${OPENEXR_LIB}_d
-        HINTS
-            "${OPENEXR_LOCATION}"
-            "$ENV{OPENEXR_LOCATION}"
-        PATH_SUFFIXES
-            lib/
-            debug/lib/
-        NO_DEFAULT_PATH
-        NO_SYSTEM_ENVIRONMENT_PATH
-        DOC
-            "OPENEXR's ${OPENEXR_LIB} debug library path"
-    )
-    #mark_as_advanced(OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY)
-
-    # OpenEXR libraries may be suffixed with the version number, so we search
-    # using both versioned and unversioned names.
-    find_library(OPENEXR_${OPENEXR_LIB}_STATIC_LIBRARY
-        NAMES
-            ${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}_s
-            ${OPENEXR_LIB}_s
-        HINTS
-            "${OPENEXR_LOCATION}"
-            "$ENV{OPENEXR_LOCATION}"
-        PATH_SUFFIXES
-            lib/
-        NO_DEFAULT_PATH
-        NO_SYSTEM_ENVIRONMENT_PATH
-        DOC
-            "OPENEXR's ${OPENEXR_LIB} static library path"
-    )
-    #mark_as_advanced(OPENEXR_${OPENEXR_LIB}_STATIC_LIBRARY)
-
-    # OpenEXR libraries may be suffixed with the version number, so we search
-    # using both versioned and unversioned names.
-    find_library(OPENEXR_${OPENEXR_LIB}_STATIC_DEBUG_LIBRARY
-        NAMES
-            ${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}_s_d
-            ${OPENEXR_LIB}_s_d
-        HINTS
-            "${OPENEXR_LOCATION}"
-            "$ENV{OPENEXR_LOCATION}"
-        PATH_SUFFIXES
-            lib/
-            debug/lib/
-        NO_DEFAULT_PATH
-        NO_SYSTEM_ENVIRONMENT_PATH
-        DOC
-            "OPENEXR's ${OPENEXR_LIB} static debug library path"
-    )
-    #mark_as_advanced(OPENEXR_${OPENEXR_LIB}_STATIC_DEBUG_LIBRARY)
-
-endforeach(OPENEXR_LIB)
+  IF(OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY)
+    LIST(APPEND OPENEXR_LIBRARIES ${OPENEXR_${OPENEXR_LIB}_LIBRARY})
+  ENDIF(OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY)
+ENDFOREACH(OPENEXR_LIB)
 
 # So #include <half.h> works
-list(APPEND OPENEXR_INCLUDE_DIRS ${OPENEXR_INCLUDE_DIR})
-list(APPEND OPENEXR_INCLUDE_DIRS ${OPENEXR_INCLUDE_DIR}/OpenEXR)
+LIST(APPEND OPENEXR_INCLUDE_DIRS "${OPENEXR_INCLUDE_DIR}")
+LIST(APPEND OPENEXR_INCLUDE_DIRS "${OPENEXR_INCLUDE_DIR}/OpenEXR")
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(OpenEXR
-    REQUIRED_VARS
-        OPENEXR_INCLUDE_DIRS
-        OPENEXR_LIBRARIES
-    VERSION_VAR
-        OPENEXR_VERSION
+# Validate the libraries.
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenEXR
+  REQUIRED_VARS     OPENEXR_INCLUDE_DIRS OPENEXR_LIBRARIES
+  VERSION_VAR       OPENEXR_VERSION
 )
 
-foreach(OPENEXR_LIB
-    IlmImf
-    IlmImfUtil)
+###################################################################################################
+##### Setup the target properties for the libraries.                                          #####
+###################################################################################################
+FOREACH(OPENEXR_LIB
+  Half
+  Imath
+  Iex
+  IexMath
+  IlmThread
+  IlmImf 
+  IlmImfUtil
+)
+  # Set properties for the shared library.
+  IF(OPENEXR_${OPENEXR_LIB}_LIBRARY)
+    ADD_LIBRARY(OpenEXR::${OPENEXR_LIB} SHARED IMPORTED)
+    SET_TARGET_PROPERTIES(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED ON)
+    SET_TARGET_PROPERTIES(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED_IMPLIB_RELEASE ${OPENEXR_${OPENEXR_LIB}_LIBRARY})
+    SET_TARGET_PROPERTIES(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED_IMPLIB_DEBUG ${OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY})
+    SET_TARGET_PROPERTIES(OpenEXR::${OPENEXR_LIB} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+    SET_PROPERTY(TARGET OpenEXR::${OPENEXR_LIB} APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${OPENEXR_INCLUDE_DIRS}")
+    
+    IF(WIN32)
+      # Lookup the release and debug DLLs.
+      FIND_FILE(OPENEXR_${OPENEXR_LIB}_LINK_LIBRARY 
+        NAMES "${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}.dll" "${OPENEXR_LIB}.dll"
+        HINTS "${OPENEXR_LOCATION}" "$ENV{OPENEXR_LOCATION}"
+        PATH_SUFFIXES "bin/" "debug/bin/"
+        NO_DEFAULT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH
+        DOC "OPENEXR '${OPENEXR_LIB}' link library path."
+      )
 
-    if (OPENEXR_${OPENEXR_LIB}_LIBRARY)
-      add_library(OpenEXR::${OPENEXR_LIB} SHARED IMPORTED)
-      set_target_properties(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED_LOCATION_RELEASE ${OPENEXR_${OPENEXR_LIB}_LIBRARY})
-      set_target_properties(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED_LOCATION_DEBUG ${OPENEXR_${OPENEXR_LIB}_DEBUG_LIBRARY})
-      set_target_properties(OpenEXR::${OPENEXR_LIB} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-      set_property(TARGET   OpenEXR::${OPENEXR_LIB} APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPENEXR_INCLUDE_DIR})
-      set_property(TARGET   OpenEXR::${OPENEXR_LIB} APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPENEXR_INCLUDE_DIR}/OpenEXR)
-    endif()
+      IF(OPENEXR_${OPENEXR_LIB}_LINK_LIBRARY)
+        SET_TARGET_PROPERTIES(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED_LOCATION_RELEASE ${OPENEXR_${OPENEXR_LIB}_LINK_LIBRARY})
+      ENDIF(OPENEXR_${OPENEXR_LIB}_LINK_LIBRARY)
 
-    if (OPENEXR_${OPENEXR_LIB}_STATIC_LIBRARY)
-      add_library(OpenEXR::${OPENEXR_LIB}_static SHARED IMPORTED)
-      set_target_properties(OpenEXR::${OPENEXR_LIB}_static PROPERTIES IMPORTED_LOCATION_RELEASE ${OPENEXR_${OPENEXR_LIB}_STATIC_LIBRARY})
-      set_target_properties(OpenEXR::${OPENEXR_LIB}_static PROPERTIES IMPORTED_LOCATION_DEBUG ${OPENEXR_${OPENEXR_LIB}_STATIC_DEBUG_LIBRARY})
-      set_target_properties(OpenEXR::${OPENEXR_LIB}_static PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
-      set_property(TARGET   OpenEXR::${OPENEXR_LIB}_static APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPENEXR_INCLUDE_DIR})
-      set_property(TARGET   OpenEXR::${OPENEXR_LIB}_static APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${OPENEXR_INCLUDE_DIR}/OpenEXR)
-    endif()
+      FIND_FILE(OPENEXR_${OPENEXR_LIB}_DEBUG_LINK_LIBRARY 
+        NAMES "${OPENEXR_LIB}-${OPENEXR_MAJOR_VERSION}_${OPENEXR_MINOR_VERSION}_d.dll" "${OPENEXR_LIB}_d.dll"
+        HINTS "${OPENEXR_LOCATION}" "$ENV{OPENEXR_LOCATION}"
+        PATH_SUFFIXES "bin/" "debug/bin/"
+        NO_DEFAULT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH
+        DOC "OPENEXR '${OPENEXR_LIB}' link library path."
+      )
 
-    if (NOT OPENEXR_${OPENEXR_LIB}_LIBRARY AND NOT OPENEXR_${OPENEXR_LIB}_STATIC_LIBRARY)
-      message(WARNING, "${OPENEXR_LIB} was not found.")
-    endif()
-
-endforeach()
+      IF(OPENEXR_${OPENEXR_LIB}_DEBUG_LINK_LIBRARY)
+        SET_TARGET_PROPERTIES(OpenEXR::${OPENEXR_LIB} PROPERTIES IMPORTED_LOCATION_DEBUG ${OPENEXR_${OPENEXR_LIB}_DEBUG_LINK_LIBRARY})
+      ENDIF(OPENEXR_${OPENEXR_LIB}_DEBUG_LINK_LIBRARY)
+    ENDIF(WIN32)
+    
+    LIST(APPEND OPENEXR_LIBS OpenEXR::${OPENEXR_LIB})
+  ELSE(OPENEXR_${OPENEXR_LIB}_LIBRARY)
+    MESSAGE(WARNING "  ${OPENEXR_LIB} was not found.")
+  ENDIF(OPENEXR_${OPENEXR_LIB}_LIBRARY)
+ENDFOREACH(OPENEXR_LIB)
