@@ -13,6 +13,13 @@ MESSAGE(STATUS "----------------------------------------------------------------
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Setting up project: ${PROJECT_NAME}...")
 
+# Set compiler flags
+IF(MSVC)
+  # Switch from Multi-Thread DLL (/MD) to Multi-Thread Debug DLL (/MDd) for debug builds.
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+ENDIF(MSVC)
+
 # Specify source folders, relative to the project sources directory.
 SET(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 SET(SOURCES_DIR "${PROJECT_SOURCE_DIR}/src")
@@ -33,10 +40,6 @@ ADD_DEFINITIONS(
   -DUNICODE 
   -D_UNICODE
 )
-
-IF(BUILD_TYPE STREQUAL DEBUG)
-  ADD_DEFINITIONS(-D_DEBUG)
-ENDIF(BUILD_TYPE STREQUAL DEBUG)
 
 ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 
@@ -62,6 +65,9 @@ ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRC_FILES})
 
 # Setup target dependencies.
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Analysis)
+
+# Append "_d" to artifact names for debug builds.
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ".Dbg")
 
 # Setup target includes.
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} 

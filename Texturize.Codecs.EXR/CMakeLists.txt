@@ -13,6 +13,13 @@ MESSAGE(STATUS "----------------------------------------------------------------
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Setting up project: ${PROJECT_NAME}...")
 
+# Set compiler flags
+IF(MSVC)
+  # Switch from Multi-Thread DLL (/MD) to Multi-Thread Debug DLL (/MDd) for debug builds.
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+ENDIF(MSVC)
+
 # Specify source folders, relative to the project sources directory.
 SET(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 SET(SOURCES_DIR "${PROJECT_SOURCE_DIR}/src")
@@ -33,10 +40,6 @@ ADD_DEFINITIONS(
   -DUNICODE 
   -D_UNICODE
 )
-
-IF(BUILD_TYPE STREQUAL DEBUG)
-  ADD_DEFINITIONS(-D_DEBUG)
-ENDIF(BUILD_TYPE STREQUAL DEBUG)
 
 ###################################################################################################
 ##### Resolve package dependencies.                                                           #####
@@ -85,6 +88,9 @@ FILE(GLOB SRC_FILES
 # Make the project a shared library.
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRC_FILES})
 
+# Append "_d" to artifact names for debug builds.
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ".Dbg")
+
 # Setup target dependencies.
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Codecs ${MODULE_NAMES})
 
@@ -107,7 +113,23 @@ INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${CONFIG_NAME}
 INSTALL(DIRECTORY ${INCLUDE_DIR} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # Install 3rd party assemblies.
-INSTALL(FILES ${MODULE_INSTALLER} DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+FOREACH(_MODULE ${MODULE_NAMES})
+  GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION)
+
+  IF(EXISTS "${${_MODULE}_IMPORTED_LOCATION}")
+    INSTALL(FILES "${${_MODULE}_IMPORTED_LOCATION}" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+  ENDIF(EXISTS "${${_MODULE}_IMPORTED_LOCATION}")
+  
+  GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION_DEBUG)
+  IF(EXISTS "${${_MODULE}_IMPORTED_LOCATION}")
+    INSTALL(FILES "${${_MODULE}_IMPORTED_LOCATION}" CONFIGURATIONS "Debug" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+  ENDIF(EXISTS "${${_MODULE}_IMPORTED_LOCATION}")
+  
+  GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION_RELEASE)
+  IF(EXISTS "${${_MODULE}_IMPORTED_LOCATION}")
+    INSTALL(FILES "${${_MODULE}_IMPORTED_LOCATION}" CONFIGURATIONS "Release" DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+  ENDIF(EXISTS "${${_MODULE}_IMPORTED_LOCATION}")
+ENDFOREACH(_MODULE "${MODULE_NAMES}")
 
 ###################################################################################################
 ##### Define export package.                                                                  #####

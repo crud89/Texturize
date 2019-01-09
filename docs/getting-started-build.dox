@@ -15,7 +15,7 @@ the latest build, the project has been successfully tested with. Higher versions
 | SDK/Framework |     Project URL     | Version | Source URL  |
 |---------------|-------------------|:-------:|:---:|
 | OpenCV        | https://opencv.org/ | 4.0   | [Link](https://github.com/opencv/opencv/tree/4.0.0) |
-| HDF5          | https://www.hdfgroup.org/ | 1.10.1 | [Link](https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/) |
+| HDF5          | https://www.hdfgroup.org/ | 1.10.4 | [Link](https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.4/src/) |
 | TBB           | https://www.threadingbuildingblocks.org/ | 20170919 | [Link](https://github.com/01org/tbb/releases/tag/2018_U1) |
 | OpenEXR       | http://www.openexr.com/ | 2.3.0 | [Link](https://github.com/openexr/openexr) |
 
@@ -25,6 +25,13 @@ the latest build, the project has been successfully tested with. Higher versions
 \note By default, the framework is linked against the following OpenCV modules: `core`, `imgproc`, `ximgproc`, `imgcodecs`, `highgui`, 
       `features2d`, `calib3d` and `flann`. Do not forget to include them in your build as well! The other dependencies are build with 
       default settings.
+
+\note **Regarding HDF5 builds**
+
+\note HDF5 can produce some tricky issues, like debug-time errors or falsely configured library links, when you try to compile custom
+      builds. Creating custom builds typically resolves those issues. From the provided URL, download the CMake release and build it
+      for your platform. Make sure to build both configurations (`Release` and `Debug`) successfully. Use the generated install 
+      package to build the framework.
 
 Make sure all dependencies are build correctly for your target system. If you do not want to build them on your own, some provide 
 pre-compiled binaries. Copy the build of each dependency into the respective directory under `modules\` and run 

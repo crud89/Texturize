@@ -33,19 +33,19 @@ if (![String]::IsNullOrEmpty($installTo)) {
 }
 
 if (![String]::IsNullOrEmpty($OpenCV)) {
-    $invoke += "-DOpenCV_DIR:STRING=`"$($OpenCV)`" -DOpenCV_FOUND:BOOL=ON "
+    $invoke += "-DOpenCV_DIR:STRING=`"$($OpenCV)`" "
 }
 
 if (![String]::IsNullOrEmpty($OpenEXR)) {
-    $invoke += "-DOPENEXR_LOCATION:STRING=`"$($OpenEXR)`" -DOpenEXR_FOUND:BOOL=ON "
+    $invoke += "-DOPENEXR_LOCATION:STRING=`"$($OpenEXR)`" "
 }
 
 if (![String]::IsNullOrEmpty($TBB)) {
-    $invoke += "-DTBB_DIR:STRING=`"$($TBB)`" -DTBB_FOUND:BOOL=ON "
+    $invoke += "-DTBB_DIR:STRING=`"$($TBB)`" "
 }
 
 if (![String]::IsNullOrEmpty($HDF5)) {
-    $invoke += "-DHDF5_ROOT:STRING=`"$($HDF5)`" -DHDF5_FOUND:BOOL=ON "
+    $invoke += "-DHDF5_ROOT:STRING=`"$($HDF5)`" "
 }
 
 if ($verbose) {
