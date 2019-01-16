@@ -71,34 +71,34 @@ namespace Texturize {
 
 	public:
 		/// \copydoc Texturize::IFileStorage::write
-		virtual void write(const std::string &name, int _data) override;
-		virtual void write(const std::string &name, float _data) override;
-		virtual void write(const std::string &name, double _data) override;
-		virtual void write(const std::string &name, const std::string &_data) override;
-		virtual void write(const std::string &name, const cv::Mat &_data) override;
-		virtual void write(const std::string &name, const cv::SparseMat &_data) override;
-		virtual void write(const std::string &name, const std::vector<int> &_data) override;
-		virtual void write(const std::string &name, const std::vector<float> &_data) override;
-		virtual void write(const std::string &name, const std::vector<double> &_data) override;
-		virtual void write(const std::string &name, const std::vector<std::string> &_data) override;
-		virtual void write(const std::string &name, const std::vector<cv::KeyPoint> &_data) override;
-		virtual void write(const std::string &name, const std::vector<cv::DMatch> &_data) override;
-		virtual void write(const std::string &name, const cv::Range& _data) override;
+		void write(const std::string &name, int _data) override;
+		void write(const std::string &name, float _data) override;
+		void write(const std::string &name, double _data) override;
+		void write(const std::string &name, const std::string &_data) override;
+		void write(const std::string &name, const cv::Mat &_data) override;
+		void write(const std::string &name, const cv::SparseMat &_data) override;
+		void write(const std::string &name, const std::vector<int> &_data) override;
+		void write(const std::string &name, const std::vector<float> &_data) override;
+		void write(const std::string &name, const std::vector<double> &_data) override;
+		void write(const std::string &name, const std::vector<std::string> &_data) override;
+		void write(const std::string &name, const std::vector<cv::KeyPoint> &_data) override;
+		void write(const std::string &name, const std::vector<cv::DMatch> &_data) override;
+		void write(const std::string &name, const cv::Range& _data) override;
 
 		/// \copydoc Texturize::IFileStorage::read
-		virtual void read(const std::string &name, int &data) const override;
-		virtual void read(const std::string &name, float &data) const override;
-		virtual void read(const std::string &name, double &data) const override;
-		virtual void read(const std::string &name, std::string &data) const override;
-		virtual void read(const std::string &name, cv::Mat &data) const override;
-		virtual void read(const std::string &name, cv::SparseMat &data) const override;
-		virtual void read(const std::string &name, std::vector<int> &data) const override;
-		virtual void read(const std::string &name, std::vector<float> &data) const override;
-		virtual void read(const std::string &name, std::vector<double> &data) const override;
-		virtual void read(const std::string &name, std::vector<std::string> &data) const override;
-		virtual void read(const std::string &name, std::vector<cv::KeyPoint> &ks) const override;
-		virtual void read(const std::string &name, std::vector<cv::DMatch> &dm) const override;
-		virtual void read(const std::string &name, cv::Range& _data) const override;
+		void read(const std::string &name, int &data) const override;
+		void read(const std::string &name, float &data) const override;
+		void read(const std::string &name, double &data) const override;
+		void read(const std::string &name, std::string &data) const override;
+		void read(const std::string &name, cv::Mat &data) const override;
+		void read(const std::string &name, cv::SparseMat &data) const override;
+		void read(const std::string &name, std::vector<int> &data) const override;
+		void read(const std::string &name, std::vector<float> &data) const override;
+		void read(const std::string &name, std::vector<double> &data) const override;
+		void read(const std::string &name, std::vector<std::string> &data) const override;
+		void read(const std::string &name, std::vector<cv::KeyPoint> &ks) const override;
+		void read(const std::string &name, std::vector<cv::DMatch> &dm) const override;
+		void read(const std::string &name, cv::Range& _data) const override;
 	};
 
 	/// \brief A file storage implementation, that uses OpenCV's file storage implementation to store files.
@@ -197,10 +197,10 @@ namespace Texturize {
 		public ISampleCodec
 	{
 	public:
-		virtual void load(const std::string& fileName, Sample& sample) const override;
-		virtual void load(std::istream& stream, Sample& sample) const override;
-		virtual void save(const std::string& fileName, const Sample& sample, const int depth = CV_8U) const override;
-		virtual void save(std::ostream& stream, const Sample& sample, const int depth = CV_8U) const override;
+		void load(const std::string& fileName, Sample& sample) const override;
+		void load(std::istream& stream, Sample& sample) const override;
+		void save(const std::string& fileName, const Sample& sample, const int depth = CV_8U) const override;
+		void save(std::ostream& stream, const Sample& sample, const int depth = CV_8U) const override;
 	};
 
 	/// \brief An object that allows to manage multiple codecs and dispatch persistence requests accordingly.
@@ -303,8 +303,8 @@ namespace Texturize {
 		FunctionalAssetPersistence(ASSET_WRITER writer, ASSET_READER reader);
 
 	public:
-		virtual void store(IFileStorage* storage, const TAsset* asset) const override;
-		virtual void restore(const IFileStorage* storage, TAsset** asset) const override;
+		void store(IFileStorage* storage, const TAsset* asset) const override;
+		void restore(const IFileStorage* storage, TAsset** asset) const override;
 	};
 
 	/// \brief An object that allows to store `AppearanceSpace` instances inside an asset.
@@ -312,8 +312,8 @@ namespace Texturize {
 		public AssetPersistence<AppearanceSpace>
 	{
 	public:
-		virtual void store(IFileStorage* storage, const AppearanceSpace* asset) const override;
-		virtual void restore(const IFileStorage* storage, AppearanceSpace** asset) const override;
+		void store(IFileStorage* storage, const AppearanceSpace* asset) const override;
+		void restore(const IFileStorage* storage, AppearanceSpace** asset) const override;
 
 		void write(const std::string& fileName, const AppearanceSpace* descriptor, const StorageFactory& storages = StorageFactory()) const;
 		void read(const std::string& fileName, AppearanceSpace** descriptor, const StorageFactory& storages = StorageFactory()) const;

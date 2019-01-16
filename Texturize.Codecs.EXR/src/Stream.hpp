@@ -26,10 +26,10 @@ public:
 		//delete _stream;
 	}
 
-	virtual bool read(char c[], int n) override;
-	virtual Int64 tellg() override;
-	virtual void seekg(Int64 pos) override;
-	virtual void clear() override;
+	bool read(char c[], int n) override;
+	Int64 tellg() override;
+	void seekg(Int64 pos) override;
+	void clear() override;
 };
 
 class OStreamImpl :
@@ -50,9 +50,9 @@ public:
 		//delete _stream;
 	}
 
-	virtual void write(const char c[], int n) override;
-	virtual Int64 tellp() override;
-	virtual void seekp(Int64 p) override;
+	void write(const char c[], int n) override;
+	Int64 tellp() override;
+	void seekp(Int64 p) override;
 };
 
 bool IStreamImpl::read(char c[], int n)
