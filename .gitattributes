@@ -1,0 +1,9 @@
+# "modules" contains 3rd party libraries; "models" contains static files, that are not supposed to be scanned.
+modules/*   linguist-vendored
+models/*    linguist-vendored
+
+# "docs" contains the documentation.
+docs/*      linguist-documentation
+
+# Special file types.
+*.h         linguist-language=cpp
