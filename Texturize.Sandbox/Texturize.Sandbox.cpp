@@ -29,8 +29,9 @@ using namespace Texturize;
 const char* parameters =
 {
 	"{h help usage ?    |    | Displays this help message}"
-	"{proc p            |    | Specifies the program(s) to run (fm: Detect Features, fd: Calculate feature distances, as: Appearance space transform, s: Perform synthesis). Different programs can be seperated using the \'|\' character and will be executed in the order they appear.}"
+	"{proc p            |    | Specifies the program(s) to run (fm: Detect Features, fd: Calculate feature distances, as: Appearance space transform, s: Perform synthesis, st: Style transfer). Different programs can be seperated using the \'|\' character and will be executed in the order they appear.}"
 	"{exemplar ex       |    | Exemplar file name}"
+	"{target t          |    | Style transfer target map}"
 	"{featureMap fm     |    | Feature map file name}"
 	"{distanceMap fd    |    | Feature distance file name}"
 	"{descriptor ds     |    | Descriptor asset name}"
@@ -46,7 +47,7 @@ const char* parameters =
 	"{jitter j          |    | Semicolon-separated list of floats between 0 and 1, that contain per-level randomness.}"
 	"{rnd               |0   | A randomness value that is used to initialize constant jitter over all levels.}"
 	"{g gauss           |0   | Defines a randomness distribution, set to a pyramid level where a gaussian distribution has its peak. Overrides j and rnd settings.}"
-	"{gs                |0   | Lets the synthesizeser use a symmetrical normal jitter distribution function.}"
+	"{gs                |0   | Lets the synthesizer use a symmetrical normal jitter distribution function.}"
 	"{s seed            |0   | The seed to initialize the RNG.}"
 	"{d dim             |8   | Dimensionality of the search space.}"
 };
@@ -192,7 +193,7 @@ int appearanceSpace(const std::unordered_map<std::string, std::string>& exemplar
 	return 0;
 }
 
-int synthesize(const std::unordered_map<std::string, std::string>& exemplarMaps, const std::unordered_map<std::string, std::string>& resultMaps, const std::string& uvMap, std::string& descriptorAssetName, std::vector<float>& jitter, int width, int height, const uint64_t seed, const cv::Point2f seedCoords = cv::Point2f(-1, -1), const int seedKernel = 5, bool showResult = false)
+int synthesize(const std::unordered_map<std::string, std::string>& exemplarMaps, const std::unordered_map<std::string, std::string>& resultMaps, const std::string& uvMap, const std::string& descriptorAssetName, std::vector<float>& jitter, int width, int height, const uint64_t seed, const cv::Point2f seedCoords = cv::Point2f(-1, -1), const int seedKernel = 5, bool showResult = false)
 {
 	// Load the exemplar albedo map.
 	Sample albedoMap;
@@ -305,16 +306,126 @@ int synthesize(const std::unordered_map<std::string, std::string>& exemplarMaps,
 		_persistence.saveSample(map.second, resultSample);
 	}
 
-	//if (showResult)
-	//{
-	//	Sample uvMap = Sample(uv);
-	//	Sample b(cv::Mat::zeros(uv.size(), CV_32FC3));
-	//	uvMap.extract({ 0, 2, 1, 1 }, b);	// Since CV uses BGR representation.
+	return 0;
+}
 
-	//	cv::imshow("RGB", rgb);
-	//	cv::imshow("UV Map", (cv::Mat)b);
-	//	cv::waitKey(0);
-	//}
+int transferStyle(const std::unordered_map<std::string, std::string>& exemplarMaps, const std::unordered_map<std::string, std::string>& resultMaps, const std::string& uvMap, const std::string& descriptorAssetName, const std::unordered_map<std::string, std::string>& transferTargets, const uint64_t seed, bool showResult = false)
+{
+	// Load the exemplar albedo map.
+	Sample albedoMap;
+	bool albedoProvided = false;
+
+	if (albedoProvided = (exemplarMaps.find("albedo") != exemplarMaps.end()))
+		_persistence.loadSample(exemplarMaps.at("albedo"), albedoMap);
+
+	// Load the transfer target.
+	std::vector<Sample> samples;
+
+	for (auto& targetName : transferTargets)
+	{
+		Sample target;
+		_persistence.loadSample(targetName.second, target);
+		samples.push_back(target);
+	}
+
+	Sample transferTarget = Sample::mergeSamples(std::initializer_list<const Sample>(samples.data(), samples.data() + samples.size()));
+
+	// Load the appearance space descriptor.
+	std::unique_ptr<AppearanceSpace> descriptor;
+
+	try
+	{
+		AppearanceSpaceAsset asset;
+		AppearanceSpace* desc;
+		asset.read(descriptorAssetName, &desc, _storage);
+		descriptor = std::unique_ptr<AppearanceSpace>(desc);
+	}
+	catch (...)
+	{
+		std::cout << "Error: Invalid descriptor asset." << std::endl;
+		return -1;
+	}
+
+	// Get the exemplar and define the synthesis result.
+	Sample exemplar, result;
+	int kernel;
+	descriptor->sample(exemplar);
+	descriptor->getKernel(kernel);
+
+	// Build up the search index.
+	//FeatureMatchingIndex index(descriptor.get(), cv::NORM_L2, true);		// BF-Matcher
+	//FeatureMatchingIndex index(descriptor.get());							// FLANN-Matcher
+	//CoherentIndex index(descriptor.get());
+	//RandomWalkIndex index(descriptor.get());
+	KMeansIndex index(descriptor.get());
+
+#ifdef _DEBUG
+	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
+	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+#else
+	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
+	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+#endif
+
+	PyramidSynthesisSettings config(1.0f);
+	config._seedKernel = kernel;
+	config._rngState = seed;
+
+	// TODO: This can be removed or altered to use the Sample::sample method for sampling (thanks, Captain Obvious!).
+	if (showResult && albedoProvided) {
+		config._feedbackHandler.add([&albedoMap](const std::string& windowName, const cv::Mat& img) -> void {
+			Sample image(cv::Mat::zeros(img.size(), CV_32FC3));
+			cv::Mat rgb = cv::Mat::zeros(img.size(), CV_32FC3);
+			cv::Mat ex = (cv::Mat)albedoMap;
+
+			if (img.channels() == 2)
+			{
+				Sample map(img);
+				map.extract({ 0, 2, 1, 1 }, image);	// Since CV uses BGR representation.
+			}
+			else
+			{
+				image = Sample(img);
+			}
+
+			rgb.forEach<cv::Vec3f>([&img, &ex](cv::Vec3f& val, const int* idx) -> void {
+				cv::Vec2f coords = img.at<cv::Vec2f>(idx);
+				cv::Point2i exc(static_cast<int>(coords[0] * ex.cols), static_cast<int>(coords[1] * ex.rows));
+				val = ex.at<cv::Vec3f>(exc);
+			});
+
+			cv::imshow(windowName, (cv::Mat)image);
+			cv::imshow("RGB", rgb);
+			cv::waitKey(1);
+			//cv::waitKey(0);
+		});
+	}
+
+	// Perform the synthesis.
+	synthesizer->transferStyle(transferTarget, result, config);
+	cv::Mat uv = (cv::Mat)result;
+
+	if (!uvMap.empty())
+		_persistence.saveSample(uvMap, result, CV_16U);
+
+	// Sample the result maps.
+	for each (auto map in resultMaps)
+	{
+		if (map.second.empty())
+			continue;
+
+		if (exemplarMaps.find(map.first) == exemplarMaps.end()) {
+			std::cout << "Warning: No exemplar map called \"" << map.first << "\" has been provided. Skipping..." << std::endl;
+			continue;
+		}
+
+		Sample mapImage, resultSample;
+		std::string mapName = exemplarMaps.at(map.first);
+
+		_persistence.loadSample(mapName, mapImage);
+		mapImage.sample(uv, resultSample);
+		_persistence.saveSample(map.second, resultSample);
+	}
 
 	return 0;
 }
@@ -325,9 +436,15 @@ void parsePrograms(const std::string& cmd, std::queue<std::string>& programs)
 	std::istringstream tokens(cmd);
 	std::string token;
 
-	while (std::getline(tokens, token, '|'))
-		if (!token.empty())
-			programs.push(token);
+	while (std::getline(tokens, token, '|')) {
+		// In case there is no token, skip.
+		if (token.empty())
+			continue;
+		
+		// Convert the token to lowercase.
+		std::transform(token.begin(), token.end(), token.begin(), std::tolower);
+		programs.push(token);
+	}
 }
 
 void parseMaps(const std::string& cmd, std::unordered_map<std::string, std::string>& maps)
@@ -420,6 +537,10 @@ void parseJitter(const std::string& cmd, std::vector<float>& jitter)
 // PBR Material Presets:
 // -proc=fm|fd|as|s -ex="albedo:$(SolutionDir)\samples\Cliff\cliff_albedo.tif;normal:$(SolutionDir)\samples\Cliff\cliff_normal.tif;height:$(SolutionDir)\samples\Cliff\cliff_height.tif;roughness:$(SolutionDir)\samples\Cliff\cliff_roughness.tif;ao:$(SolutionDir)\samples\Cliff\cliff_ao.tif" -fm="$(SolutionDir)\samples\Cliff\cliff_fm.txr" -fd="$(SolutionDir)\samples\Cliff\cliff_fd.txr" -ds="$(SolutionDir)samples\Cliff\cliff_am.txa" -em="$(SolutionDir)\models\forest\modelFinal.yml" -r="albedo:$(SolutionDir)\samples\Cliff\cliff_albedo_512.png;normal:$(SolutionDir)\samples\Cliff\cliff_normal_512.png;height:$(SolutionDir)\samples\Cliff\cliff_height_512.png;roughness:$(SolutionDir)\samples\Cliff\cliff_roughness_512.png;ao:$(SolutionDir)\samples\Cliff\cliff_ao_512.png" -rw=512 -rh=512 -dr=1 -m=1 -w="normal:2;albedo:2"
 // -proc=fm|fd|as|s -ex="albedo:$(SolutionDir)\samples\Cliff\cliff_albedo.tif;normal:$(SolutionDir)\samples\Cliff\cliff_normal.tif;height:$(SolutionDir)\samples\Cliff\cliff_height.tif;roughness:$(SolutionDir)\samples\Cliff\cliff_roughness.tif;ao:$(SolutionDir)\samples\Cliff\cliff_ao.tif" -fm="$(SolutionDir)\samples\Cliff\cliff_fm.txr" -fd="$(SolutionDir)\samples\Cliff\cliff_fd.txr" -ds="$(SolutionDir)samples\Cliff\cliff_am.txa" -em="$(SolutionDir)\models\forest\modelFinal.yml" -uv="$(SolutionDir)\samples\Cliff\cliff_uv_512_01.png" -rw=512 -rh=512 -dr=1 -m=1 -w="normal:3;albedo:2"
+//
+// Style Transfer Tests:
+// -dontWait=1 -proc="as" -ex="height:C:\Users\Admin\Documents\Visual Studio 2017\Projects\Texturize\tests\height_transfer\height.tif" -ds="C:\Users\Admin\Documents\Visual Studio 2017\Projects\Texturize\tests\height_transfer\searchSpace.txa" -m=1 -fd="C:\Users\Admin\Documents\Visual Studio 2017\Projects\Texturize\tests\height_transfer\guidance.txr"
+// -dontWait=1 -proc="st" -ds="C:\Users\Admin\Documents\Visual Studio 2017\Projects\Texturize\tests\height_transfer\searchSpace.txa" -t="C:\Users\Admin\Documents\Visual Studio 2017\Projects\Texturize\tests\height_transfer\target_height.tif" -r="C:\Users\Admin\Documents\Visual Studio 2017\Projects\Texturize\tests\height_transfer\transferred.tif"
 int main(int argc, const char** argv)
 {
 	// Parse the command line.
@@ -447,6 +568,7 @@ int main(int argc, const char** argv)
 	// Check the program and call it accordingly.
 	std::string proc = parser.get<std::string>("proc");
 	std::string exemplar = parser.get<std::string>("ex");
+	std::string transferTarget = parser.get<std::string>("t");
 	std::string featureMap = parser.get<std::string>("fm");
 	std::string distanceMap = parser.get<std::string>("fd");
 	std::string descriptorAsset = parser.get<std::string>("ds");
@@ -468,6 +590,7 @@ int main(int argc, const char** argv)
 
 	// Remove surrounding quote occurencies.
 	exemplar			= !exemplar.empty() ? exemplar.substr(exemplar.find_first_not_of('\"'), exemplar.find_last_not_of('\"') + 1) : exemplar;
+	transferTarget		= !transferTarget.empty() ? transferTarget.substr(transferTarget.find_first_not_of('\"'), transferTarget.find_last_not_of('\"') + 1) : transferTarget;
 	featureMap			= !featureMap.empty() ? featureMap.substr(featureMap.find_first_not_of('\"'), featureMap.find_last_not_of('\"') + 1) : featureMap;
 	distanceMap			= !distanceMap.empty() ? distanceMap.substr(distanceMap.find_first_not_of('\"'), distanceMap.find_last_not_of('\"') + 1) : distanceMap;
 	descriptorAsset     = !descriptorAsset.empty() ? descriptorAsset.substr(descriptorAsset.find_first_not_of('\"'), descriptorAsset.find_last_not_of('\"') + 1) : descriptorAsset;
@@ -481,19 +604,21 @@ int main(int argc, const char** argv)
 	parsePrograms(proc, programs);
 
 	// Get the maps, if the material flag is specified.
-	std::unordered_map<std::string, std::string> exemplarMaps, resultMaps;
+	std::unordered_map<std::string, std::string> exemplarMaps, resultMaps, transferMaps;
 
 	if (isMaterial != 0)
 	{
 		dimensionality = dimensionality == 0 ? 8 : dimensionality;
 		parseMaps(exemplar, exemplarMaps);
 		parseMaps(resultFile, resultMaps);
+		parseMaps(transferTarget, transferMaps);
 	}
-	else
+	else if (!exemplar.empty())
 	{
 		dimensionality = dimensionality == 0 ? 4 : dimensionality;
 		exemplarMaps["albedo"] = exemplar;
 		resultMaps["albedo"] = resultFile;
+		transferMaps["albedo"] = transferTarget;
 	}
 
 	// Get the weights.
@@ -594,6 +719,21 @@ int main(int argc, const char** argv)
 
 				std::cout << "\ts:Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 			}
+		}
+		else if (program == "st") {
+			std::cout << "Performing style transfer..." << std::endl
+				<< "\tDescriptor Asset: " << descriptorAsset << std::endl;
+
+			for each (auto map in transferMaps)
+				std::cout << "\tTarget Map " << map.first << ": " << map.second << std::endl;
+
+			std::cout << "\tResult: " << uvMap << std::endl;
+			
+			auto start = std::chrono::high_resolution_clock::now();
+			result = transferStyle(exemplarMaps, resultMaps, uvMap, descriptorAsset, transferMaps, seed, showResult);
+			auto end = std::chrono::high_resolution_clock::now();
+
+			std::cout << "\ts:Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 		}
 
 		if (result != 0)
