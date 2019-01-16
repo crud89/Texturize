@@ -54,7 +54,7 @@ SET(MODULE_INCLUDES)
 ###################################################################################################
 ##### Find OpenCV.                                                                            #####
 ###################################################################################################
-FIND_PACKAGE(OpenCV REQUIRED core imgproc ximgproc imgcodecs highgui features2d calib3d flann)
+FIND_PACKAGE(OpenCV REQUIRED core imgproc ximgproc imgcodecs highgui features2d calib3d flann ml)
 
 IF(OpenCV_FOUND)
   MESSAGE(STATUS "  OpenCV modules:       ${OpenCV_LIBS}...")

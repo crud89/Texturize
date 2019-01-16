@@ -14,7 +14,7 @@ the latest build, the project has been successfully tested with. Higher versions
 
 | SDK/Framework |     Project URL     | Version | Source URL  |
 |---------------|-------------------|:-------:|:---:|
-| OpenCV        | https://opencv.org/ | 4.0   | [Link](https://github.com/opencv/opencv/tree/4.0.0) |
+| OpenCV        | https://opencv.org/ | 4.0.1   | [Link](https://github.com/opencv/opencv/tree/4.0.1) |
 | HDF5          | https://www.hdfgroup.org/ | 1.10.4 | [Link](https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.4/src/) |
 | TBB           | https://www.threadingbuildingblocks.org/ | 20170919 | [Link](https://github.com/01org/tbb/releases/tag/2018_U1) |
 | OpenEXR       | http://www.openexr.com/ | 2.3.0 | [Link](https://github.com/openexr/openexr) |
@@ -23,8 +23,8 @@ the latest build, the project has been successfully tested with. Higher versions
 \note **Custom OpenCV builds**
       
 \note By default, the framework is linked against the following OpenCV modules: `core`, `imgproc`, `ximgproc`, `imgcodecs`, `highgui`, 
-      `features2d`, `calib3d` and `flann`. Do not forget to include them in your build as well! The other dependencies are build with 
-      default settings.
+      `features2d`, `calib3d`, `ml` and `flann`. Do not forget to include them in your build as well! The other dependencies are build 
+      with default settings.
 
 \note **Regarding HDF5 builds**
 

@@ -16,8 +16,13 @@ MESSAGE(STATUS "Setting up project: ${PROJECT_NAME}...")
 # Set compiler flags
 IF(MSVC)
   # Switch from Multi-Thread (/MT) to Multi-Thread Debug (/MTd) for debug builds.
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+  #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+  #SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+  
+  # NOTE: While the above should be correct for executables, there will be heap corruption errors
+  #		  in debug mode, so we leave this on /MD(d) for now.
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 ENDIF(MSVC)
 
 # Specify source folders, relative to the project sources directory.
