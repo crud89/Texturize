@@ -60,44 +60,6 @@ cv::Mat AppearanceSpace::getComponents(const Sample& exemplar, int ks)
 	return components;
 }
 
-Sample AppearanceSpace::mergeSamples(std::initializer_list<const Sample>& samples)
-{
-	// Calculate the number of channels in the result exemplar.
-	int cn(0), targetChannel(0);
-	int width = samples.begin()->width();
-	int height = samples.begin()->height();
-
-	for (auto ex : samples)
-	{
-		// The dimensions must be equal for all sample layers.
-		TEXTURIZE_ASSERT(width == ex.width());
-		TEXTURIZE_ASSERT(height == ex.height());
-
-		// Accumulate the number of channels of each sample to get the number of channels within the target.
-		cn += static_cast<int>(ex.channels());
-	}
-
-	// Create a new exemplar by merging the provided channels.
-	Sample target(cn, width, height);
-
-	for (auto ex : samples)
-	{
-		// Create a mapping between the source and target sample, where each channel is copied individually.
-		std::vector<int> fromTo;
-
-		for (int c(0); c < ex.channels(); ++c)
-		{
-			fromTo.push_back(c);										// Extract from channel 0..n in source exemplar
-			fromTo.push_back(targetChannel++);							// To channel m..m+n in target exemplar; m represents the increment of all prevously mapped channels.
-		}
-
-		// Map the channels to the new exemplar.
-		ex.extract(fromTo, target);
-	}
-	
-	return target;
-}
-
 void AppearanceSpace::calculate(const Sample& exemplar, AppearanceSpace** desc, size_t rd, int ks)
 {
 	TEXTURIZE_ASSERT(desc != nullptr);
@@ -163,12 +125,12 @@ void AppearanceSpace::calculate(const Sample& exemplar, AppearanceSpace** desc, 
 
 void AppearanceSpace::calculate(std::initializer_list<const Sample> exemplarMaps, AppearanceSpace** desc, size_t rd, int ks)
 {
-	AppearanceSpace::calculate(mergeSamples(exemplarMaps), desc, rd, ks);
+	AppearanceSpace::calculate(Sample::mergeSamples(exemplarMaps), desc, rd, ks);
 }
 
 void AppearanceSpace::calculate(std::initializer_list<const Sample> exemplarMaps, AppearanceSpace** desc, float tv, int ks)
 {
-	AppearanceSpace::calculate(mergeSamples(exemplarMaps), desc, tv, ks);
+	AppearanceSpace::calculate(Sample::mergeSamples(exemplarMaps), desc, tv, ks);
 }
 
 void AppearanceSpace::getProjector(const cv::PCA** projection) const
@@ -228,6 +190,24 @@ void AppearanceSpace::transform(const Sample& sample, const cv::Point& texelCoor
 	sample.getNeighborhood(texelCoords, _kernelSize, kernel, true);
 
 	this->transform(kernel, desc);
+}
+
+void AppearanceSpace::transform(const Sample& sample, Sample& to, const int ks) const
+{
+	cv::Mat components = AppearanceSpace::getComponents(sample, ks);
+	cv::Mat projected = _projection->project(components);
+	std::vector<cv::Mat> channels;
+
+	for (int c(0); c < projected.rows; ++c)
+		channels.push_back(projected.row(c));
+
+	cv::merge(channels, projected);
+	projected = projected.reshape(channels.size(), sample.height());
+
+	TEXTURIZE_ASSERT(projected.channels() == channels.size());
+	TEXTURIZE_ASSERT(projected.rows == sample.height());
+
+	to = (Sample)projected;
 }
 
 void AppearanceSpace::sample(Sample& sample) const

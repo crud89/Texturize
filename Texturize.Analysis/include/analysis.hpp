@@ -356,6 +356,12 @@ namespace Texturize {
 		/// cv::Mat mat = (cv::Mat)sample;			// Convert to a 512x512 cv::Mat object with a depth of 4.
 		/// \endcode
 		explicit operator cv::Mat() const;
+
+	public:
+		/// \brief Merges multiple input samples into a single `Sample` instance.
+		/// \param samples A list of samples to merge.
+		/// \returns A single `Sample` instance, containing all channels of all input samples.
+		static Sample mergeSamples(std::initializer_list<const Sample>& samples);
 	};
 
 	/// \brief A class that provides unified access to image samples.
@@ -521,7 +527,7 @@ namespace Texturize {
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& samples) const override;
+		void apply(Sample& result, const Sample& samples) const override;
 
 		/// \copydoc Texturize::IFilter::apply
 		template <typename TRes = TResult, typename TSmpl = TSample, typename std::enable_if<
@@ -547,7 +553,7 @@ namespace Texturize {
 		/// \copydoc Texturize::IFilter::apply
 		///
 		/// The method executes each filter in the cascade in the order they have been appended.
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 
 		/// \brief Appends a filter to the cascade.
 		/// \param filter The filter to append to the cascade.
@@ -580,7 +586,7 @@ namespace Texturize {
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief Implements an dynamic threshold filter.
@@ -594,7 +600,7 @@ namespace Texturize {
 	{
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief Implements a euclidean distance filter.
@@ -605,7 +611,7 @@ namespace Texturize {
 	{
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief Implements a normalization filter.
@@ -616,7 +622,7 @@ namespace Texturize {
 	{
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief Implements a grayscale filter.
@@ -625,7 +631,7 @@ namespace Texturize {
 	{
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief Implements a gaussian blur filter.
@@ -648,7 +654,7 @@ namespace Texturize {
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief Implements a filter that calculates a *feature map*
@@ -667,7 +673,7 @@ namespace Texturize {
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		virtual void apply(Sample& result, const Sample& sample) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 	};
 
 	/// \brief An interface that defines methods to create, transform and work with search spaces.
@@ -701,6 +707,8 @@ namespace Texturize {
 		/// \param texelCoords The x and y coordinates of the texel to project.
 		/// \param desc A descriptor, that describes the projected texel.
 		virtual void transform(const Sample& sample, const cv::Point& texelCoords, std::vector<float>& desc) const = 0;
+
+		virtual void transform(const Sample& sample, Sample& to, const int ks = 5) const = 0;
 
 		/// \brief Gets a copy of the sample, containing search space descriptors.
 		/// \param sample A buffer to copy the sample to.
@@ -783,11 +791,6 @@ namespace Texturize {
 		/// \returns A column-major matrix containing high-dimensional vectors, that describe a pixel neighborhood. Each column represents a single pixel of the input exemplar.
 		static cv::Mat getComponents(const Sample& exemplar, int kernel);
 
-		/// \brief Merges multiple input samples into a single `Sample` instance.
-		/// \param samples A list of samples to merge.
-		/// \returns A single `Sample` instance, containing all channels of all input samples.
-		static Sample mergeSamples(std::initializer_list<const Sample>& samples);
-
 	public:
 		/// \brief Calculates the appearance space for an individual exemplar.
 		/// \param exemplar The exemplar sample to calculate the seach space for.
@@ -836,14 +839,15 @@ namespace Texturize {
 
 		// ISearchSpace
 	public:
-		virtual void transform(const std::vector<float>& pixelNeighborhood, std::vector<float>& desc) const override;
-		virtual void transform(const Sample& sample, const int x, const int y, std::vector<float>& desc) const override;
-		virtual void transform(const Sample& sample, const cv::Point& texelCoords, std::vector<float>& desc) const override;
-		virtual void sample(Sample& sample) const override;
-		virtual void sample(const Sample** const sample) const override;
-		virtual void kernel(int& kernel) const override;
-		virtual void sampleSize(cv::Size& size) const override;
-		virtual void sampleSize(int& width, int& height) const override;
+		void transform(const std::vector<float>& pixelNeighborhood, std::vector<float>& desc) const override;
+		void transform(const Sample& sample, const int x, const int y, std::vector<float>& desc) const override;
+		void transform(const Sample& sample, const cv::Point& texelCoords, std::vector<float>& desc) const override;
+		void transform(const Sample& sample, Sample& to, const int ks = 5) const override;
+		void sample(Sample& sample) const override;
+		void sample(const Sample** const sample) const override;
+		void kernel(int& kernel) const override;
+		void sampleSize(cv::Size& size) const override;
+		void sampleSize(int& width, int& height) const override;
 	};
 
 	/// @}
