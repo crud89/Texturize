@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <sampling.hpp>
+#include <tbb/tbb.h>
 
 #include "log2.h"
 
@@ -61,6 +62,21 @@ void PyramidSynthesizer::synthesize(int width, int height, Sample& result, const
 void PyramidSynthesizer::synthesize(const cv::Size& size, Sample& result, const SynthesisSettings& config) const
 {
 	this->synthesize(size.width, size.height, result, config);
+}
+
+void PyramidSynthesizer::transferStyle(const Sample& target, Sample& result, const SynthesisSettings& config) const
+{
+	// The configuration must contain arguments for pyramidal synthesis.
+	const PyramidSynthesisSettings* settings = dynamic_cast<const PyramidSynthesisSettings*>(&config);
+
+	TEXTURIZE_ASSERT(settings != nullptr);							// The synthesis settings must be compatible.
+	TEXTURIZE_ASSERT(settings->validate());							// The synthesis configuration must be valid.
+
+	// Get a state object to handle common synthesizer configuration.
+	PyramidSynthesizerState state(*settings);
+
+	// Perform the style transfer.
+	this->transferTo(target, result, state);
 }
 
 void PyramidSynthesizer::synthesizeLevel(cv::Mat& sample, const PyramidSynthesizerState& state) const
@@ -246,7 +262,64 @@ std::vector<float> PyramidSynthesizer::getNeighborhoodDescriptor(const Sample* e
 	return neighborhood;
 }
 
-std::unique_ptr<ISynthesizer> PyramidSynthesizer::createSynthesizer(const SearchIndex* catalog)
+void PyramidSynthesizer::transferTo(const Sample& target, Sample& result, const PyramidSynthesizerState& state) const
+{
+	const SearchIndex* index = this->getIndex();
+	const unsigned int subPasses = state.config()._correctionSubPasses;
+	const unsigned int totalSubPasses = subPasses * subPasses;
+
+	// Initialize a matrix that will contain the result.
+	cv::Mat sample(target.size(), CV_32FC2);
+	const int width = target.width(), height = target.height();
+
+	sample.forEach<cv::Vec2f>([&width, &height](cv::Vec2f& uv, const int* idx) -> void {
+		uv[0] = static_cast<float>(idx[1]) / static_cast<float>(width);
+		uv[1] = static_cast<float>(idx[0]) / static_cast<float>(height);
+	});
+
+	// Transform the target into the search space.
+	Sample targetSpace;
+	index->getSearchSpace()->transform(target, targetSpace);
+
+	// For each pixel in the sample, lookup the best match.
+	// NOTE: This is similar to an initial correction pass.
+	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
+	{
+		// Get the neighborhood descriptors of the target space.
+		const cv::Mat descriptors = index->calculateNeighborhoodDescriptors(targetSpace);
+
+		for (int r = 0; r < sample.rows; ++r)
+		for (int c = 0; c < sample.cols; ++c)
+		{
+			// Check if the pixel should be corrected within the current sub-pass.
+			int col = c % subPasses;
+			int row = r % subPasses;
+			int subPass = row * subPasses + col;
+
+			// Only correct the pixel, if it should be done within this sub-pass.
+			if (subPass != sp)
+				continue;
+
+			// Match the descriptor with the search space.
+			cv::Point2i point(c, r);
+			cv::Vec2f newCoords;
+			cv::Vec2f& coords = sample.at<cv::Vec2f>(point);
+
+			// Get the descriptor at the current location.
+			index->findNearestNeighbor(descriptors, sample, point, newCoords);
+			coords = newCoords;
+		}
+
+		// TODO: Run correction passes.
+		state.config()._feedbackHandler.execute("Status", sample);
+	}
+
+	// Send the temporary result to handlers.
+	state.config()._feedbackHandler.execute("Transferred", sample);
+	result = Sample(sample);
+}
+
+std::unique_ptr<SynthesizerBase> PyramidSynthesizer::createSynthesizer(const SearchIndex* catalog)
 {
 	return std::unique_ptr<PyramidSynthesizer>(new PyramidSynthesizer(catalog));
 }
@@ -342,7 +415,56 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 	}
 }
 
-std::unique_ptr<ISynthesizer> ParallelPyramidSynthesizer::createSynthesizer(const SearchIndex* catalog)
+void ParallelPyramidSynthesizer::transferTo(const Sample& target, Sample& result, const PyramidSynthesizerState& state) const
+{
+	const SearchIndex* index = this->getIndex();
+	const unsigned int subPasses = state.config()._correctionSubPasses;
+	const unsigned int totalSubPasses = subPasses * subPasses;
+
+	// Initialize a matrix that will contain the result.
+	cv::Mat sample(target.size(), CV_32FC2);
+	const int width = target.width(), height = target.height();
+
+	sample.forEach<cv::Vec2f>([&width, &height](cv::Vec2f& uv, const int* idx) -> void {
+		uv[0] = static_cast<float>(idx[1]) / static_cast<float>(width);
+		uv[1] = static_cast<float>(idx[0]) / static_cast<float>(height);
+	});
+
+	// Transform the target into the search space.
+	Sample targetSpace;
+	index->getSearchSpace()->transform(target, targetSpace);
+
+	// For each pixel in the sample, lookup the best match.
+	// NOTE: This is similar to an initial correction pass.
+	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
+	{
+		// Get the neighborhood descriptors of the target space.
+		const cv::Mat descriptors = index->calculateNeighborhoodDescriptors(targetSpace);
+
+		sample.forEach<cv::Vec2f>([&sample, &index, &descriptors, &sp, &subPasses](cv::Vec2f& coords, const int* idx) -> void {
+			// Check if the pixel should be corrected within the current sub-pass.
+			int col = idx[1] % subPasses;
+			int row = idx[0] % subPasses;
+			int subPass = row * subPasses + col;
+
+			// Only correct the pixel, if it should be done within this sub-pass.
+			if (subPass != sp)
+				return;
+
+			// Get the descriptor at the current location.
+			index->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), coords);
+		});
+
+		// TODO: Run correction passes.
+		//state.config()._feedbackHandler.execute("Status", sample);
+	}
+
+	// Send the temporary result to handlers.
+	//state.config()._feedbackHandler.execute("Transferred", sample);
+	result = Sample(sample);
+}
+
+std::unique_ptr<SynthesizerBase> ParallelPyramidSynthesizer::createSynthesizer(const SearchIndex* catalog)
 {
 	return std::unique_ptr<ParallelPyramidSynthesizer>(new ParallelPyramidSynthesizer(catalog));
 }

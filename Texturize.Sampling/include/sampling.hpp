@@ -7,7 +7,7 @@
 #include <random>
 
 #include <opencv2\core.hpp>
-#include <opencv2\flann.hpp>
+#include <opencv2\ml.hpp>
 
 /// \namespace Texturize
 /// \brief The root namespace, that contains all framework classes.
@@ -198,52 +198,22 @@ namespace Texturize {
 		const ISearchSpace* getSearchSpace() const;
 	};
 
-	/// \brief A search index based on OpenCV's feature matching library.
+	/// \brief A search index implementation that clusters the search space using k-means to build a quantized search-tree, which allows for fast neighborhood queries.
 	///
-	/// \deprecated Note that this class is deprecated, due to poor quality and may be either reworked or removed in future releases. It is not recommendet to use
-	///				it in is current form.
-	class TEXTURIZE_API FeatureMatchingIndex :
+	/// This search index allows for fast, yet accurate (i.e. non-approximative) runtime neighborhood queries. This is achieved by clustering the search space when creating the index. *TODO: DOC...*
+	class TEXTURIZE_API KMeansIndex :
 		public SearchIndex
 	{
 	private:
-		cv::Ptr<cv::DescriptorMatcher> _matcher;
+		cv::Ptr<cv::ml::KNearest> _classifier{ cv::ml::KNearest::create() };
+		int _sampleWidth{ 0 };
 
 	private:
 		void init();
 
 	public:
 		/// \brief Creates a search index based on brute force matching.
-		FeatureMatchingIndex(const ISearchSpace* searchSpace, const cv::NormTypes norm, const bool crossCheck = false);
-
-		/// \brief Creates a search index that uses fast approximate nearest neighbor matchning (FLANN).
-		FeatureMatchingIndex(const ISearchSpace* searchSpace, cv::flann::IndexParams* indexParams = new cv::flann::KDTreeIndexParams(), cv::flann::SearchParams* searchParams = new cv::flann::SearchParams());
-		
-	public:
-		/// \brief Calculates a set of neighborhood-descriptors for the search-space exemplar.
-		///
-		/// The method takes the exemplar that is used to initialize the search space, used by the current index instance and extracts so called *proxy-pixels* for the neighborhood of each pixel. It
-		/// then uses them to project them to a set of descriptors that can be used to match them with their nearest neighbors.
-		///
-		/// *Proxy-pixels* are the four pixels diagonally adjecent pixels of a certain pixel within an exemplar. They are used to predict the appearance of this pixel. The actual pixel values are
-		/// later found by matching the resulting neighborhood descriptor from those proxy-pixels with a pre-computed descriptor set.
-		///
-		/// This overload generates a UV map with equal dimensions to the search-space exemplar. The UV map get's filled with coordinates between `0.0` and `1.0`.
-		///
-		/// \returns A set of descriptors for the whole search-space exemplar, where each row contains one descriptor.
-		cv::Mat calculateNeighborhoodDescriptors() const;
-
-		/// \brief Calculates a set of neighborhood-descriptors for the search-space exemplar.
-		///
-		/// The method takes the exemplar that is used to initialize the search space, used by the current index instance and extracts so called *proxy-pixels* for the neighborhood of each pixel. It
-		/// then uses them to project them to a set of descriptors that can be used to match them with their nearest neighbors.
-		///
-		/// *Proxy-pixels* are the four pixels diagonally adjecent pixels of a certain pixel within an exemplar. They are used to predict the appearance of this pixel. The actual pixel values are
-		/// later found by matching the resulting neighborhood descriptor from those proxy-pixels with a pre-computed descriptor set.
-		///
-		/// This overload uses a UV map to fetch individual pixels from the search-space exemplar.
-		///
-		/// \returns A set of descriptors for each point within the UV map, where each row contains one descriptor.
-		cv::Mat calculateNeighborhoodDescriptors(const cv::Mat& uv) const;
+		KMeansIndex(const ISearchSpace* searchSpace);
 
 	public:
 		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
@@ -729,9 +699,25 @@ namespace Texturize {
 		virtual void synthesize(const cv::Size& size, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const = 0;
 	};
 
+	/// \brief The base interface for style transfer implementations.
+	///
+	/// Style transfer is a special case of texture synthesis. Instead of creating a completely new texture, the exemplar is used to fit a second image - the transfer
+	/// target - to it. Basically for each pixel of the target, the synthesizer looks up the best correspondence from the exemplar.
+	///
+	/// \see Texturize::SynthesizerBase
+	class TEXTURIZE_API IStyleTransfer {
+	public:
+		/// \brief Transfers the style of the search space to a target sample and stores the result.
+		/// \param target The target sample the style should be transferred to.
+		/// \param result A reference to the result sample.
+		/// \param config The configuration to initialize the synthesizer with.
+		virtual void transferStyle(const Sample& target, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const = 0;
+	};
+
 	/// \brief A base implementation for exemplar-based synthesizers.
 	class TEXTURIZE_API SynthesizerBase :
-		public ISynthesizer
+		public ISynthesizer,
+		public IStyleTransfer
 	{
 		/// \example NaiveSamplingSynthesizer.cpp
 		/// This example demonstrates how to implement a custom synthesizer. The following code implements a synthesizer, that generates a new texture by naive sampling, as
@@ -751,6 +737,8 @@ namespace Texturize {
 		/// \brief Creates a new synthesizer instance.
 		/// \param catalog An index, that provides access to exemplar pixel neighborhoods and implements neighborhood matching.
 		SynthesizerBase(const SearchIndex* catalog);
+
+	public:
 		virtual ~SynthesizerBase() { }
 
 	public:
@@ -835,15 +823,18 @@ namespace Texturize {
 		///				releases. Consider using `SearchIndex::findNearestNeighbor` directly.
 		virtual std::vector<float> getNeighborhoodDescriptor(const Sample* exemplar, const cv::Mat& sample, const cv::Point2i& uv, int kernel, bool weight = true) const;
 
+		virtual void transferTo(const Sample& target, Sample& result, const PyramidSynthesizerState& state) const;
+
 	public:
-		virtual void synthesize(int width, int height, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const override;
-		virtual void synthesize(const cv::Size& size, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const override;
+		void synthesize(int width, int height, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const override;
+		void synthesize(const cv::Size& size, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const override;
+		void transferStyle(const Sample& target, Sample& result, const SynthesisSettings& config = SynthesisSettings()) const override;
 
 	public:
 		/// \brief A factory method that creates a new synthesizer and initializes with a search index, that provides access to exemplar neighborhoods.
 		/// \param catalog An search index, that provides access to exemplar neighborhoods and provides runtime pixel neighborhood matching.
 		/// \return An instance of a synthesizer.
-		static std::unique_ptr<ISynthesizer> createSynthesizer(const SearchIndex* catalog);
+		static std::unique_ptr<SynthesizerBase> createSynthesizer(const SearchIndex* catalog);
 	};
 
 	/// \brief Implements a parallel, pyramid-bases, non-parametric, per-pixel synthesizer.
@@ -875,12 +866,13 @@ namespace Texturize {
 		void upsample(cv::Mat& sample, const PyramidSynthesizerState& state) const override;
 		void jitter(cv::Mat& sample, const PyramidSynthesizerState& state) const override;
 		void correct(cv::Mat& sample, const PyramidSynthesizerState& state) const override;
+		void transferTo(const Sample& target, Sample& result, const PyramidSynthesizerState& state) const override;
 
 	public:
 		/// \brief A factory method that creates a new synthesizer and initializes with a search index, that provides access to exemplar neighborhoods.
 		/// \param catalog An search index, that provides access to exemplar neighborhoods and provides runtime pixel neighborhood matching.
 		/// \return An instance of a synthesizer.
-		static std::unique_ptr<ISynthesizer> createSynthesizer(const SearchIndex* catalog);
+		static std::unique_ptr<SynthesizerBase> createSynthesizer(const SearchIndex* catalog);
 	};
 
 	// class TEXTURIZE_API GPUPyramidSynthesizer : public PyramidSynthesizer { }

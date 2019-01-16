@@ -22,114 +22,100 @@ const ISearchSpace* SearchIndex::getSearchSpace() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-///// FeatureMatching-based search index implementation                                       /////
+///// KMeans-based search index implementation                                                /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-FeatureMatchingIndex::FeatureMatchingIndex(const ISearchSpace* searchSpace, const cv::NormTypes norm, const bool crossCheck) :
-	SearchIndex(searchSpace), _matcher(cv::BFMatcher::create(norm, crossCheck))
+KMeansIndex::KMeansIndex(const ISearchSpace* searchSpace) :
+	SearchIndex(searchSpace)
 {
 	this->init();
 }
 
-FeatureMatchingIndex::FeatureMatchingIndex(const ISearchSpace* searchSpace, cv::flann::IndexParams* indexParams, cv::flann::SearchParams* searchParams) :
-	SearchIndex(searchSpace), _matcher(cv::makePtr<cv::FlannBasedMatcher>(indexParams, searchParams))
-{
-	this->init();
-}
-
-void FeatureMatchingIndex::init()
+void KMeansIndex::init()
 {
 	// Precompute the neighborhood descriptors used to train data.
 	const Sample* sample;
+	int height;
 	this->getSearchSpace()->sample(&sample);
+	sample->getSize(_sampleWidth, height);
 
 	// Form a descriptor vector from the sample.
 	cv::Mat descriptors = DescriptorExtractor::calculateNeighborhoodDescriptors(*sample);
 
-	// Train the matcher with the sample set.
-	_matcher->add(descriptors);
-	_matcher->train();
+	// Set the vector coordinates as labels.
+	cv::Mat labels(1, _sampleWidth * height, CV_32SC1);
+	labels.forEach<int>( [](int& pi, const int* idx) -> void { pi = idx[1]; } );
+
+	// Train the classifier.
+	bool trainSuccess = _classifier->train(descriptors, cv::ml::ROW_SAMPLE, labels);
+
+	TEXTURIZE_ASSERT(trainSuccess);											// Training should be successful.
 }
 
-cv::Mat FeatureMatchingIndex::calculateNeighborhoodDescriptors() const
+bool KMeansIndex::findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist, float* dist) const
 {
-	const Sample* exemplar;
-	this->getSearchSpace()->sample(&exemplar);
-
-	return DescriptorExtractor::calculateNeighborhoodDescriptors(*exemplar);
-}
-
-cv::Mat FeatureMatchingIndex::calculateNeighborhoodDescriptors(const cv::Mat& uv) const
-{
-	const Sample* exemplar;
-	this->getSearchSpace()->sample(&exemplar);
-
-	return DescriptorExtractor::calculateNeighborhoodDescriptors(*exemplar, uv);
-}
-
-bool FeatureMatchingIndex::findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist, float* dist) const
-{
-	// Find the best match only.
-	std::vector<cv::Vec2f> matches;
-	std::vector<float> distances;
-
-	if (!this->findNearestNeighbors(descriptor, matches, 1, minDist, &distances))
-		return false;
-
-	if (matches.size() == 0)
-		return false;
+	// Convert the descriptor.
+	cv::Mat candidate(descriptor,  false);
+	candidate = candidate.t();
 	
-	// Return the match and distance.
-	match = matches[0];
+	// Find the k=1 nearest neighbor.
+	cv::Mat response, distance;
+	_classifier->findNearest(candidate, 1, cv::noArray(), response, distance);
 
-	if (dist != nullptr)
-		*dist = distances[0];
+	// The response contains the UV coordinates of the best match.
+	int matchId = static_cast<int>(response.at<float>(0, 0));
+	match[0] = static_cast<float>(matchId % _sampleWidth) / static_cast<float>(_sampleWidth);
+	match[1] = static_cast<float>(matchId / _sampleWidth) / static_cast<float>(_sampleWidth);
+	
+	// Store the distance/error.
+	if (dist)
+		*dist = distance.at<float>(0, 0);
 
 	return true;
 }
 
-bool FeatureMatchingIndex::findNearestNeighbors(const std::vector<float>& descriptor, std::vector<cv::Vec2f>& mtx, const int k, float minDist, std::vector<float>* dist) const
+bool KMeansIndex::findNearestNeighbors(const std::vector<float>& descriptor, std::vector<cv::Vec2f>& mtx, const int k, float minDist, std::vector<float>* dist) const
 {
-	// Perform a knn-search.
-	std::vector<std::vector<cv::DMatch>> matches;
-	_matcher->knnMatch(descriptor, matches, k);
+	//// Perform a knn-search.
+	//std::vector<std::vector<cv::DMatch>> matches;
+	//_matcher->knnMatch(descriptor, matches, k);
 
-	TEXTURIZE_ASSERT_DBG(matches.size() == 1);								// There should only be one result set, since the query was for one texel.
+	//TEXTURIZE_ASSERT_DBG(matches.size() == 1);								// There should only be one result set, since the query was for one texel.
 
-	// Store the sample to find the keypoints.
-	int width, height;
-	this->getSearchSpace()->sampleSize(width, height);
+	//// Store the sample to find the keypoints.
+	//int width, height;
+	//this->getSearchSpace()->sampleSize(width, height);
 
-	if (matches[0].size() == 0)
-		return false;
+	//if (matches[0].size() == 0)
+	//	return false;
 
-	// Copy the coords of each match.
-	for each (auto match in matches[0])
-	{
-		int row = match.trainIdx / width;
-		int col = match.trainIdx % width;
-		float d = match.distance;
+	//// Copy the coords of each match.
+	//for each (auto match in matches[0])
+	//{
+	//	int row = match.trainIdx / width;
+	//	int col = match.trainIdx % width;
+	//	float d = match.distance;
 
-		if (d < minDist)
-			continue;
+	//	if (d < minDist)
+	//		continue;
 
-		if (dist != nullptr)
-			dist->push_back(d);
+	//	if (dist != nullptr)
+	//		dist->push_back(d);
 
-		mtx.push_back(cv::Vec2f(col / static_cast<float>(width), row / static_cast<float>(height)));
-	}
+	//	mtx.push_back(cv::Vec2f(col / static_cast<float>(width), row / static_cast<float>(height)));
+	//}
 
 	return true;
 }
 
-bool FeatureMatchingIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist, float* dist) const
+bool KMeansIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist, float* dist) const
 {
 	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.cols + at.x);
 
 	return this->findNearestNeighbor(targetDescriptor, match, minDist, dist);
 }
 
-bool FeatureMatchingIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k, float minDist, std::vector<float>* dist) const
+bool KMeansIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k, float minDist, std::vector<float>* dist) const
 {
 	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.cols + at.x);
 
