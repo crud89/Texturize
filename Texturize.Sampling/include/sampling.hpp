@@ -8,6 +8,7 @@
 
 #include <opencv2\core.hpp>
 #include <opencv2\ml.hpp>
+#include <opencv2\features2d.hpp>
 
 /// \namespace Texturize
 /// \brief The root namespace, that contains all framework classes.
@@ -198,10 +199,12 @@ namespace Texturize {
 		const ISearchSpace* getSearchSpace() const;
 	};
 
-	/// \brief A search index implementation that clusters the search space using k-means to build a quantized search-tree, which allows for fast neighborhood queries.
+	/// \brief A search index implementation that clusters the search space using a quantized kd-tree, which allows for fast neighborhood queries.
 	///
-	/// This search index allows for fast, yet accurate (i.e. non-approximative) runtime neighborhood queries. This is achieved by clustering the search space when creating the index. *TODO: DOC...*
-	class TEXTURIZE_API KMeansIndex :
+	/// This search index allows for fast, yet accurate (i.e. non-approximative) runtime neighborhood queries. This is achieved by clustering the search space when creating the index.
+	///
+	/// TODO: DOC, _classifier->setAlgorithmType(ml::KDTREE) (after fixed in opencv)
+	class TEXTURIZE_API KNNIndex :
 		public SearchIndex
 	{
 	private:
@@ -213,7 +216,33 @@ namespace Texturize {
 
 	public:
 		/// \brief Creates a search index based on brute force matching.
-		KMeansIndex(const ISearchSpace* searchSpace);
+		KNNIndex(const ISearchSpace* searchSpace);
+
+	public:
+		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
+		bool findNearestNeighbors(const std::vector<float>& descriptor, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const;
+
+		// ISearchIndex
+	public:
+		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const override;
+	};
+
+	class TEXTURIZE_API ANNIndex :
+		public SearchIndex
+	{
+	private:
+		cv::Ptr<cv::flann::Index> _index;
+		//cv::Ptr<cv::DescriptorMatcher> _matcher;
+		cv::Mat _descriptors;
+		int _sampleWidth{ 0 };
+
+	private:
+		void init();
+
+	public:
+		/// \brief Creates a search index based on brute force matching.
+		ANNIndex(const ISearchSpace* searchSpace);
 
 	public:
 		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;

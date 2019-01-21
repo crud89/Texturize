@@ -224,8 +224,6 @@ int synthesize(const std::unordered_map<std::string, std::string>& exemplarMaps,
 	descriptor->getKernel(kernel);
 
 	// Build up the search index.
-	//FeatureMatchingIndex index(descriptor.get(), cv::NORM_L2, true);		// BF-Matcher
-	//FeatureMatchingIndex index(descriptor.get());							// FLANN-Matcher
 	//CoherentIndex index(descriptor.get());
 	RandomWalkIndex index(descriptor.get());
 
@@ -353,11 +351,10 @@ int transferStyle(const std::unordered_map<std::string, std::string>& exemplarMa
 	descriptor->getKernel(kernel);
 
 	// Build up the search index.
-	//FeatureMatchingIndex index(descriptor.get(), cv::NORM_L2, true);		// BF-Matcher
-	//FeatureMatchingIndex index(descriptor.get());							// FLANN-Matcher
 	//CoherentIndex index(descriptor.get());
 	//RandomWalkIndex index(descriptor.get());
-	KMeansIndex index(descriptor.get());
+	//KNNIndex index(descriptor.get());
+	ANNIndex index(descriptor.get());
 
 #ifdef _DEBUG
 	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
