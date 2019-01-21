@@ -354,7 +354,8 @@ int transferStyle(const std::unordered_map<std::string, std::string>& exemplarMa
 	//CoherentIndex index(descriptor.get());
 	//RandomWalkIndex index(descriptor.get());
 	//KNNIndex index(descriptor.get());
-	ANNIndex index(descriptor.get());
+	//ANNIndex index(descriptor.get());
+	KNNIndex index(descriptor.get());
 
 #ifdef _DEBUG
 	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);

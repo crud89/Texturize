@@ -22,121 +22,16 @@ const ISearchSpace* SearchIndex::getSearchSpace() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-///// KD-Tree-based search index implementation                                               /////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-KNNIndex::KNNIndex(const ISearchSpace* searchSpace) :
-	SearchIndex(searchSpace)
-{
-	// Set algorithm type.
-	//_classifier->setAlgorithmType(cv::ml::KNearest::Types::KDTREE);
-
-	// Initialize
-	this->init();
-}
-
-void KNNIndex::init()
-{
-	// Precompute the neighborhood descriptors used to train data.
-	const Sample* sample;
-	int height;
-	this->getSearchSpace()->sample(&sample);
-	sample->getSize(_sampleWidth, height);
-
-	// Form a descriptor vector from the sample.
-	cv::Mat descriptors = DescriptorExtractor::calculateNeighborhoodDescriptors(*sample);
-
-	// Set the vector coordinates as labels.
-	cv::Mat labels(1, _sampleWidth * height, CV_32SC1);
-	labels.forEach<int>( [](int& pi, const int* idx) -> void { pi = idx[1]; } );
-
-	// Train the classifier.
-	bool trainSuccess = _classifier->train(descriptors, cv::ml::ROW_SAMPLE, labels);
-
-	TEXTURIZE_ASSERT(trainSuccess);											// Training should be successful.
-}
-
-bool KNNIndex::findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist, float* dist) const
-{
-	// Convert the descriptor.
-	cv::Mat candidate(descriptor,  false);
-	candidate = candidate.t();
-	
-	// Find the k=1 nearest neighbor.
-	cv::Mat response, distance;
-	_classifier->findNearest(candidate, 1, cv::noArray(), response, distance);
-
-	// The response contains the UV coordinates of the best match.
-	int matchId = static_cast<int>(response.at<float>(0, 0));
-	match[0] = static_cast<float>(matchId % _sampleWidth) / static_cast<float>(_sampleWidth);
-	match[1] = static_cast<float>(matchId / _sampleWidth) / static_cast<float>(_sampleWidth);
-	
-	// Store the distance/error.
-	if (dist)
-		*dist = distance.at<float>(0, 0);
-
-	return true;
-}
-
-bool KNNIndex::findNearestNeighbors(const std::vector<float>& descriptor, std::vector<cv::Vec2f>& mtx, const int k, float minDist, std::vector<float>* dist) const
-{
-	//// Perform a knn-search.
-	//std::vector<std::vector<cv::DMatch>> matches;
-	//_matcher->knnMatch(descriptor, matches, k);
-
-	//TEXTURIZE_ASSERT_DBG(matches.size() == 1);								// There should only be one result set, since the query was for one texel.
-
-	//// Store the sample to find the keypoints.
-	//int width, height;
-	//this->getSearchSpace()->sampleSize(width, height);
-
-	//if (matches[0].size() == 0)
-	//	return false;
-
-	//// Copy the coords of each match.
-	//for each (auto match in matches[0])
-	//{
-	//	int row = match.trainIdx / width;
-	//	int col = match.trainIdx % width;
-	//	float d = match.distance;
-
-	//	if (d < minDist)
-	//		continue;
-
-	//	if (dist != nullptr)
-	//		dist->push_back(d);
-
-	//	mtx.push_back(cv::Vec2f(col / static_cast<float>(width), row / static_cast<float>(height)));
-	//}
-
-	return true;
-}
-
-bool KNNIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist, float* dist) const
-{
-	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.cols + at.x);
-
-	return this->findNearestNeighbor(targetDescriptor, match, minDist, dist);
-}
-
-bool KNNIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k, float minDist, std::vector<float>* dist) const
-{
-	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.cols + at.x);
-
-	return this->findNearestNeighbors(targetDescriptor, matches, k, minDist, dist);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// FLANN-based ANN search index implementation                                             /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ANNIndex::ANNIndex(const ISearchSpace* searchSpace) :
+ANNIndex::ANNIndex(const ISearchSpace* searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams) :
 	SearchIndex(searchSpace)
 {
-	this->init();
+	this->init(*indexParams);
 }
 
-void ANNIndex::init()
+void ANNIndex::init(const cv::flann::IndexParams& indexParams)
 {
 	// Precompute the neighborhood descriptors used to train data.
 	const Sample* sample;
@@ -148,11 +43,10 @@ void ANNIndex::init()
 	_descriptors = DescriptorExtractor::calculateNeighborhoodDescriptors(*sample);
 
 	// Create an index.
-	cv::Ptr<cv::flann::IndexParams> _indexParams{ cv::makePtr<cv::flann::KDTreeIndexParams>() };
 	//cv::flann::KDTreeIndexParams _indexParams{ cv::makePtr<cv::flann::KDTreeIndexParams>(descriptors.cols) };
 	// TODO: Use KDTreeSingleIndex for KNNIndex.
 	_index = cv::makePtr<cv::flann::Index>();
-	_index->build(_descriptors, *_indexParams);
+	_index->build(_descriptors, indexParams);
 }
 
 bool ANNIndex::findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist, float* dist) const
@@ -211,6 +105,15 @@ bool ANNIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& u
 	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.cols + at.x);
 
 	return this->findNearestNeighbors(targetDescriptor, matches, k, minDist, dist);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// KD-Tree-based search index implementation                                               /////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+KNNIndex::KNNIndex(const ISearchSpace* searchSpace) :
+	ANNIndex(searchSpace, cv::makePtr<const KDTreeSingleIndexParams>())
+{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

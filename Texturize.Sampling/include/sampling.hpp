@@ -198,25 +198,21 @@ namespace Texturize {
 		/// \returns A reference of the search space, indexed by the current instance.
 		const ISearchSpace* getSearchSpace() const;
 	};
-
-	/// \brief A search index implementation that clusters the search space using a quantized kd-tree, which allows for fast neighborhood queries.
-	///
-	/// This search index allows for fast, yet accurate (i.e. non-approximative) runtime neighborhood queries. This is achieved by clustering the search space when creating the index.
-	///
-	/// TODO: DOC, _classifier->setAlgorithmType(ml::KDTREE) (after fixed in opencv)
-	class TEXTURIZE_API KNNIndex :
+	
+	class TEXTURIZE_API ANNIndex :
 		public SearchIndex
 	{
 	private:
-		cv::Ptr<cv::ml::KNearest> _classifier{ cv::ml::KNearest::create() };
+		cv::Ptr<cv::flann::Index> _index;
+		cv::Mat _descriptors;
 		int _sampleWidth{ 0 };
 
-	private:
-		void init();
+	protected:
+		void init(const cv::flann::IndexParams& indexParams);
 
 	public:
 		/// \brief Creates a search index based on brute force matching.
-		KNNIndex(const ISearchSpace* searchSpace);
+		ANNIndex(const ISearchSpace* searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>());
 
 	public:
 		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
@@ -228,30 +224,27 @@ namespace Texturize {
 		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const override;
 	};
 
-	class TEXTURIZE_API ANNIndex :
-		public SearchIndex
+	/// \brief A search index implementation that clusters the search space using a quantized kd-tree, which allows for fast neighborhood queries.
+	///
+	/// This search index allows for fast, yet accurate (i.e. non-approximative) runtime neighborhood queries. This is achieved by clustering the search space when creating the index.
+	///
+	/// TODO: DOC
+	class TEXTURIZE_API KNNIndex :
+		public ANNIndex
 	{
 	private:
-		cv::Ptr<cv::flann::Index> _index;
-		//cv::Ptr<cv::DescriptorMatcher> _matcher;
-		cv::Mat _descriptors;
-		int _sampleWidth{ 0 };
-
-	private:
-		void init();
-
-	public:
-		/// \brief Creates a search index based on brute force matching.
-		ANNIndex(const ISearchSpace* searchSpace);
+		// NOTE: This is currently missing in OpenCV 4.0.1 cv::flann namespace, hence the redefine.
+		struct KDTreeSingleIndexParams : public cv::flann::KDTreeIndexParams {
+			KDTreeSingleIndexParams(int trees = 4)
+			{
+				this->setAlgorithm(cvflann::FLANN_INDEX_KDTREE_SINGLE);
+				this->setInt("trees", trees);
+			}
+		};
 
 	public:
-		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
-		bool findNearestNeighbors(const std::vector<float>& descriptor, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const;
-
-		// ISearchIndex
-	public:
-		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const override;
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const override;
+		/// \brief Creates a search index based on exact kd-tree matching.
+		KNNIndex(const ISearchSpace* searchSpace);
 	};
 
 	/// \brief Implements a search index, that matches pixel neighborhoods based on coherent pixels.
