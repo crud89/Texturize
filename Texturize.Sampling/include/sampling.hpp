@@ -113,6 +113,16 @@ namespace Texturize {
 		/// \see Texturize::DescriptorExtractor::getProxyPixel(const Sample& exemplar, const cv::Point2i& at, const cv::Vec2i& delta)
 		static std::vector<float> getProxyPixel(const Sample& exemplar, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta);
 
+		/// \brief Returns the value of a pixel neighborhood from the exemplar.
+		/// \param exemplar The exemplar sample, projected into search space.
+		/// \param at The x and y coordinate of the center texel.
+		/// \param delta The offset of the direction of the proxy pixel.
+		/// \param uv The uv map used to resolve the pixel coordinate provided by the `at` parameter.
+		/// \param rowPtr A pointer to an array of color values, that store the result. Note that the array must have at least as many items as there are channels within the `exemplar`.
+		///
+		/// \see Texturize::DescriptorExtractor::getProxyPixel(const Sample& exemplar, const cv::Point2i& at, const cv::Vec2i& delta)
+		static void getProxyPixel(const Sample& exemplar, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, float* const rowPtr);
+
 	public:
 		/// \brief Creates an search index from a set of exemplar descriptors.
 		/// \param exemplar A sample, containing the search space descriptors of the exemplar.
