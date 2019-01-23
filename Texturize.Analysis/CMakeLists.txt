@@ -63,6 +63,8 @@ ELSE()
   MESSAGE(FATAL_ERROR "  ERROR: Required OpenCV modules have not been found.")
 ENDIF()
 
+# NOTE: Remapping RelWithDebInfo/MinSizeRel to Release is done before GET_PACKAGE_INFO.
+
 ###################################################################################################
 ##### Find TBB.                                                                               #####
 ###################################################################################################
@@ -74,6 +76,10 @@ if(TBB_FOUND)
 ELSE()
   MESSAGE(FATAL_ERROR "  ERROR: Required TBB modules have not been found.")
 ENDIF()
+
+# Remap to release builds.
+SET_TARGET_PROPERTIES(${MODULE_NAMES} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE)
+SET_TARGET_PROPERTIES(${MODULE_NAMES} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL RELEASE)
 
 GET_PACKAGE_INFO("${MODULE_NAMES}" MODULE_INCLUDES MODULE_INSTALLER)
 MESSAGE(STATUS "")
