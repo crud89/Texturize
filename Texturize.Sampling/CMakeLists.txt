@@ -6,7 +6,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12 FATAL_ERROR)
 SET(PROJECT_NAME Texturize.Sampling)
-PROJECT(${PROJECT_NAME} CXX)
+PROJECT(${PROJECT_NAME} LANGUAGES C CXX VERSION ${Texturize_VERSION})
 SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")

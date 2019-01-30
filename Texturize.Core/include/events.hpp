@@ -97,7 +97,7 @@ namespace Texturize {
 		template <typename = typename std::enable_if<std::is_void<TResult>::value>::type>
 		void execute(TArgs... args) const
 		{
-			for each (Callback cb in _callbacks)
+			for (Callback cb : _callbacks)
 				cb(args...);
 		}
 
@@ -110,7 +110,7 @@ namespace Texturize {
 		{
 			results.clear();
 
-			for each (Callback cb in _callbacks)
+			for (Callback cb : _callbacks)
 				results.push_back(cb(args...));
 		}
 	};

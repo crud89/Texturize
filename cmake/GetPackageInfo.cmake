@@ -33,21 +33,27 @@ FUNCTION(GET_PACKAGE_INFO ARG_MODULE_NAMES RET_INCLUDES RET_INSTALLER)
       MESSAGE(STATUS "  [${_MODULE}] includes: ${${_MODULE}_INCLUDE_DIRECTORIES}")
       LIST(APPEND _INCLUDES ${${_MODULE}_INCLUDE_DIRECTORIES})
       
-      # Resolve the assembly directories of the module.
-      GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION)
+      # Check the module type.
+      GET_PROPERTY(${_MODULE}_TYPE TARGET ${_MODULE} PROPERTY TYPE)
+      #MESSAGE(STATUS "  [${_MODULE}] TYPE: ${${_MODULE}_TYPE}")
 
-      # If there is no imported assembly, try again by importing for a current configuration.
-      IF("${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
-        GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION_${BUILD_TYPE})
-      ENDIF("${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+      IF(NOT "${${_MODULE}_TYPE}" STREQUAL "INTERFACE_LIBRARY")
+        # Resolve the assembly directories of the module.
+        GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION)
 
-      # If an assembly has been found, add it to the install list.
-      IF(NOT "${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
-        MESSAGE(STATUS "  [${_MODULE}] assemblies: ${${_MODULE}_IMPORTED_LOCATION}")
-        LIST(APPEND _BINARIES ${${_MODULE}_IMPORTED_LOCATION})
-      ELSE(NOT "${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
-        MESSAGE(STATUS "  [${_MODULE}] assemblies: -")
-      ENDIF(NOT "${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+        # If there is no imported assembly, try again by importing for a current configuration.
+        IF("${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+          GET_PROPERTY(${_MODULE}_IMPORTED_LOCATION TARGET ${_MODULE} PROPERTY IMPORTED_LOCATION_${BUILD_TYPE})
+        ENDIF("${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+
+        # If an assembly has been found, add it to the install list.
+        IF(NOT "${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+          MESSAGE(STATUS "  [${_MODULE}] assemblies: ${${_MODULE}_IMPORTED_LOCATION}")
+          LIST(APPEND _BINARIES ${${_MODULE}_IMPORTED_LOCATION})
+        ELSE(NOT "${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+          MESSAGE(STATUS "  [${_MODULE}] assemblies: -")
+        ENDIF(NOT "${${_MODULE}_IMPORTED_LOCATION}" STREQUAL "")
+      ENDIF(NOT "${${_MODULE}_TYPE}" STREQUAL "INTERFACE_LIBRARY")
     ENDIF(NOT ${_MODULE}_IMPORTED)
   ENDFOREACH(_MODULE ${MODULE_NAMES})
   
