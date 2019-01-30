@@ -11,7 +11,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 INCLUDE("cmake/TexturizeVersion.cmake")
 
 # Configure the project
-PROJECT(Texturize LANGUAGES C CXX VERSION ${Texturize_VERSION})
+PROJECT(Texturize LANGUAGES CXX VERSION ${Texturize_VERSION})
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
 MESSAGE(STATUS "Building Texturize Version ${Texturize_VERSION_MAJOR}.${Texturize_VERSION_MINOR}")

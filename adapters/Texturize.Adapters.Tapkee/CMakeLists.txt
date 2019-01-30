@@ -6,7 +6,7 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12 FATAL_ERROR)
 SET(PROJECT_NAME Texturize.Adapters.Tapkee)
-PROJECT(${PROJECT_NAME} LANGUAGES C CXX VERSION ${Texturize_VERSION})
+PROJECT(${PROJECT_NAME} LANGUAGES CXX VERSION ${Texturize_VERSION})
 SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
@@ -36,7 +36,6 @@ ADD_DEFINITIONS(
   -DTEXTURIZE_EXPORTS 
   -D_WINDOWS 
   -D_USRDLL
-  -DTEXTURIZECORE_EXPORTS 
   -DUNICODE 
   -D_UNICODE
 )
@@ -102,7 +101,7 @@ MESSAGE(STATUS "")
 # Set header directories.
 INCLUDE_DIRECTORIES(
   ${INCLUDE_DIR}
-  ${TXTRZ_CODECS_INCLUDE_DIRS}
+  ${TXTRZ_SAMPLING_INCLUDE_DIRS}
   ${MODULE_INCLUDES}
 )
 
@@ -117,11 +116,11 @@ FILE(GLOB SRC_FILES
 # Make the project a shared library.
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${SRC_FILES})
 
+# Setup target dependencies.
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Sampling)
+
 # Append "_d" to artifact names for debug builds.
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ".Dbg")
-
-# Setup target dependencies.
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Codecs ${MODULE_NAMES})
 
 # Setup target includes.
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} 
