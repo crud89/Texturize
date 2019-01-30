@@ -10,23 +10,29 @@ using namespace Texturize;
 ///// SearchIndex base interface                                                              /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SearchIndex::SearchIndex(const ISearchSpace* searchSpace) : 
-	_searchSpace(searchSpace)
+SearchIndex::SearchIndex(const std::shared_ptr<ISearchSpace> searchSpace, const std::shared_ptr<IDescriptorExtractor> descriptorExtractor, cv::NormTypes normType) :
+	_searchSpace(std::move(searchSpace)), _descriptorExtractor(std::move(descriptorExtractor)), _normType(normType)
 {
 	TEXTURIZE_ASSERT(searchSpace != nullptr);
+	TEXTURIZE_ASSERT(descriptorExtractor != nullptr);
 }
 
-const ISearchSpace* SearchIndex::getSearchSpace() const
+std::shared_ptr<ISearchSpace> SearchIndex::getSearchSpace() const
 {
 	return _searchSpace;
+}
+
+std::shared_ptr<IDescriptorExtractor> SearchIndex::getDescriptorExtractor() const
+{
+	return _descriptorExtractor;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// FLANN-based ANN search index implementation                                             /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ANNIndex::ANNIndex(const ISearchSpace* searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams) :
-	SearchIndex(searchSpace)
+ANNIndex::ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams, cv::NormTypes normType) :
+	SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>(), normType)
 {
 	this->init(*indexParams);
 }
@@ -36,15 +42,13 @@ void ANNIndex::init(const cv::flann::IndexParams& indexParams)
 	// Precompute the neighborhood descriptors used to train data.
 	const Sample* sample;
 	int height;
-	this->getSearchSpace()->sample(&sample);
+	_searchSpace->sample(&sample);
 	sample->getSize(_sampleWidth, height);
 
 	// Form a descriptor vector from the sample.
-	_descriptors = DescriptorExtractor::calculateNeighborhoodDescriptors(*sample);
+	_descriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(*sample);
 
 	// Create an index.
-	//cv::flann::KDTreeIndexParams _indexParams{ cv::makePtr<cv::flann::KDTreeIndexParams>(descriptors.cols) };
-	// TODO: Use KDTreeSingleIndex for KNNIndex.
 	_index = cv::makePtr<cv::flann::Index>();
 	_index->build(_descriptors, indexParams);
 }
@@ -111,17 +115,26 @@ bool ANNIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& u
 ///// KD-Tree-based search index implementation                                               /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-KNNIndex::KNNIndex(const ISearchSpace* searchSpace) :
+KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 	ANNIndex(searchSpace, cv::makePtr<const KDTreeSingleIndexParams>())
 {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+///// LSH-based search index implementation                                                   /////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+//LSHIndex::LSHIndex(std::shared_ptr<ISearchSpace> searchSpace, int tables, int keySize, int probeLevel) :
+//	ANNIndex(searchSpace, cv::makePtr<const cv::flann::LshIndexParams>(tables, keySize, probeLevel), cv::NORM_HAMMING)
+//{
+//}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// SearchIndex implementation based on coherent pixels.                                    /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-CoherentIndex::CoherentIndex(const ISearchSpace* searchSpace, cv::NormTypes distanceMeasure) :
-	SearchIndex(searchSpace), _normType(distanceMeasure)
+CoherentIndex::CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace) :
+	SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>())
 {
 	this->init();
 }
@@ -130,17 +143,17 @@ void CoherentIndex::init()
 {
 	// Precompute the neighborhood descriptors used to train data.
 	const Sample* sample;
-	this->getSearchSpace()->sample(&sample);
+	_searchSpace->sample(&sample);
 
 	// Form a descriptor vector from the sample.
-	_exemplarDescriptors = DescriptorExtractor::indexNeighborhoods(*sample);
+	_exemplarDescriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(*sample);
 }
 
 CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<float>& targetDescriptor, const cv::Point2i& towards) const
 {
 	// Get the search space transformed exemplar.
 	const Sample* exemplar;
-	this->getSearchSpace()->sample(&exemplar);
+	_searchSpace->sample(&exemplar);
 
 	std::vector<float> exemplarDescriptor = _exemplarDescriptors.row(towards.y * exemplar->width() + towards.x);
 
@@ -154,7 +167,7 @@ void CoherentIndex::getCoherentCandidate(const std::vector<float>& targetDescrip
 {
 	// Get the search space transformed exemplar.
 	const Sample* exemplar;
-	this->getSearchSpace()->sample(&exemplar);
+	_searchSpace->sample(&exemplar);
 	int width = exemplar->width();
 	int height = exemplar->height();
 
@@ -290,8 +303,8 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 ///// SearchIndex implementation based on random pixel walk.                                  /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-RandomWalkIndex::RandomWalkIndex(const ISearchSpace* searchSpace, cv::NormTypes distanceMeasure) :
-	CoherentIndex(searchSpace, distanceMeasure)
+RandomWalkIndex::RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace) :
+	CoherentIndex(searchSpace)
 {
 	std::random_device seed;
 	_rng = std::mt19937(seed());
@@ -330,7 +343,7 @@ bool RandomWalkIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::
 		// Randomly walk around the environment of the match, trying to find a better one.
 		// The radius around the pixel is calculated from the smaller dimension. Initially it is half as large as the exemplar width.
 		const Sample* exemplar;
-		this->getSearchSpace()->sample(&exemplar);
+		_searchSpace->sample(&exemplar);
 
 		// Perform as long, as the environment is non-trivial, i.e. there is an environment which does not only contain the candidate pixel.
 		// The radius get's halved with each iteration.

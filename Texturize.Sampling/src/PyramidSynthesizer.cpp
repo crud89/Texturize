@@ -11,8 +11,8 @@ using namespace Texturize;
 ///// Pyramid Synthesizer implementation	                                                  /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-PyramidSynthesizer::PyramidSynthesizer(const SearchIndex* catalog) :
-	SynthesizerBase(catalog)
+PyramidSynthesizer::PyramidSynthesizer(std::shared_ptr<ISearchIndex> catalog) :
+	SynthesizerBase(std::move(catalog))
 {
 }
 
@@ -163,17 +163,17 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 	const unsigned int subPasses = state.config()._correctionSubPasses;
 	const unsigned int totalSubPasses = subPasses * subPasses;
 	const unsigned int width = sample.cols, height = sample.rows;
-	const SearchIndex* index = this->getIndex();
+	std::shared_ptr<IDescriptorExtractor> descriptorExtractor = _catalog->getDescriptorExtractor();
 	
 	// Request a reference of the exemplar.
 	const Sample* exemplar;
-	index->getSearchSpace()->sample(&exemplar);
+	_catalog->getSearchSpace()->sample(&exemplar);
 
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
 	{
 		// Get the neighborhood descriptors for the current sub-pass. The descriptors are rebuild for each sub-pass, so that the sample converges against the expected result.
-		const cv::Mat descriptors = index->calculateNeighborhoodDescriptors(*exemplar, sample);
+		const cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample);
 
 		for (int r = 0; r < sample.rows; ++r)
 		for (int c = 0; c < sample.cols; ++c)
@@ -192,7 +192,7 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 			cv::Vec2f newCoords;
 			cv::Vec2f& coords = sample.at<cv::Vec2f>(point);
 
-			if (index->findNearestNeighbor(descriptors, sample, point, newCoords))
+			if (_catalog->findNearestNeighbor(descriptors, sample, point, newCoords))
 				coords = newCoords;
 		}
 
@@ -264,9 +264,9 @@ std::vector<float> PyramidSynthesizer::getNeighborhoodDescriptor(const Sample* e
 
 void PyramidSynthesizer::transferTo(const Sample& target, Sample& result, const PyramidSynthesizerState& state) const
 {
-	const SearchIndex* index = this->getIndex();
 	const unsigned int subPasses = state.config()._correctionSubPasses;
 	const unsigned int totalSubPasses = subPasses * subPasses;
+	std::shared_ptr<IDescriptorExtractor> descriptorExtractor = _catalog->getDescriptorExtractor();
 
 	// Initialize a matrix that will contain the result.
 	cv::Mat sample(target.size(), CV_32FC2);
@@ -279,14 +279,14 @@ void PyramidSynthesizer::transferTo(const Sample& target, Sample& result, const 
 
 	// Transform the target into the search space.
 	Sample targetSpace;
-	index->getSearchSpace()->transform(target, targetSpace);
+	_catalog->getSearchSpace()->transform(target, targetSpace);
 
 	// For each pixel in the sample, lookup the best match.
 	// NOTE: This is similar to an initial correction pass.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
 	{
 		// Get the neighborhood descriptors of the target space.
-		const cv::Mat descriptors = index->calculateNeighborhoodDescriptors(targetSpace);
+		const cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(targetSpace);
 
 		for (int r = 0; r < sample.rows; ++r)
 		for (int c = 0; c < sample.cols; ++c)
@@ -306,7 +306,7 @@ void PyramidSynthesizer::transferTo(const Sample& target, Sample& result, const 
 			cv::Vec2f& coords = sample.at<cv::Vec2f>(point);
 
 			// Get the descriptor at the current location.
-			index->findNearestNeighbor(descriptors, sample, point, newCoords);
+			_catalog->findNearestNeighbor(descriptors, sample, point, newCoords);
 			coords = newCoords;
 		}
 
@@ -319,7 +319,7 @@ void PyramidSynthesizer::transferTo(const Sample& target, Sample& result, const 
 	result = Sample(sample);
 }
 
-std::unique_ptr<SynthesizerBase> PyramidSynthesizer::createSynthesizer(const SearchIndex* catalog)
+std::unique_ptr<SynthesizerBase> PyramidSynthesizer::createSynthesizer(std::shared_ptr<ISearchIndex> catalog)
 {
 	return std::unique_ptr<PyramidSynthesizer>(new PyramidSynthesizer(catalog));
 }
@@ -381,19 +381,21 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 	const unsigned int subPasses = state.config()._correctionSubPasses;
 	const unsigned int totalSubPasses = subPasses * subPasses;
 	const unsigned int width = sample.cols, height = sample.rows;
-	const SearchIndex* index = this->getIndex();
+
+	std::shared_ptr<ISearchIndex> searchIndex = _catalog;
+	std::shared_ptr<IDescriptorExtractor> descriptorExtractor = searchIndex->getDescriptorExtractor();
 
 	// Request a reference of the exemplar.
 	const Sample* exemplar;
-	index->getSearchSpace()->sample(&exemplar);
+	searchIndex->getSearchSpace()->sample(&exemplar);
 
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
 	{
 		// Get the neighborhood descriptors for the current sub-pass. The descriptors are rebuild for each sub-pass, so that the sample converges against the expected result.
-		const cv::Mat descriptors = index->calculateNeighborhoodDescriptors(*exemplar, sample);
+		const cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample);
 
-		sample.forEach<cv::Vec2f>([&sample, &index, &descriptors, &sp, &subPasses, &width, &height](cv::Vec2f& coords, const int* idx) -> void {
+		sample.forEach<cv::Vec2f>([&sample, &searchIndex, &descriptors, &sp, &subPasses, &width, &height](cv::Vec2f& coords, const int* idx) -> void {
 			// Check if the pixel should be corrected within the current sub-pass.
 			int col = idx[1] % subPasses;
 			int row = idx[0] % subPasses;
@@ -406,7 +408,7 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 			// Match the descriptor with the search space.
 			cv::Vec2f newCoords;
 
-			if (index->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), newCoords))
+			if (searchIndex->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), newCoords))
 				coords = newCoords;
 		});
 
@@ -417,7 +419,9 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 
 void ParallelPyramidSynthesizer::transferTo(const Sample& target, Sample& result, const PyramidSynthesizerState& state) const
 {
-	const SearchIndex* index = this->getIndex();
+	std::shared_ptr<ISearchIndex> searchIndex = _catalog;
+	std::shared_ptr<IDescriptorExtractor> descriptorExtractor = searchIndex->getDescriptorExtractor();
+
 	const unsigned int subPasses = state.config()._correctionSubPasses;
 	const unsigned int totalSubPasses = subPasses * subPasses;
 
@@ -430,18 +434,18 @@ void ParallelPyramidSynthesizer::transferTo(const Sample& target, Sample& result
 		uv[1] = static_cast<float>(idx[0]) / static_cast<float>(height);
 	});
 
-	// Transform the target into the search space.
+	//// Transform the target into the search space.
 	Sample targetSpace;
-	index->getSearchSpace()->transform(target, targetSpace);
+	searchIndex->getSearchSpace()->transform(target, targetSpace);
 
 	// For each pixel in the sample, lookup the best match.
 	// NOTE: This is similar to an initial correction pass.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
 	{
 		// Get the neighborhood descriptors of the target space.
-		const cv::Mat descriptors = index->calculateNeighborhoodDescriptors(targetSpace);
+		const cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(targetSpace);
 
-		sample.forEach<cv::Vec2f>([&sample, &index, &descriptors, &sp, &subPasses](cv::Vec2f& coords, const int* idx) -> void {
+		sample.forEach<cv::Vec2f>([&sample, &searchIndex, &descriptors , &sp, &subPasses](cv::Vec2f& coords, const int* idx) -> void {
 			// Check if the pixel should be corrected within the current sub-pass.
 			int col = idx[1] % subPasses;
 			int row = idx[0] % subPasses;
@@ -452,7 +456,7 @@ void ParallelPyramidSynthesizer::transferTo(const Sample& target, Sample& result
 				return;
 
 			// Get the descriptor at the current location.
-			index->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), coords);
+			searchIndex->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), coords);
 		});
 
 		// TODO: Run correction passes.
@@ -464,7 +468,7 @@ void ParallelPyramidSynthesizer::transferTo(const Sample& target, Sample& result
 	result = Sample(sample);
 }
 
-std::unique_ptr<SynthesizerBase> ParallelPyramidSynthesizer::createSynthesizer(const SearchIndex* catalog)
+std::unique_ptr<SynthesizerBase> ParallelPyramidSynthesizer::createSynthesizer(std::shared_ptr<ISearchIndex> catalog)
 {
-	return std::unique_ptr<ParallelPyramidSynthesizer>(new ParallelPyramidSynthesizer(catalog));
+	return std::unique_ptr<ParallelPyramidSynthesizer>(new ParallelPyramidSynthesizer(std::move(catalog)));
 }

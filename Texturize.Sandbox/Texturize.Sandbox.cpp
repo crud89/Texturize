@@ -224,15 +224,15 @@ int synthesize(const std::unordered_map<std::string, std::string>& exemplarMaps,
 	descriptor->getKernel(kernel);
 
 	// Build up the search index.
-	//CoherentIndex index(descriptor.get());
-	RandomWalkIndex index(descriptor.get());
+	//std::shared_ptr<ISearchIndex> index = std::make_shared<CoherentIndex>(std::move(descriptor));
+	std::shared_ptr<ISearchIndex> index = std::make_shared<RandomWalkIndex>(std::move(descriptor));
 
 #ifdef _DEBUG
-	auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
-	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
+	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
 #else
-	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
-	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+	//auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
+	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
 #endif
 
 	// Randomness Selector Function
@@ -351,18 +351,17 @@ int transferStyle(const std::unordered_map<std::string, std::string>& exemplarMa
 	descriptor->getKernel(kernel);
 
 	// Build up the search index.
-	//CoherentIndex index(descriptor.get());
-	//RandomWalkIndex index(descriptor.get());
-	//KNNIndex index(descriptor.get());
-	//ANNIndex index(descriptor.get());
-	KNNIndex index(descriptor.get());
+	//std::shared_ptr<ISearchIndex> index = std::make_shared<CoherentIndex>(std::move(descriptor));
+	//std::shared_ptr<ISearchIndex> index = std::make_shared<RandomWalkIndex>(std::move(descriptor));
+	//std::shared_ptr<ISearchIndex> index = std::make_shared<ANNIndex>(std::move(descriptor));
+	std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor));
 
 #ifdef _DEBUG
-	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
-	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+	auto synthesizer = PyramidSynthesizer::createSynthesizer(std::move(index));
+	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(std::move(index));
 #else
-	//auto synthesizer = PyramidSynthesizer::createSynthesizer(&index);
-	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(&index);
+	//auto synthesizer = PyramidSynthesizer::createSynthesizer(std::move(index));
+	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(std::move(index));
 #endif
 
 	PyramidSynthesisSettings config(1.0f);

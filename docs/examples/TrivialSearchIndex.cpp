@@ -34,17 +34,17 @@ public:
 // 
 // ------------------------------------------------------------------------------------------------
 
-TrivialSearchIndex::TrivialSearchIndex(const ISearchSpace* searchSpace, cv::NormTypes distanceMeasure = cv::NORM_L2SQR) :
-    SearchIndex(searchSpace), _normType(distanceMeasure) {
+TrivialSearchIndex::TrivialSearchIndex(std::shared_ptr<ISearchSpace> searchSpace, cv::NormTypes distanceMeasure = cv::NORM_L2SQR) :
+    SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>()), _normType(distanceMeasure) {
 }
 
 void TrivialSearchIndex::init() {
 	// Precompute the neighborhood descriptors used to train data.
 	const Sample* sample;
-	this->getSearchSpace()->sample(&sample);
+	_searchSpace->sample(&sample);
 
 	// Form a descriptor vector from the sample.
-	_exemplarDescriptors = DescriptorExtractor::indexNeighborhoods(*sample);
+	_exemplarDescriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(*sample);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -8,13 +8,13 @@ using namespace Texturize;
 ///// Synthesizer base implementation		                                                  /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SynthesizerBase::SynthesizerBase(const SearchIndex* catalog) :
-	_catalog(catalog)
+SynthesizerBase::SynthesizerBase(std::shared_ptr<ISearchIndex> catalog) :
+	_catalog(std::move(catalog))
 {
-	TEXTURIZE_ASSERT(catalog != nullptr);							// The search space must be initialized.
+	TEXTURIZE_ASSERT(_catalog != nullptr);							// The search space must be initialized.
 }
 
-const SearchIndex* SynthesizerBase::getIndex() const
+std::shared_ptr<ISearchIndex> SynthesizerBase::getIndex() const
 {
 	return _catalog;
 }

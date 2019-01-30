@@ -18,61 +18,26 @@ namespace Texturize {
 	/// Contains components used during Synthesis phase. For more information see \ref index.
 	/// @{
 
-	/// \brief An interface that is used to access index search spaces.
+	/// \brief
 	///
-	/// A *search index* is created from a *search space* prior to synthesis in order to match pixel neighborhoods. There are different approaches to this, so this 
-	/// interface only provides methods for neighborhood matching. The actual indexing process needs to be provided along implementations of this interface.
-	class TEXTURIZE_API ISearchIndex {
+	///
+	class TEXTURIZE_API IDescriptorExtractor {
 	public:
-		/// \brief Finds the best match for a given pixel neighborhood.
-		/// \param descriptors An array, containing all neighborhood descriptors of the currently synthesized sample.
-		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
-		/// \param at The x and y coordinates of the pixel to match.
-		/// \param match The u and v coordinates of the best match.
-		/// \param minDist The minimum distance between the source texel and match within the exemplar.
-		/// \param dist A pointer to a value, containing the distance between the source texel and match, after the method has returned.
-		/// \returns True, if a match has been found, given the provided constraints.
-		///
-		/// Actual synthesis is a two-phase process. After analyzing the exemplar, a set of neighborhood descriptors is stored within a *search space*. Those neighborhoods,
-		/// however, are not necessarily present within the synthesized sample. In order to match neighborhoods anyway, a runtime descriptor needs to be calculated for each
-		/// neighborhood of the sample. A set of those descriptors is provided alongside an uv map. The index then extracts the descriptor at a given location (by resolving
-		/// the `at` parameter inside the uv map) and tries to find close matches within the exemplar descriptors. Note that the definition of the distance parameter depends
-		/// on the implementation of the actual index. Typically the `minDist` parameter contains a geometric distance between two texels, whilst the `dist` parameter
-		/// describes the L2 distance between both texel vectors, i.e. their "similarity".
-		///
-		/// \see Texturize::ISearchSpace
-		virtual bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const = 0;
+		/// \brief Calculates the runtime neighborhood descriptors of a search space exemplar.
+		/// \param exemplar A sample, containing the search space descriptors of the exemplar.
+		/// \returns A matrix, containing the runtime neighborhood descriptors of the provided sample.
+		virtual cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar) const = 0;
 
-		/// \brief Finds the best matches for a given pixel neighborhood.
-		/// \param descriptors An array, containing all neighborhood descriptors of the currently synthesized sample.
-		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
-		/// \param at The x and y coordinates of the pixel to match.
-		/// \param matches A vector of u and v coordinates of the best matches.
-		/// \param k The number of matches to find.
-		/// \param minDist The minimum distance between the source texel and a match within the exemplar.
-		/// \param dist A pointer to a vector, containing the distances between the source texel and match, after the method has returned.
-		/// \returns True, if at least one match has been found, given the provided constraints.
-		///
-		/// This method typically runs `findNearestNeighbor` multiple times, excluding the already found matches. Please refer to the notes there.
-		///
-		/// \see Texturize::ISearchSpace
-		/// \see Texturize::ISearchIndex::findNearestNeighbor
-		virtual bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const = 0;
+		/// \brief Calculates the runtime neighborhood descriptors of a search space exemplar.
+		/// \param exemplar A sample, containing the search space descriptors of the exemplar.
+		/// \param uv The uv map used to resolve the pixel coordinates inside the exemplar sample.
+		/// \returns A matrix, containing the runtime neighborhood descriptors of the provided sample.
+		virtual cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv) const = 0;
 	};
 
-	/// \brief Provides access to runtime neighborhood descriptors during synthesis.
-	///
-	/// This class is typically inherited by implementaions of `ISearchIndex` in order to extract runtime neighborhood descriptors. Those differ from analysis neighborhoods
-	/// in a way, that they are not neccessarily existent within the exemplar.
-	///
-	/// \see Texturize::ISearchIndex
-	/// \see Texturize::ISearchSpace
-	/// \see Texturize::SearchIndex
-	class TEXTURIZE_API DescriptorExtractor {
-	private:
-		// TODO: Re-use projector from search space. Currently, the PCA matrix will be re-evaluated.
-		std::unique_ptr<cv::PCA> _projector;
-		
+	class TEXTURIZE_API DescriptorExtractor :
+		public IDescriptorExtractor
+	{
 	public:
 		/// \brief Returns the value of a pixel neighborhood from the exemplar.
 		/// \param exemplar The exemplar sample, projected into search space.
@@ -123,26 +88,11 @@ namespace Texturize {
 		/// \see Texturize::DescriptorExtractor::getProxyPixel(const Sample& exemplar, const cv::Point2i& at, const cv::Vec2i& delta)
 		static void getProxyPixel(const Sample& exemplar, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, float* const rowPtr);
 
+
+		// IDescriptorExtractor
 	public:
-		/// \brief Creates an search index from a set of exemplar descriptors.
-		/// \param exemplar A sample, containing the search space descriptors of the exemplar.
-		/// \returns A matrix, containing the runtime neighborhood descriptors of the provided sample.
-		cv::Mat indexNeighborhoods(const Sample& exemplar);
-
-		/// \brief Calculates the runtime neighborhood descriptors of a search space exemplar.
-		/// \param exemplar A sample, containing the search space descriptors of the exemplar.
-		/// \returns A matrix, containing the runtime neighborhood descriptors of the provided sample.
-		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar) const;
-
-		/// \brief Calculates the runtime neighborhood descriptors of a search space exemplar.
-		/// \param exemplar A sample, containing the search space descriptors of the exemplar.
-		/// \param uv The uv map used to resolve the pixel coordinates inside the exemplar sample.
-		/// \returns A matrix, containing the runtime neighborhood descriptors of the provided sample.
-		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv) const;
-
-	private:
-		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv, std::unique_ptr<cv::PCA>& projector) const;
-		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv, const std::unique_ptr<cv::PCA>& projector) const;
+		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar) const override;
+		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv) const override;
 
 	protected:
 		/// \brief Generates a simple UV map, that reproduces the exemplar.
@@ -155,6 +105,81 @@ namespace Texturize {
 		/// \param uv The uv map used to resolve the pixel coordinates inside the exemplar sample.
 		/// \returns A column-major matrix, containing the pixel neighborhoods for each exemplar pixel.
 		cv::Mat getPixelNeighborhoods(const Sample& exemplar, const cv::Mat& uv) const;
+	};
+
+	/// \brief Provides access to runtime neighborhood descriptors during synthesis.
+	///
+	/// This class is typically inherited by implementaions of `ISearchIndex` in order to extract runtime neighborhood descriptors. Those differ from analysis neighborhoods
+	/// in a way, that they are not neccessarily existent within the exemplar.
+	///
+	/// \see Texturize::ISearchIndex
+	/// \see Texturize::ISearchSpace
+	/// \see Texturize::SearchIndex
+	class TEXTURIZE_API PCADescriptorExtractor :
+		public DescriptorExtractor 
+	{
+	private:
+		// TODO: Re-use projector from search space. Currently, the PCA matrix will be re-evaluated.
+		std::unique_ptr<cv::PCA> _projector;
+
+		// IDescriptorExtractor
+	public:
+		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar) const override;
+		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv) const override;
+
+	private:
+		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv, std::unique_ptr<cv::PCA>& projector) const;
+		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv, const std::unique_ptr<cv::PCA>& projector) const;
+	};
+
+	/// \brief An interface that is used to access index search spaces.
+	///
+	/// A *search index* is created from a *search space* prior to synthesis in order to match pixel neighborhoods. There are different approaches to this, so this 
+	/// interface only provides methods for neighborhood matching. The actual indexing process needs to be provided along implementations of this interface.
+	class TEXTURIZE_API ISearchIndex {
+	public:
+		/// \brief Finds the best match for a given pixel neighborhood.
+		/// \param descriptors An array, containing all neighborhood descriptors of the currently synthesized sample.
+		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
+		/// \param at The x and y coordinates of the pixel to match.
+		/// \param match The u and v coordinates of the best match.
+		/// \param minDist The minimum distance between the source texel and match within the exemplar.
+		/// \param dist A pointer to a value, containing the distance between the source texel and match, after the method has returned.
+		/// \returns True, if a match has been found, given the provided constraints.
+		///
+		/// Actual synthesis is a two-phase process. After analyzing the exemplar, a set of neighborhood descriptors is stored within a *search space*. Those neighborhoods,
+		/// however, are not necessarily present within the synthesized sample. In order to match neighborhoods anyway, a runtime descriptor needs to be calculated for each
+		/// neighborhood of the sample. A set of those descriptors is provided alongside an uv map. The index then extracts the descriptor at a given location (by resolving
+		/// the `at` parameter inside the uv map) and tries to find close matches within the exemplar descriptors. Note that the definition of the distance parameter depends
+		/// on the implementation of the actual index. Typically the `minDist` parameter contains a geometric distance between two texels, whilst the `dist` parameter
+		/// describes the L2 distance between both texel vectors, i.e. their "similarity".
+		///
+		/// \see Texturize::ISearchSpace
+		virtual bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const = 0;
+
+		/// \brief Finds the best matches for a given pixel neighborhood.
+		/// \param descriptors An array, containing all neighborhood descriptors of the currently synthesized sample.
+		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
+		/// \param at The x and y coordinates of the pixel to match.
+		/// \param matches A vector of u and v coordinates of the best matches.
+		/// \param k The number of matches to find.
+		/// \param minDist The minimum distance between the source texel and a match within the exemplar.
+		/// \param dist A pointer to a vector, containing the distances between the source texel and match, after the method has returned.
+		/// \returns True, if at least one match has been found, given the provided constraints.
+		///
+		/// This method typically runs `findNearestNeighbor` multiple times, excluding the already found matches. Please refer to the notes there.
+		///
+		/// \see Texturize::ISearchSpace
+		/// \see Texturize::ISearchIndex::findNearestNeighbor
+		virtual bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const = 0;
+
+		/// \brief Returns a reference of the search space, indexed by the current instance.
+		/// \returns A reference of the search space, indexed by the current instance.
+		virtual std::shared_ptr<ISearchSpace> getSearchSpace() const = 0;
+
+		/// \brief Returns a reference of the descriptor extractor, that is used to extract runtime neighborhood descriptors.
+		/// \returns A reference of the descriptor extractor, that is used to extract runtime neighborhood descriptors.
+		virtual std::shared_ptr<IDescriptorExtractor> getDescriptorExtractor() const = 0;
 	};
 
 	/// \brief Implements a search index, based on pixel neighborhood appearances.
@@ -173,8 +198,7 @@ namespace Texturize {
 	/// \see Texturize::ISearchIndex
 	/// \see Texturize::DescriptorExtractor
 	class TEXTURIZE_API SearchIndex :
-		public ISearchIndex,
-		public DescriptorExtractor
+		public ISearchIndex
 	{
 		/// \example TrivialSearchIndex.cpp This example demonstrates how to implement a search index. The implementation matches pixel neighborhoods by calculating the 
 		///                                 euclidean distance between pixel neighborhood descriptors. This basically resembles the naive sampling algorithm, described by
@@ -193,20 +217,26 @@ namespace Texturize {
 		/// \see Michael Ashikhmin. "Synthesizing Natural Textures." In: Proceedings of the 2001 Symposium on Interactive 3D Graphics. I3D '01. New York, NY, USA: ACM, 2001, pp. 217-226. isbn: 1-58113-292-1. doi: 10.1145/364338.364405. url: http://doi.acm.org/10.1145/364338.364405. 
 		/// \see Xin Tong et al. "Synthesis of Bidirectional Texture Functionson Arbitrary Surfaces." In: ACM Trans. Graph. 21.3 (July 2002), pp. 665-672. issn: 07300301. doi: 10.1145/566654.566634. url: http://doi.acm.org/10.1145/566654.566634. 
 
-	private:
-		const ISearchSpace* _searchSpace;
+	protected:
+		const std::shared_ptr<ISearchSpace> _searchSpace;
+		const std::shared_ptr<IDescriptorExtractor> _descriptorExtractor;
+		const cv::NormTypes _normType;
 
 	protected:
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
-		SearchIndex(const ISearchSpace* searchSpace);
+		SearchIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, cv::NormTypes normType = cv::NORM_L2SQR);
 
 		virtual ~SearchIndex() = default;
 
 	public:
 		/// \brief Returns a reference of the search space, indexed by the current instance.
 		/// \returns A reference of the search space, indexed by the current instance.
-		const ISearchSpace* getSearchSpace() const;
+		std::shared_ptr<ISearchSpace> getSearchSpace() const override;
+
+		/// \brief Returns a reference of the descriptor extractor, that is used to extract runtime neighborhood descriptors.
+		/// \returns A reference of the descriptor extractor, that is used to extract runtime neighborhood descriptors.
+		std::shared_ptr<IDescriptorExtractor> getDescriptorExtractor() const override;
 	};
 	
 	class TEXTURIZE_API ANNIndex :
@@ -222,7 +252,7 @@ namespace Texturize {
 
 	public:
 		/// \brief Creates a search index based on brute force matching.
-		ANNIndex(const ISearchSpace* searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>());
+		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 
 	public:
 		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
@@ -254,8 +284,16 @@ namespace Texturize {
 
 	public:
 		/// \brief Creates a search index based on exact kd-tree matching.
-		KNNIndex(const ISearchSpace* searchSpace);
+		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace);
 	};
+
+	//class TEXTURIZE_API LSHIndex :
+	//	public ANNIndex
+	//{
+	//public:
+	//	/// \brief Creates a search index that uses locality-sensitive hashing to represent and match neighborhood descriptors.
+	//	LSHIndex(std::shared_ptr<ISearchSpace> searchSpace, int tables = 20, int keySize = 12, int probeLevel = 2);
+	//};
 
 	/// \brief Implements a search index, that matches pixel neighborhoods based on coherent pixels.
 	///
@@ -287,7 +325,7 @@ namespace Texturize {
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
-		CoherentIndex(const ISearchSpace* searchSpace, cv::NormTypes distanceMeasure = cv::NORM_L2SQR);
+		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace);
 
 	private:
 		void init();
@@ -344,7 +382,7 @@ namespace Texturize {
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
-		RandomWalkIndex(const ISearchSpace* searchSpace, cv::NormTypes distanceMeasure = cv::NORM_L2SQR);
+		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace);
 
 	private:
 		cv::Vec2f getRandomPixelAround(const cv::Vec2f& point, int radius, int dominantDimensionExtent) const;
@@ -756,8 +794,8 @@ namespace Texturize {
 		/// described by Efros and Leung.
 		///
 		/// \see Alexei A. Efros and Thomas K. Leung. "Texture Synthesis by Non Parametric Sampling." In: Proceedings of the International Conference on Computer Vision - Volume 2. ICCV '99. Washington, DC, USA: IEEE Computer Society, 1999. isbn: 0-7695-0164-8. url: http://dl.acm.org/citation.cfm?id=850924.851569.
-	private:
-		const SearchIndex* _catalog;
+	protected:
+		const std::shared_ptr<ISearchIndex> _catalog;
 
 	protected:
 		/// \brief Creates a new synthesizer instance.
@@ -768,7 +806,7 @@ namespace Texturize {
 
 		/// \brief Creates a new synthesizer instance.
 		/// \param catalog An index, that provides access to exemplar pixel neighborhoods and implements neighborhood matching.
-		SynthesizerBase(const SearchIndex* catalog);
+		SynthesizerBase(std::shared_ptr<ISearchIndex> catalog);
 
 	public:
 		virtual ~SynthesizerBase() { }
@@ -776,7 +814,7 @@ namespace Texturize {
 	public:
 		/// \brief Returns the search index used to match pixel neighborhoods during synthesis.
 		/// \returns A pointer to the search index, used to match pixel neighborhood during synthesis.
-		const SearchIndex* getIndex() const;
+		std::shared_ptr<ISearchIndex> getIndex() const;
 	};
 
 	// TODO: This one can either take a search space pointer, or directly use an exemplar to build up a ColorSpaceDescriptor.
@@ -804,7 +842,7 @@ namespace Texturize {
 	protected:
 		/// \brief Creates a new synthesizer instance.
 		/// \param catalog An index, that provides access to exemplar pixel neighborhoods and implements neighborhood matching.
-		PyramidSynthesizer(const SearchIndex* catalog);
+		PyramidSynthesizer(std::shared_ptr<ISearchIndex> catalog);
 
 	protected:
 		/// \brief Performs synthesis for the next level of the image pyramid.
@@ -866,7 +904,7 @@ namespace Texturize {
 		/// \brief A factory method that creates a new synthesizer and initializes with a search index, that provides access to exemplar neighborhoods.
 		/// \param catalog An search index, that provides access to exemplar neighborhoods and provides runtime pixel neighborhood matching.
 		/// \return An instance of a synthesizer.
-		static std::unique_ptr<SynthesizerBase> createSynthesizer(const SearchIndex* catalog);
+		static std::unique_ptr<SynthesizerBase> createSynthesizer(std::shared_ptr<ISearchIndex> catalog);
 	};
 
 	/// \brief Implements a parallel, pyramid-bases, non-parametric, per-pixel synthesizer.
@@ -889,8 +927,8 @@ namespace Texturize {
 		public PyramidSynthesizer
 	{
 	private:
-		ParallelPyramidSynthesizer(const SearchIndex* catalog) : 
-			PyramidSynthesizer(catalog) 
+		ParallelPyramidSynthesizer(std::shared_ptr<ISearchIndex> catalog) :
+			PyramidSynthesizer(std::move(catalog)) 
 		{ 
 		}
 
@@ -904,7 +942,7 @@ namespace Texturize {
 		/// \brief A factory method that creates a new synthesizer and initializes with a search index, that provides access to exemplar neighborhoods.
 		/// \param catalog An search index, that provides access to exemplar neighborhoods and provides runtime pixel neighborhood matching.
 		/// \return An instance of a synthesizer.
-		static std::unique_ptr<SynthesizerBase> createSynthesizer(const SearchIndex* catalog);
+		static std::unique_ptr<SynthesizerBase> createSynthesizer(std::shared_ptr<ISearchIndex> catalog);
 	};
 
 	// class TEXTURIZE_API GPUPyramidSynthesizer : public PyramidSynthesizer { }
