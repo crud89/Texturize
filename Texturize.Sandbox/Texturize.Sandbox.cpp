@@ -21,6 +21,7 @@
 #include <sampling.hpp>
 #include <codecs.hpp>
 #include <Codecs\exr.hpp>
+#include <Adapters\tapkee.hpp>
 
 using namespace Texturize;
 
@@ -354,7 +355,10 @@ int transferStyle(const std::unordered_map<std::string, std::string>& exemplarMa
 	//std::shared_ptr<ISearchIndex> index = std::make_shared<CoherentIndex>(std::move(descriptor));
 	//std::shared_ptr<ISearchIndex> index = std::make_shared<RandomWalkIndex>(std::move(descriptor));
 	//std::shared_ptr<ISearchIndex> index = std::make_shared<ANNIndex>(std::move(descriptor));
-	std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor));
+	//std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor));
+
+	std::unique_ptr<IDescriptorExtractor> descriptorExtractor = std::make_unique<Tapkee::PCADescriptorExtractor>();
+	std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor), std::move(descriptorExtractor));
 
 #ifdef _DEBUG
 	auto synthesizer = PyramidSynthesizer::createSynthesizer(std::move(index));
