@@ -4,10 +4,10 @@
 #####                                                                                         #####
 ###################################################################################################
 
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-set(PROJECT_NAME Texturize.Sandbox)
-project(${PROJECT_NAME} CXX)
-set(CONFIG_NAME ${PROJECT_NAME}Config)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12 FATAL_ERROR)
+SET(PROJECT_NAME Texturize.Sandbox)
+PROJECT(${PROJECT_NAME} CXX)
+SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
 MESSAGE(STATUS "---------------------------------------------------------------------------------------------------")
 MESSAGE(STATUS "")
@@ -52,11 +52,18 @@ ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 ###################################################################################################
 
 # Set header directories.
-INCLUDE_DIRECTORIES(
-  ${INCLUDE_DIR}
+LIST(APPEND INCLUDE_DIR 
   ${TXTRZ_SAMPLING_INCLUDE_DIRS}
   ${TXTRZ_CODECS_INCLUDE_DIRS}
   ${TXTRZ_CODECS_EXR_INCLUDE_DIRS}
+)
+
+IF(WITH_TAPKEE)
+  LIST(APPEND INCLUDE_DIR ${TXTRZ_ADAPTERS_TAPKEE_INCLUDE_DIRS})
+ENDIF(WITH_TAPKEE)
+
+INCLUDE_DIRECTORIES(
+  ${INCLUDE_DIR}
 )
 
 FILE(GLOB SRC_FILES
@@ -73,7 +80,13 @@ ADD_EXECUTABLE(${PROJECT_NAME} Texturize.Sandbox.cpp ${SRC_FILES})
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ".Dbg")
 
 # Setup target dependencies.
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} Texturize.Sampling Texturize.Codecs.EXR)
+LIST(APPEND LINK_LIBS Texturize.Sampling Texturize.Codecs.EXR)
+
+IF(WITH_TAPKEE)
+  LIST(APPEND LINK_LIBS Texturize.Adapters.Tapkee)
+ENDIF(WITH_TAPKEE)
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} "${LINK_LIBS}")
 
 # Setup target includes.
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} 
