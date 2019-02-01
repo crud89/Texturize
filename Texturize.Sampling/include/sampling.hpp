@@ -251,7 +251,7 @@ namespace Texturize {
 		void init(const cv::flann::IndexParams& indexParams);
 
 	public:
-		/// \brief Creates a search index based on brute force matching.
+		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 
 	public:
@@ -284,6 +284,7 @@ namespace Texturize {
 
 	public:
 		/// \brief Creates a search index based on exact kd-tree matching.
+		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor);
 		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace);
 	};
 

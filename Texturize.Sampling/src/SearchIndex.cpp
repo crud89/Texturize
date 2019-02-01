@@ -31,10 +31,15 @@ std::shared_ptr<IDescriptorExtractor> SearchIndex::getDescriptorExtractor() cons
 ///// FLANN-based ANN search index implementation                                             /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-ANNIndex::ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams, cv::NormTypes normType) :
-	SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>(), normType)
+ANNIndex::ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const cv::Ptr<const cv::flann::IndexParams> indexParams, cv::NormTypes normType) :
+	SearchIndex(searchSpace, descriptorExtractor, normType)
 {
 	this->init(*indexParams);
+}
+
+ANNIndex::ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams, cv::NormTypes normType) :
+	ANNIndex(searchSpace, std::make_unique<PCADescriptorExtractor>(), indexParams, normType)
+{
 }
 
 void ANNIndex::init(const cv::flann::IndexParams& indexParams)
@@ -115,19 +120,15 @@ bool ANNIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& u
 ///// KD-Tree-based search index implementation                                               /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor) :
+	ANNIndex(searchSpace, descriptorExtractor, cv::makePtr<const KDTreeSingleIndexParams>())
+{
+}
+
 KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 	ANNIndex(searchSpace, cv::makePtr<const KDTreeSingleIndexParams>())
 {
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///// LSH-based search index implementation                                                   /////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-//LSHIndex::LSHIndex(std::shared_ptr<ISearchSpace> searchSpace, int tables, int keySize, int probeLevel) :
-//	ANNIndex(searchSpace, cv::makePtr<const cv::flann::LshIndexParams>(tables, keySize, probeLevel), cv::NORM_HAMMING)
-//{
-//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// SearchIndex implementation based on coherent pixels.                                    /////
