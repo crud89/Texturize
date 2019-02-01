@@ -1,9 +1,15 @@
 #pragma once
 
-#pragma warning( disable: 4267 4244 )
+// Disable C++17 compatibility warnings.
+#pragma warning( disable: 4267 4244 4996 )
+// Disable warnings about discarded nodiscard-return values.
+#pragma warning( disable: 4834 )
 
 #include <texturize.hpp>
 #include <sampling.hpp>
+
+// Single precision is enough for now.
+#define TAPKEE_CUSTOM_INTERNAL_NUMTYPE float 
 
 #include <tapkee/tapkee.hpp>
 

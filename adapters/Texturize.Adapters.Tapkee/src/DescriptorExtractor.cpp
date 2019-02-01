@@ -24,37 +24,30 @@ cv::Mat Tapkee::PCADescriptorExtractor::calculateNeighborhoodDescriptors(const S
 
 cv::Mat Tapkee::PCADescriptorExtractor::calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv) const
 {
-	//tapkee::float_distance_callback distanceCallback;
-	//tapkee::float_kernel_callback	kernelCallback;
-	//tapkee::float_features_callback	featureCallback;
-
 	// Get the pixel neighborhoods and a buffer to store the projected pixels to.
 	cv::Mat projected, neighborhoods = this->getPixelNeighborhoods(exemplar, uv);
-
+	
 	// Convert into an Eigen matrix.
-	Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> eigenNeighbors;
-	cv::cv2eigen(neighborhoods.t(), eigenNeighbors);
+	tapkee::DenseMatrix eigenNeighbors;
+	cv::cv2eigen(neighborhoods, eigenNeighbors);
 
 	// Apply PCA.
 	tapkee::ParametersSet parameters = tapkee::kwargs[
 		tapkee::method = tapkee::PCA,
-		tapkee::target_dimension = 4
+		tapkee::target_dimension = exemplar.channels()
 	];
 
 	tapkee::TapkeeOutput result = tapkee::initialize()
 		.withParameters(parameters)
-		//.withDistance(distanceCallback)
-		//.withFeatures(featureCallback)
-		//.withKernel(kernelCallback)
 		.embedUsing(eigenNeighbors);
 
 	// Convert it back.
 	cv::eigen2cv(result.embedding, projected);
 
 	// Return the projected neighborhoods.
-	TEXTURIZE_ASSERT(projected.rows == exemplar.channels());
+	TEXTURIZE_ASSERT(projected.cols == exemplar.channels());
 
-	return projected.t();
+	return projected;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,8 +56,6 @@ cv::Mat Tapkee::PCADescriptorExtractor::calculateNeighborhoodDescriptors(const S
 
 cv::Mat Tapkee::SNEDescriptorExtractor::calculateNeighborhoodDescriptors(const Sample& exemplar) const
 {
-
-
 	throw;
 }
 
