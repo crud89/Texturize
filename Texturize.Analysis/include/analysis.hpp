@@ -680,12 +680,17 @@ namespace Texturize {
 		public IFilter 
 	{
 	private:
-		const cv::Mat _target;
+		/// \brief The cummulative probability distribution function for the reference sample, that is used to match the target histogram against.
+		cv::Mat _referenceCdf;
 
 	public:
 		/// \brief Creates a new histogram equalization filter.
-		/// \param target The sample to match the histogram against.
-		HistogramMatchingFilter(const Sample& target);
+		/// \param referemceSample The sample to match the target histogram against.
+		HistogramMatchingFilter(const Sample& referenceSample);
+
+	private:
+		cv::Mat& sampleCdf(const Sample& sample) const;
+		cv::Mat& cummulate(const cv::Mat& histogram) const;
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
