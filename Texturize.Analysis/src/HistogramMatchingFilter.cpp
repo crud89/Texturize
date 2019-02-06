@@ -5,8 +5,6 @@
 #include <analysis.hpp>
 #include <opencv2/core/fast_math.hpp>
 
-#include <opencv2/highgui.hpp>
-
 using namespace Texturize;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
