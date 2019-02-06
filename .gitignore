@@ -310,3 +310,4 @@ install/
 .vs/
 */.vs/
 CMakeSettings.json
+.vscode/
