@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <intrin.h>
 
+#include <texturize.hpp>
+
 #pragma intrinsic(_BitScanReverse)
 
 /// \brief Approximates the log2 of an integral 32-bit value, by counting the index of the most significant bit of the input.
