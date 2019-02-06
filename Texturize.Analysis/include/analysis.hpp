@@ -527,12 +527,12 @@ namespace Texturize {
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
-		void apply(Sample& result, const Sample& samples) const override;
+		void apply(Sample& result, const Sample& sample) const override;
 
 		/// \copydoc Texturize::IFilter::apply
 		template <typename TRes = TResult, typename TSmpl = TSample, typename std::enable_if<
 			!std::is_same<TRes, Sample>::value && !std::is_same<TSmpl, Sample>::value>::type = 0>
-		void apply(TRes& result, const TSmpl& samples) const
+		void apply(TRes& result, const TSmpl& sample) const
 		{
 			result = this->_functor(sample);
 		}
@@ -670,6 +670,22 @@ namespace Texturize {
 	public:
 		/// \brief Creates a new feature extractor instance.
 		FeatureExtractor();
+
+	public:
+		/// \copydoc Texturize::IFilter::apply
+		void apply(Sample& result, const Sample& sample) const override;
+	};
+
+	class TEXTURIZE_API HistogramMatchingFilter :
+		public IFilter 
+	{
+	private:
+		const cv::Mat _target;
+
+	public:
+		/// \brief Creates a new histogram equalization filter.
+		/// \param target The sample to match the histogram against.
+		HistogramMatchingFilter(const Sample& target);
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
@@ -848,6 +864,37 @@ namespace Texturize {
 		void kernel(int& kernel) const override;
 		void sampleSize(cv::Size& size) const override;
 		void sampleSize(int& width, int& height) const override;
+	};
+
+	class TEXTURIZE_API IImagePyramid {
+	public:
+		void construct(const Sample& sample, const unsigned int levels) virtual = 0;
+		void reconstruct(Sample& to, const unsigned int toLevel = 0) virtual = 0;
+	};
+	
+	class TEXTURIZE_API ImagePyramid :
+		public IImagePyramid
+	{
+	protected:
+		std::vector<Sample> _levels;
+		
+	public:
+		void filterLevel(std::unique_ptr<IFilter>& filter, const unsigned int level);
+	};
+
+	class TEXTURIZE_API GaussianImagePyramid :
+		public ImagePyramid {
+
+	public:
+		void construct(const Sample& sample, const unsigned int levels) override;
+		void reconstruct(Sample& to, const unsigned int toLevel = 0) override;
+	};
+
+	class TEXTURIZE_API LaplacianImagePyramid :
+		public ImagePyramid {
+	public:
+		void construct(const Sample& sample, const unsigned int levels) override;
+		void reconstruct(Sample& to, const unsigned int toLevel = 0) override;
 	};
 
 	/// @}
