@@ -868,8 +868,8 @@ namespace Texturize {
 
 	class TEXTURIZE_API IImagePyramid {
 	public:
-		void construct(const Sample& sample, const unsigned int levels) virtual = 0;
-		void reconstruct(Sample& to, const unsigned int toLevel = 0) virtual = 0;
+		virtual void construct(const Sample& sample, const unsigned int levels) = 0;
+		virtual void reconstruct(Sample& to, const unsigned int toLevel = 0) = 0;
 	};
 	
 	class TEXTURIZE_API ImagePyramid :
@@ -891,7 +891,7 @@ namespace Texturize {
 	};
 
 	class TEXTURIZE_API LaplacianImagePyramid :
-		public ImagePyramid {
+		public GaussianImagePyramid {
 	public:
 		void construct(const Sample& sample, const unsigned int levels) override;
 		void reconstruct(Sample& to, const unsigned int toLevel = 0) override;

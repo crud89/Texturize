@@ -18,5 +18,5 @@ HistogramMatchingFilter::HistogramMatchingFilter(const Sample& target) :
 
 void HistogramMatchingFilter::apply(Sample& result, const Sample& sample) const
 {
-    throw();
+    throw;
 }

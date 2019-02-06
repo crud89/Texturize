@@ -11,7 +11,7 @@ using namespace Texturize;
 
 void ImagePyramid::filterLevel(std::unique_ptr<IFilter>& filter, const unsigned int level)
 {
-    TEXTURIZE_ASSERT(level < _levels.count());                  // level must be a valid index
+    TEXTURIZE_ASSERT(level < _levels.size());                   // level must be a valid index
     
     Sample sample = _levels[level];
     filter->apply(sample, _levels[level]);
@@ -21,7 +21,7 @@ void ImagePyramid::filterLevel(std::unique_ptr<IFilter>& filter, const unsigned 
 ///// Gaussian image pyramid base implementation 		                                      /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void GaussianImagePyramid::construct(const Sample& sample, const unsigned int toLevel) override
+void GaussianImagePyramid::construct(const Sample& sample, const unsigned int toLevel)
 {
     auto level = log2(static_cast<uint32_t>(sample.width()));
 
@@ -36,15 +36,15 @@ void GaussianImagePyramid::construct(const Sample& sample, const unsigned int to
 
     for (unsigned int l = 1; l < toLevel; ++l)
     {
-        cv::Mat finerLevel = _levels[l - 1], downsampledLevel;
+        cv::Mat finerLevel = (cv::Mat)_levels[l - 1], downsampledLevel;
         cv::pyrDown(finerLevel, downsampledLevel);
-        _levels.push_back((Sample)downsampledLevel);
+        _levels.push_back(Sample(downsampledLevel));
     }
 }
 
-void GaussianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel) override
+void GaussianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel)
 {
-    TEXTURIZE_ASSERT(toLevel < _levels.count());                // toLevel must be a valid level index.
+    TEXTURIZE_ASSERT(toLevel < _levels.size());                 // toLevel must be a valid level index.
 
     // Reconstruction is done by starting at the coarsest level, iterating upwards.
     cv::Mat reconstruction = (cv::Mat)_levels.back();
@@ -52,16 +52,16 @@ void GaussianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel) o
     for (unsigned int i = 0; i < toLevel; ++i)
         cv::pyrUp(reconstruction, reconstruction);
 
-    to = (Sample)reconstruction;
+    to = Sample(reconstruction);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Gaussian image pyramid base implementation 		                                      /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LaplacianImagePyramid::construct(const Sample& sample, const unsigned int toLevel) override
+void LaplacianImagePyramid::construct(const Sample& sample, const unsigned int toLevel)
 {
-    TEXTURIZE_ASSERT(level > 1);                                // There must be at least two levels, in order upsample high frequencies.
+    TEXTURIZE_ASSERT(toLevel > 1);                                // There must be at least two levels, in order upsample high frequencies.
 
     // Generate a gaussian pyramid first.
     GaussianImagePyramid::construct(sample, toLevel);
@@ -82,26 +82,26 @@ void LaplacianImagePyramid::construct(const Sample& sample, const unsigned int t
         cv::subtract((cv::Mat)_levels[l], upsampledLevel, currentLevel);
 
         // Store the filter response.
-        _levels[l] = (Sample)currentLevel;
+        _levels[l] = Sample(currentLevel);
     } 
 }
 
-void LaplacianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel = 0) override
+void LaplacianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel)
 {
-    TEXTURIZE_ASSERT(toLevel < _levels.count());                // toLevel must be a valid level index.
+    TEXTURIZE_ASSERT(toLevel < _levels.size());                 // toLevel must be a valid level index.
 
     // Reconstruction is done by starting at the coarsest level, iterating upwards. Each level
     // gets added the low
     cv::Mat reconstruction = (cv::Mat)_levels.back();
 
-    for (size_t l = _levels.count() - 2; l >= 0; --i)
+    for (size_t l = _levels.size() - 2; l >= 0; --l)
     {
         // Upsample and blur.
         cv::pyrUp(reconstruction, reconstruction);
 
         // Add high frequencies back in.
-        cv::add(reconstruction, (cv::Mat)_levels[l]);
+        cv::add(reconstruction, (cv::Mat)_levels[l], reconstruction);
     }
 
-    to = (Sample)reconstruction;
+    to = Sample(reconstruction);
 }
