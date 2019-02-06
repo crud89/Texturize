@@ -689,8 +689,10 @@ namespace Texturize {
 		HistogramMatchingFilter(const Sample& referenceSample);
 
 	private:
-		cv::Mat& sampleCdf(const Sample& sample) const;
-		cv::Mat& cummulate(const cv::Mat& histogram) const;
+		cv::Mat toGrayscale(const Sample& sample) const;
+		cv::Mat sampleCdf(const Sample& sample) const;
+		cv::Mat sampleCdf(const Sample& sample, cv::Mat& grayscale) const;
+		cv::Mat cummulate(const cv::Mat& histogram) const;
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
