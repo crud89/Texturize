@@ -13,7 +13,7 @@ void DefaultCodec::load(const std::string& fileName, Sample& sample) const
 {
 	// NOTE: Since we do not know the number of channels within the image, they will allways be read
 	//       with all color channels and need to be converted to grayscale later, if required.
-	cv::Mat s = cv::imread(fileName);
+	cv::Mat s = cv::imread(fileName, cv::IMREAD_UNCHANGED);
 	sample = Sample(s);
 }
 
@@ -25,7 +25,7 @@ void DefaultCodec::load(std::istream& stream, Sample& sample) const
 	std::vector<uchar> data(size);
 	buffer->sgetn(reinterpret_cast<char*>(data.data()), size);
 
-	cv::Mat s = cv::imdecode(data, cv::IMREAD_COLOR);
+	cv::Mat s = cv::imdecode(data, cv::IMREAD_UNCHANGED);
 	sample = Sample(s);
 }
 
