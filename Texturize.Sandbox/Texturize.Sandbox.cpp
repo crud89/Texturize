@@ -30,7 +30,7 @@ using namespace Texturize;
 const char* parameters =
 {
 	"{h help usage ?    |    | Displays this help message}"
-	"{proc p            |    | Specifies the program(s) to run (fm: Detect Features, fd: Calculate feature distances, as: Appearance space transform, s: Perform synthesis, st: Style transfer). Different programs can be seperated using the \'|\' character and will be executed in the order they appear.}"
+	"{proc p            |    | Specifies the program(s) to run (fm: Detect Features, fd: Calculate feature distances, as: Appearance space transform, s: Perform synthesis, st: Style transfer, gr: Guidance channel refinement). Different programs can be seperated using the \'|\' character and will be executed in the order they appear.}"
 	"{exemplar ex       |    | Exemplar file name}"
 	"{target t          |    | Style transfer target map}"
 	"{featureMap fm     |    | Feature map file name}"
@@ -51,6 +51,7 @@ const char* parameters =
 	"{gs                |0   | Lets the synthesizer use a symmetrical normal jitter distribution function.}"
 	"{s seed            |0   | The seed to initialize the RNG.}"
 	"{d dim             |8   | Dimensionality of the search space.}"
+	"{ref               |    | Reference file name.}"
 };
 
 // NOTE: In case the -m flag is specified the -ex and the -r syntax changes.
@@ -431,6 +432,77 @@ int transferStyle(const std::unordered_map<std::string, std::string>& exemplarMa
 	return 0;
 }
 
+
+int refineGuidance(const std::string& inputFileName, const std::string& referenceFileName, const std::string& resultFileName, const uint64_t seed, bool showResult = false)
+{
+	// Load the input and reference samples.
+	Sample inputSample, referenceSample;
+	_persistence.loadSample(inputFileName, inputSample);
+	_persistence.loadSample(referenceFileName, referenceSample);
+
+	// Comput the coarsest (smallest) level of the pyramid from the maximum possible number of levels, skipping the 3 coarsest ones.
+	int inputLevel = (inputSample.width() >= inputSample.height() ? log2(inputSample.width()) : log2(inputSample.height())) - 3;
+	int referenceLevel = (referenceSample.width() >= referenceSample.height() ? log2(referenceSample.width()) : log2(referenceSample.height())) - 3;
+
+	if (inputLevel < 0)
+	{
+		std::cout << "Error: the provided image \"" << inputFileName << "\" resolution (" << inputSample.width() << "x" << inputSample.height() << " Px) is too low." << std::endl;
+		return 2;
+	}
+	
+	if (referenceLevel < 0)
+	{
+		std::cout << "Error: the provided image \"" << referenceFileName << "\" resolution (" << referenceSample.width() << "x" << referenceSample.height() << " Px) is too low." << std::endl;
+		return 2;
+	}
+
+	// TODO: This should probably be moved into a sampling object.
+	// Build up Laplacian pyramids for both, input and refrence samples. 
+	LaplacianImagePyramid inputPyramid, referencePyramid;
+	inputPyramid.construct(inputSample, inputLevel);
+	referencePyramid.construct(referenceSample, referenceLevel);
+
+	// Convert the level count variables to valid indices of the coarsest levels.
+	referenceLevel--; inputLevel--;
+
+	// Match histograms of both coarsest levels.
+	Sample referenceCoarsestLevel;
+	referenceCoarsestLevel = referencePyramid.getLevel(referenceLevel);
+	std::unique_ptr<IFilter> filter = std::make_unique<HistogramMatchingFilter>(referenceCoarsestLevel);
+	inputPyramid.filterLevel(filter, inputLevel);
+
+	// Apply noise to each level from the second-coarsest to the finest level.
+	int maxLevel = std::min(referenceLevel, inputLevel);
+
+	for (int lvl(1); lvl < maxLevel; ++lvl)
+	{
+		// Reconstruct image pyramid at this level in order to deduce the noise function.
+		Sample reference = referencePyramid.getLevel(referenceLevel - lvl);
+		//referencePyramid.reconstruct(reference, referenceLevel - l);
+		std::unique_ptr<IFilter> noise = MatchingVarianceNoise::FromSample(reference);
+
+		// Add perlin noise to the laplacian at the current level.
+		inputPyramid.filterLevel(noise, inputLevel - lvl);
+	}
+
+	// Reconstruct the sample that now contains per-level noise.
+	Sample refined;
+	inputPyramid.reconstruct(refined);
+
+	// Normalize and store the sample.
+	//std::unique_ptr<IFilter> normalizationFilter = std::make_unique<NormalizationFilter>();
+	//normalizationFilter->apply(refined, refined);
+	_persistence.saveSample(resultFileName, refined);
+
+	if (showResult)
+	{
+		cv::imshow("Refined guidance", (cv::Mat)refined);
+		cv::waitKey(0);
+	}
+
+	return 0;
+}
+
 void parsePrograms(const std::string& cmd, std::queue<std::string>& programs)
 {
 	// Get the selected programs.
@@ -578,6 +650,7 @@ int main(int argc, const char** argv)
 	std::string weights = parser.get<std::string>("w");
 	std::string uvMap = parser.get<std::string>("uv");
 	std::string jitters = parser.get<std::string>("j");
+	std::string referenceFile = parser.get<std::string>("ref");
 	uint64_t seed = parser.get<uint64_t>("s");
 	bool isMaterial = parser.get<int>("m");
 	bool dontWait = parser.get<int>("dontWait");
@@ -599,13 +672,14 @@ int main(int argc, const char** argv)
 	resultFile			= !resultFile.empty() ? resultFile.substr(resultFile.find_first_not_of('\"'), resultFile.find_last_not_of('\"') + 1) : resultFile;
 	uvMap				= !uvMap.empty() ? uvMap.substr(uvMap.find_first_not_of('\"'), uvMap.find_last_not_of('\"') + 1) : uvMap;
 	weights				= !weights.empty() ? weights.substr(weights.find_first_not_of('\"'), weights.find_last_not_of('\"') + 1) : weights;
+	referenceFile		= !referenceFile.empty() ? referenceFile.substr(referenceFile.find_first_not_of('\"'), referenceFile.find_last_not_of('\"') + 1) : referenceFile;
 
 	// Get the programs in the order they should be executed.
 	std::queue<std::string> programs;
 	parsePrograms(proc, programs);
 
 	// Get the maps, if the material flag is specified.
-	std::unordered_map<std::string, std::string> exemplarMaps, resultMaps, transferMaps;
+	std::unordered_map<std::string, std::string> exemplarMaps, resultMaps, transferMaps, referenceMaps;
 
 	if (isMaterial != 0)
 	{
@@ -613,6 +687,7 @@ int main(int argc, const char** argv)
 		parseMaps(exemplar, exemplarMaps);
 		parseMaps(resultFile, resultMaps);
 		parseMaps(transferTarget, transferMaps);
+		parseMaps(referenceFile, referenceMaps);
 	}
 	else if (!exemplar.empty())
 	{
@@ -620,6 +695,7 @@ int main(int argc, const char** argv)
 		exemplarMaps["albedo"] = exemplar;
 		resultMaps["albedo"] = resultFile;
 		transferMaps["albedo"] = transferTarget;
+		referenceMaps["albedo"] = referenceFile;
 	}
 
 	// Get the weights.
@@ -672,7 +748,6 @@ int main(int argc, const char** argv)
 				
 			std::cout << "\tDistance Map: " << distanceMap << std::endl <<
 				"\tDescriptor Asset: " << descriptorAsset << std::endl;
-
 
 			auto start = std::chrono::high_resolution_clock::now();
 			result = appearanceSpace(exemplarMaps, mapWeights, distanceMap, descriptorAsset, static_cast<size_t>(dimensionality), showResult);
@@ -735,6 +810,22 @@ int main(int argc, const char** argv)
 			auto end = std::chrono::high_resolution_clock::now();
 
 			std::cout << "\ts:Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+		}
+		else if (program == "gr") {
+			int m(0);
+
+			for each (auto map in exemplarMaps) {
+				std::cout << "Performing guidance refinement " << ++m << " of " << exemplarMaps.size() << "..." << std::endl
+					<< "\tInput " << map.first << ": " << map.second << std::endl
+					<< "\tReference: " << referenceMaps[map.first] << std::endl
+					<< "\tResult: " << resultMaps[map.first] << std::endl;
+
+				auto start = std::chrono::high_resolution_clock::now();
+				result = refineGuidance(map.second, referenceMaps[map.first], resultMaps[map.first], seed, showResult);
+				auto end = std::chrono::high_resolution_clock::now();
+
+				std::cout << "\ts:Duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+			}
 		}
 
 		if (result != 0)
