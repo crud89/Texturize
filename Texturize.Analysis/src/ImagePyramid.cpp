@@ -9,12 +9,21 @@ using namespace Texturize;
 ///// Image pyramid base implementation 				                                      /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+Sample ImagePyramid::getLevel(const unsigned int level) const
+{
+	TEXTURIZE_ASSERT(level < _levels.size());                   // level must be a valid index
+	
+	return _levels[level];
+}
+
 void ImagePyramid::filterLevel(std::unique_ptr<IFilter>& filter, const unsigned int level)
 {
     TEXTURIZE_ASSERT(level < _levels.size());                   // level must be a valid index
     
-    Sample sample = _levels[level];
+	Sample sample;
+	//this->reconstruct(sample, level);
     filter->apply(sample, _levels[level]);
+	_levels[level] = sample;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,16 +71,17 @@ void GaussianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel)
 void LaplacianImagePyramid::construct(const Sample& sample, const unsigned int toLevel)
 {
     TEXTURIZE_ASSERT(toLevel > 1);                                // There must be at least two levels, in order upsample high frequencies.
-
+	
     // Generate a gaussian pyramid first.
     GaussianImagePyramid::construct(sample, toLevel);
+	std::vector<Sample> gaussianLevels = _levels;
 
     // The coarsest (smallest; highest level) level will be stored. The successive levels will be 
     // high-pass filtered.
     // Start at the second-coarsest level and traverse all towards the finest.
-    for (size_t l = toLevel - 2; l >= 0; --l) 
+    for (int lvl(1); lvl < toLevel; ++lvl) 
     {
-        cv::Mat coarserLevel = (cv::Mat)_levels[l + 1], upsampledLevel, currentLevel;
+        cv::Mat coarserLevel = (cv::Mat)gaussianLevels[toLevel - lvl], upsampledLevel, currentLevel;
 
         // Take the next coarser level; upsample and blur it.
         cv::pyrUp(coarserLevel, upsampledLevel);
@@ -79,28 +89,28 @@ void LaplacianImagePyramid::construct(const Sample& sample, const unsigned int t
         // The difference between the current level and the upsampled one are the high frequencies 
         // at this scale, which would be lost by downsampling. During reconstruction they will be
         // added back again to the image.
-        cv::subtract((cv::Mat)_levels[l], upsampledLevel, currentLevel);
+        cv::subtract((cv::Mat)gaussianLevels[(toLevel - 1) - lvl], upsampledLevel, currentLevel);
 
         // Store the filter response.
-        _levels[l] = Sample(currentLevel);
-    } 
+        _levels[(toLevel - 1) - lvl] = Sample(currentLevel);
+    }
 }
 
 void LaplacianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel)
 {
     TEXTURIZE_ASSERT(toLevel < _levels.size());                 // toLevel must be a valid level index.
 
-    // Reconstruction is done by starting at the coarsest level, iterating upwards. Each level
-    // gets added the low
+    // Reconstruction is done by starting at the coarsest level, iterating upwards.
     cv::Mat reconstruction = (cv::Mat)_levels.back();
+	auto depthType = reconstruction.depth();
 
-    for (size_t l = _levels.size() - 2; l >= 0; --l)
+    for (int lvl = 1; _levels.size() - lvl > toLevel; ++lvl)
     {
         // Upsample and blur.
         cv::pyrUp(reconstruction, reconstruction);
 
         // Add high frequencies back in.
-        cv::add(reconstruction, (cv::Mat)_levels[l], reconstruction);
+        cv::add(reconstruction, (cv::Mat)_levels[(_levels.size() - 1) - lvl], reconstruction, cv::noArray(), depthType);
     }
 
     to = Sample(reconstruction);
