@@ -949,33 +949,5 @@ namespace Texturize {
 
 	// class TEXTURIZE_API GPUPyramidSynthesizer : public PyramidSynthesizer { }
 
-	class TEXTURIZE_API INoiseFunction {
-	public:
-		virtual void makeNoise(Sample& sample) const = 0;
-	};
-
-	class TEXTURIZE_API PerlinNoise2D :
-		public INoiseFunction {
-	public:
-		void makeNoise(Sample& sample) const override;
-	};
-
-	class TEXTURIZE_API MatchingVarianceNoise :
-		public PerlinNoise2D {
-	private:
-		const float _referenceVariance;
-
-	public:
-		MatchingVarianceNoise() = delete;
-		MatchingVarianceNoise(const float referenceVariance);
-		virtual ~MatchingVarianceNoise() = default;
-
-	public:
-		void makeNoise(Sample& sample) const override;
-
-	public:
-		static std::unique_ptr<MatchingVarianceNoise> FromSample(const Sample& sample);
-	};
-
 	/// @}
 };

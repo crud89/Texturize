@@ -483,6 +483,9 @@ namespace Texturize {
 		/// \example BlurFilter.cpp The example demonstrates how to create and use a custom filter implementation. The filter uses OpenCV to apply gaussian blur with a kernel of 5 to an input image.
 
 	public:
+		virtual ~IFilter() = default;
+
+	public:
 		/// \brief Applies the filter to \ref `sample` and stores the result in \ref `result`.
 		/// \param result The result of the operation.
 		/// \param sample The sample to apply the filter function to.
@@ -699,6 +702,49 @@ namespace Texturize {
 		void apply(Sample& result, const Sample& sample) const override;
 	};
 
+	class TEXTURIZE_API INoiseFunction {
+	public:
+		virtual ~INoiseFunction() = default;
+
+	public:
+		virtual void makeNoise(Sample& sample) const = 0;
+	};
+
+	class TEXTURIZE_API PerlinNoise2D :
+		public INoiseFunction,
+		public IFilter {
+	public:
+		virtual ~PerlinNoise2D() = default;
+
+		// INoiseFunction
+	public:
+		void makeNoise(Sample& sample) const override;
+
+		// IFilter
+	public:
+		/// \copydoc Texturize::IFilter::apply
+		void apply(Sample& result, const Sample& sample) const override;
+	};
+
+	class TEXTURIZE_API MatchingVarianceNoise :
+		public PerlinNoise2D {
+	private:
+		const std::vector<float> _referenceVariance;
+
+	public:
+		MatchingVarianceNoise() = delete;
+		MatchingVarianceNoise(const float referenceVariance);
+		MatchingVarianceNoise(const std::vector<float>& referenceVariances);
+		virtual ~MatchingVarianceNoise() = default;
+
+		// INoiseFunction
+	public:
+		void makeNoise(Sample& sample) const override;
+
+	public:
+		static std::unique_ptr<IFilter> FromSample(const Sample& sample);
+	};
+
 	/// \brief An interface that defines methods to create, transform and work with search spaces.
 	///
 	/// Basically, a search space is the result of image analysis. It is used later during synthesis in order to match pixel or patch neighborhoods. This interface
@@ -886,12 +932,12 @@ namespace Texturize {
 		std::vector<Sample> _levels;
 		
 	public:
+		Sample getLevel(const unsigned int level) const;
 		void filterLevel(std::unique_ptr<IFilter>& filter, const unsigned int level);
 	};
 
 	class TEXTURIZE_API GaussianImagePyramid :
 		public ImagePyramid {
-
 	public:
 		void construct(const Sample& sample, const unsigned int levels) override;
 		void reconstruct(Sample& to, const unsigned int toLevel = 0) override;
