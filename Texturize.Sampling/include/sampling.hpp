@@ -88,7 +88,6 @@ namespace Texturize {
 		/// \see Texturize::DescriptorExtractor::getProxyPixel(const Sample& exemplar, const cv::Point2i& at, const cv::Vec2i& delta)
 		static void getProxyPixel(const Sample& exemplar, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, float* const rowPtr);
 
-
 		// IDescriptorExtractor
 	public:
 		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar) const override;

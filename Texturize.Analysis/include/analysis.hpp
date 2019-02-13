@@ -702,6 +702,24 @@ namespace Texturize {
 		void apply(Sample& result, const Sample& sample) const override;
 	};
 
+	class TEXTURIZE_API HistogramExtractionFilter :
+		public IFilter
+	{
+	private:
+		const int _binsPerDimension;
+
+	public:
+		HistogramExtractionFilter(const int& binsPerDim = 4);
+		virtual ~HistogramExtractionFilter() = default;
+
+	public:
+		/// \copydoc Texturize::IFilter::apply
+		void apply(Sample& result, const Sample& sample) const override;
+	};
+
+	//class TEXTURIZE_API IFilterBank {};
+	//class TEXTURIZE_API Max8ResponseFilterBank : public IFilterBank {};
+
 	class TEXTURIZE_API INoiseFunction {
 	public:
 		virtual ~INoiseFunction() = default;
