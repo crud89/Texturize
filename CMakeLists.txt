@@ -122,14 +122,17 @@ MESSAGE(STATUS "Configuring projects...")
 ###################################################################################################
 
 # Framework libraries
-ADD_SUBDIRECTORY(Texturize.Core)
-ADD_SUBDIRECTORY(Texturize.Codecs)
-ADD_SUBDIRECTORY(Texturize.Analysis)
-ADD_SUBDIRECTORY(Texturize.Sampling)
-ADD_SUBDIRECTORY(Texturize.Codecs.EXR)
+ADD_SUBDIRECTORY(libs/Texturize.Core)
+ADD_SUBDIRECTORY(libs/Texturize.Codecs)
+ADD_SUBDIRECTORY(libs/Texturize.Analysis)
+ADD_SUBDIRECTORY(libs/Texturize.Sampling)
+ADD_SUBDIRECTORY(libs/Texturize.Codecs.EXR)
 
+#SET_TARGET_PROPERTIES(Texturize.Core Texturize.Codecs Texturize.Analysis Texturize.Sampling Texturize.Codecs.EXR PROPERTIES FOLDER "libs")
 
-ADD_SUBDIRECTORY(Texturize.Sandbox)
+ADD_SUBDIRECTORY(apps/Texturize.Sandbox)
+
+#SET_TARGET_PROPERTIES(Texturize.Core PROPERTIES FOLDER "apps")
 
 ADD_DEPENDENCIES(Texturize.Codecs 		        Texturize.Core)
 ADD_DEPENDENCIES(Texturize.Analysis 		      Texturize.Core)

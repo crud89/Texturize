@@ -30,7 +30,7 @@ using namespace Texturize;
 const char* parameters =
 {
 	"{h help usage ?    |    | Displays this help message}"
-	"{proc p            |    | Specifies the program(s) to run (fm: Detect Features, fd: Calculate feature distances, as: Appearance space transform, s: Perform synthesis, st: Style transfer, gr: Guidance channel refinement). Different programs can be seperated using the \'|\' character and will be executed in the order they appear.}"
+	"{proc p            |    | Specifies the program(s) to run (fm: Detect Features, fd: Calculate feature distances, as: Appearance space transform, s: Perform synthesis, st: Style transfer, gtm: Generate texton map, ft: Filter textons, gr: Guidance channel refinement). Different programs can be seperated using the \'|\' character and will be executed in the order they appear.}"
 	"{exemplar ex       |    | Exemplar file name}"
 	"{target t          |    | Style transfer target map}"
 	"{featureMap fm     |    | Feature map file name}"
