@@ -130,10 +130,6 @@ ADD_SUBDIRECTORY(libs/Texturize.Codecs.EXR)
 
 #SET_TARGET_PROPERTIES(Texturize.Core Texturize.Codecs Texturize.Analysis Texturize.Sampling Texturize.Codecs.EXR PROPERTIES FOLDER "libs")
 
-ADD_SUBDIRECTORY(apps/Texturize.Sandbox)
-
-#SET_TARGET_PROPERTIES(Texturize.Core PROPERTIES FOLDER "apps")
-
 ADD_DEPENDENCIES(Texturize.Codecs 		        Texturize.Core)
 ADD_DEPENDENCIES(Texturize.Analysis 		      Texturize.Core)
 ADD_DEPENDENCIES(Texturize.Sampling 		      Texturize.Core)
@@ -144,16 +140,32 @@ ADD_DEPENDENCIES(Texturize.Codecs.EXR 		    Texturize.Codecs)
 
 IF(BUILD_ZLIB)
   ADD_SUBDIRECTORY(${ZLIB_ROOT})
-  ADD_DEPENDENCIES(Texturize.Codecs.EXR 		    zlib)
+  ADD_DEPENDENCIES(Texturize.Codecs.EXR 		  zlib)
 ENDIF(BUILD_ZLIB)
 
 ADD_DEPENDENCIES(Texturize.Sampling 		      Texturize.Analysis)
 
-ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Codecs)
-ADD_DEPENDENCIES(Texturize.Sandbox   		      Texturize.Codecs.EXR)
-ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Analysis)
-ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Sampling)
+IF(BUILD_APP_SANDBOX)
+  ADD_SUBDIRECTORY(apps/Texturize.Sandbox)
+  
+  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.Sandbox   		      Texturize.Codecs.EXR)
+  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Analysis)
+  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Sampling)
+
+  #SET_TARGET_PROPERTIES(Texturize.Sandbox PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_SANDBOX)
+
+IF(BUILD_APP_FILTERMR8)
+  ADD_SUBDIRECTORY(apps/Texturize.FilterMR8)
+  
+  ADD_DEPENDENCIES(Texturize.FilterMR8 		        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.FilterMR8 		        Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.FilterMR8 		        Texturize.Analysis)
+
+  #SET_TARGET_PROPERTIES(Texturize.FilterMR8 PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_FILTERMR8)
 
 # Adapters
 IF(WITH_TAPKEE)
@@ -162,5 +174,8 @@ IF(WITH_TAPKEE)
   ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Codecs)
   ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Analysis)
   ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Sampling)
-  ADD_DEPENDENCIES(Texturize.Sandbox          Texturize.Adapters.Tapkee)
+
+  IF(BUILD_APP_SANDBOX)
+    ADD_DEPENDENCIES(Texturize.Sandbox          Texturize.Adapters.Tapkee)
+  ENDIF(BUILD_APP_SANDBOX)
 ENDIF(WITH_TAPKEE)
