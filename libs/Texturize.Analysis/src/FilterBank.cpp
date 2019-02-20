@@ -234,11 +234,6 @@ void MaxResponseFilterBank::apply(Sample& result, const Sample& sample) const
 
 				// Overwrite the values, where they are greater.
 				maxResponse = cv::max(filterResponse, maxResponse);
-
-				cv::imshow("Filter Kernel", kernel);
-				cv::imshow("Filter Response", filterResponse);
-				cv::imshow("Max Filter Response", maxResponse);
-				cv::waitKey(0);
 			}
 
 			// Keep the maximum response for the current scale.
