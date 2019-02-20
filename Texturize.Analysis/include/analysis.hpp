@@ -712,13 +712,49 @@ namespace Texturize {
 		HistogramExtractionFilter(const int& binsPerDim = 4);
 		virtual ~HistogramExtractionFilter() = default;
 
+	private:
+		cv::Mat mask(const cv::Size& sampleSize, const cv::Point2i& at, const int kernel, const bool wrap = true) const;
+
 	public:
 		/// \copydoc Texturize::IFilter::apply
 		void apply(Sample& result, const Sample& sample) const override;
 	};
 
-	//class TEXTURIZE_API IFilterBank {};
-	//class TEXTURIZE_API Max8ResponseFilterBank : public IFilterBank {};
+	/// \brief 
+	class TEXTURIZE_API IFilterBank {
+	public:
+		/// \brief
+		///
+		/// 
+		///
+		/// \param bank A sample, that receives all kernels of the filter bank.
+		virtual void computeRootFilterSet(Sample& bank, const int kernelSize = 49) const = 0;
+	};
+
+	/// 
+	class TEXTURIZE_API MaxResponseFilterBank :
+		public IFilterBank,
+		public IFilter
+	{
+	private:
+		const Sample _rootFilterSet;
+
+	public:
+		MaxResponseFilterBank(const int kernelSize = 49);
+		virtual ~MaxResponseFilterBank() = default;
+
+	private:
+		Sample computeRootFilterSet(const int kernelSize) const;
+
+		// IFilterBank
+	public:
+		void computeRootFilterSet(Sample& bank, const int kernelSize = 49) const override;
+
+		// IFilterBank
+	public:
+		/// \copydoc Texturize::IFilter::apply
+		void apply(Sample& result, const Sample& sample) const override;
+	};
 
 	class TEXTURIZE_API INoiseFunction {
 	public:
