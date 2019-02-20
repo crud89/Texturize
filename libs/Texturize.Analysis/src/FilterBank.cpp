@@ -7,6 +7,8 @@
 
 #include <cmath>
 
+#include <opencv2/highgui.hpp>
+
 using namespace Texturize;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +20,7 @@ void getSamplingPoints(std::vector<cv::Point2f>& pts, const int ksize) {
 	int relativeKernel = ksize / 2;
 
 	for (int x(-relativeKernel); x <= relativeKernel; ++x)
-		for (int y(relativeKernel); y >= relativeKernel; --y)
+		for (int y(relativeKernel); y >= -relativeKernel; --y)
 			pts.push_back(cv::Point2f(static_cast<float>(x), static_cast<float>(y)));
 }
 
@@ -70,6 +72,20 @@ cv::Mat getLaplacianOfGaussianKernel(int ksize, float sigma) {
 		val = laplacianOfGaussian(idx[1] - halfSize, idx[0] - halfSize, sigma);
 	});
 
+	cv::normalize(kernel, kernel);
+	return kernel;
+}
+
+/// \private
+cv::Mat getGaussianKernel(int ksize, float sigma) {
+	cv::Mat kernel(cv::Size(ksize, ksize), CV_32FC1);
+	cv::Mat linearKernel = cv::getGaussianKernel(ksize, sigma, CV_32F);
+
+	kernel.forEach<float>([&linearKernel](float& val, const int* idx) -> void {
+		val = linearKernel.at<float>(idx[1], 0) * linearKernel.at<float>(idx[0], 0);
+	});
+
+	cv::normalize(kernel, kernel);
 	return kernel;
 }
 
@@ -92,11 +108,17 @@ cv::Mat getDerivGaussianKernel(int ksize, float scale, float mean = 0, float phi
 	::getSamplingPoints(pts, ksize);
 
 	// Calculate the rotation matrix and rotate all points.
-	cv::Mat rotator = cv::getRotationMatrix2D(cv::Point2f(0.f, 0.f), phi, 1.f);
-	cv::Mat rotatedPoints(2, pts.size(), CV_32F);
+	const float sine	= sinf(phi);
+	const float cosine	= cosf(phi);
+	std::vector<float> rotations = { cosine, sine, -sine, cosine };
+	cv::Mat rotator = cv::Mat(2, 2, CV_32FC1, rotations.data());
+	cv::Mat rotatedPoints(2, pts.size(), CV_32FC1);
 
 	for (std::vector<cv::Point2f>::size_type i(0); i < pts.size(); ++i)
-		rotatedPoints.col(i).setTo(rotator * cv::Mat(pts[i]));
+	{
+		cv::Mat rt = rotator * cv::Mat(pts[i]);
+		rt.copyTo(rotatedPoints.col(i));
+	}
 
 	// Calculate horizontal gaussian kernel.
 	::gauss1d(rotatedPoints.row(0), 0, 3 * scale, mean);
@@ -109,7 +131,8 @@ cv::Mat getDerivGaussianKernel(int ksize, float scale, float mean = 0, float phi
 	for (int i(0); i < rotatedPoints.cols; ++i)
 		data[i] = rotatedPoints.at<float>(0, i) * rotatedPoints.at<float>(1, i);
 
-	// TODO: Normalize?!
+	// Normalize.
+	cv::normalize(kernel, kernel);
 
 	// Return the kernel.
 	return kernel;
@@ -148,12 +171,13 @@ void MaxResponseFilterBank::computeRootFilterSet(Sample& bank, const int kernelS
 	// The three scale coefficients for edge and bar filter kernels.
 	constexpr float scales[] = { 1.f, 2.f, 4.f };
 	// The angle between two kernels at the same scale (6 discrete steps = 1/6*Pi)
-	constexpr float angle = (1.f / 6.f) * M_PI;
+	constexpr float angularDifference = (1.f / 6.f) * M_PI;
 	std::vector<cv::Mat> edgeKernels, barKernels;
+	float phi(0.f);
 
 	// At each scale, build six edge and six bar filters.
-	for (int scale(0); scale < sizeof(scales); scale++)
-	for (float phi(0.f); phi < M_PI; phi += angle)
+	for (int scale(0); scale < 3; ++scale)
+	for (int angle(0); angle < 6; ++angle, phi += angularDifference)
 	{
 		edgeKernels.push_back(::getDerivGaussianKernel(kernelSize, scales[scale], 0.0, phi, 1));
 		barKernels.push_back(::getDerivGaussianKernel(kernelSize, scales[scale], 0.0, phi, 2));
@@ -178,5 +202,70 @@ void MaxResponseFilterBank::computeRootFilterSet(Sample& bank, const int kernelS
 
 void MaxResponseFilterBank::apply(Sample& result, const Sample& sample) const
 {
-	throw;
+	TEXTURIZE_ASSERT(sample.channels() == 1);								// Only greyscale/intensity images are allowed.
+
+	// There are 3 scales for each filter mode and 6 orientations for each filter at each
+	// scale, plus two orientation and scale invariant filter kernels. The filter bank is
+	// computed by applying each kernel, keeping only the maximum response for a pixel at
+	// a certain scale.
+	std::vector<cv::Mat> responses(8);
+	int filterIndex(0), responseIndex(0);
+
+	// Apply filters of different modes: mode 0 represents edge, mode 1 bar filters.
+	for (int mode(0); mode < 2; ++mode)
+	{
+		for (int scale(0); scale < 3; ++scale)
+		{
+			// Store the maximum response for each scale.
+			cv::Mat maxResponse = cv::Mat::zeros(sample.size(), CV_32F);
+
+			for (int angle(0); angle < 6; ++angle)
+			{
+				// Start by requesting the kernel.
+				cv::Mat kernel = _rootFilterSet.getChannel(filterIndex++);
+
+				// Next, filter the image.
+				cv::Mat filterResponse;
+				cv::filter2D((cv::Mat)sample, filterResponse, CV_32F, kernel);
+
+				// In case of edge filter mode (1st order derivative), take the absolute.
+				if (mode == 0)
+					filterResponse = cv::abs(filterResponse);
+
+				// Overwrite the values, where they are greater.
+				maxResponse = cv::max(filterResponse, maxResponse);
+
+				cv::imshow("Filter Kernel", kernel);
+				cv::imshow("Filter Response", filterResponse);
+				cv::imshow("Max Filter Response", maxResponse);
+				cv::waitKey(0);
+			}
+
+			// Keep the maximum response for the current scale.
+			responses[responseIndex++] = maxResponse;
+		}
+	}
+
+	// Finally, apply the remaining two kernels.
+	TEXTURIZE_ASSERT_DBG(responseIndex == 6);
+	TEXTURIZE_ASSERT_DBG(filterIndex == 36);
+
+	// First the gaussian kernel.
+	cv::Mat gaussResponse, gaussKernel = _rootFilterSet.getChannel(filterIndex++);
+	cv::filter2D((cv::Mat)sample, gaussResponse, CV_32F, gaussKernel);
+	responses[responseIndex++] = gaussResponse;
+
+	// Then the Laplacian of Gaussian kernel (LoG).
+	cv::Mat laplacianResponse, laplacianKernel = _rootFilterSet.getChannel(filterIndex++);
+	cv::filter2D((cv::Mat)sample, laplacianResponse, CV_32F, laplacianKernel);
+	responses[responseIndex++] = laplacianResponse;
+
+	// The result should be an 8 channel sample containing the maximum responses.
+	TEXTURIZE_ASSERT_DBG(responseIndex == 8);
+	TEXTURIZE_ASSERT_DBG(filterIndex == 38);
+
+	result = Sample(responseIndex, sample.size());
+	
+	for (int i(0); i < static_cast<int>(result.channels()); ++i)
+		result.setChannel(i, responses[i]);
 }
