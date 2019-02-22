@@ -720,6 +720,21 @@ namespace Texturize {
 		void apply(Sample& result, const Sample& sample) const override;
 	};
 
+	class TEXTURIZE_API KMeansClusterFilter :
+		public IFilter {
+	private:
+		const int _numClusters, _iterations;
+
+	public:
+		KMeansClusterFilter(const int clusters = 64, const int iterations = 10);
+		virtual ~KMeansClusterFilter() = default;
+
+		// IFilter
+	public:
+		/// \copydoc Texturize::IFilter::apply
+		void apply(Sample& result, const Sample& sample) const override;
+	};
+
 	/// \brief 
 	class TEXTURIZE_API IFilterBank {
 	public:
@@ -750,7 +765,7 @@ namespace Texturize {
 	public:
 		void computeRootFilterSet(Sample& bank, const int kernelSize = 49) const override;
 
-		// IFilterBank
+		// IFilter
 	public:
 		/// \copydoc Texturize::IFilter::apply
 		void apply(Sample& result, const Sample& sample) const override;
