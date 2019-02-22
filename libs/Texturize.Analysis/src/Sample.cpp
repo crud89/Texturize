@@ -17,12 +17,17 @@ Sample::Sample(const cv::Mat& raw) :
 	auto cn = raw.channels();
 	std::vector<cv::Mat> channels(cn);
 	cv::split(raw, channels);
-
+	
 	// Convert the channels, if required.
 	for (int c(0); c < cn; ++c)
-		channels[c].depth() != CV_32F && channels[c].depth() != CV_64F ?
-			channels[c].convertTo(_channels[c], CV_32F, 1 / 255.f) :
+	{
+		if (channels[c].depth() == CV_8U || channels[c].depth() == CV_8S)
+			channels[c].convertTo(_channels[c], CV_32F, 1.f / static_cast<float>(std::numeric_limits<TX_BYTE>::max()));
+		else if (channels[c].depth() == CV_16U || channels[c].depth() == CV_16S)
+			channels[c].convertTo(_channels[c], CV_32F, 1.f / static_cast<float>(std::numeric_limits<TX_WORD>::max()));
+		else
 			channels[c].convertTo(_channels[c], CV_32F);
+	}
 }
 
 Sample::Sample(const size_t channels) : 
