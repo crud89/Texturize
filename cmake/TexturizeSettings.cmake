@@ -9,6 +9,7 @@ OPTION(WITH_TAPKEE  "Build advanced dimensionality reductors based on tapkee."  
 
 OPTION(BUILD_APP_SANDBOX    "Builds the sandbox app."                                                                   OFF)
 OPTION(BUILD_APP_FILTERMR8  "Builds MR8 filter bank app."                                                               ON)
+OPTION(BUILD_APP_KMEANS     "Builds k-means clustering app."                                                            ON)
 
 IF("${OpenCV_DIR}" STREQUAL "")
   SET(OpenCV_DIR "${CMAKE_MODULE_PATH}/opencv")

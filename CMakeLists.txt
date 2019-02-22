@@ -167,6 +167,16 @@ IF(BUILD_APP_FILTERMR8)
   #SET_TARGET_PROPERTIES(Texturize.FilterMR8 PROPERTIES FOLDER "apps")
 ENDIF(BUILD_APP_FILTERMR8)
 
+IF(BUILD_APP_KMEANS)
+  ADD_SUBDIRECTORY(apps/Texturize.KMeans)
+  
+  ADD_DEPENDENCIES(Texturize.KMeans 		          Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.KMeans 		          Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.KMeans 		          Texturize.Analysis)
+
+  #SET_TARGET_PROPERTIES(Texturize.KMeans PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_KMEANS)
+
 # Adapters
 IF(WITH_TAPKEE)
   ADD_SUBDIRECTORY(adapters/Texturize.Adapters.Tapkee)
