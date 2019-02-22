@@ -58,7 +58,7 @@ ADD_DEFINITIONS(
 ###################################################################################################
 
 # Set header directory.
-INCLUDE_DIRECTORIES(INCLUDE_DIR)
+INCLUDE_DIRECTORIES(${INCLUDE_DIR})
 
 # Lookup source files.
 FILE(GLOB SRC_FILES
