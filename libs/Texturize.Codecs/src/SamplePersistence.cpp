@@ -8,19 +8,19 @@ using namespace Texturize;
 ///// Sample Persistence implementation                                                       /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SamplePersistence::SamplePersistence(LPCSAMPLECODEC defaultCodec) :
-	_defaultCodec(defaultCodec)
+SamplePersistence::SamplePersistence(std::unique_ptr<ISampleCodec> defaultCodec) :
+	_defaultCodec(std::move(defaultCodec))
 {
 	// NOTE: It does not matter if the codec is initialized or not. We have to check this everytime.
 }
 
-void SamplePersistence::registerCodec(const std::string& extension, LPCSAMPLECODEC codec)
+void SamplePersistence::registerCodec(const std::string& extension, std::unique_ptr<ISampleCodec> codec)
 {
 	TEXTURIZE_ASSERT_DBG(extension.find('.') == std::string::npos);				// Extensions are not expected to contain the "." character.
 	TEXTURIZE_ASSERT(_codecs.find(extension) == _codecs.end());					// An extension can only be registered with one codec.
 	TEXTURIZE_ASSERT(codec != nullptr);											// The codec must be initialized.
 
-	_codecs.insert(std::make_pair(extension, codec));
+	_codecs.insert(std::make_pair(extension, std::move(codec)));
 }
 
 void SamplePersistence::loadSample(const std::string& fileName, Sample& sample) const

@@ -13,10 +13,6 @@ Exception::Exception(int code, const char* msg) :
 {
 }
 
-Exception::~Exception() throw()
-{
-}
-
 const char* Exception::what() const throw()
 {
 	// The C-style cast that violates Core Guideline Type.4 (prefer named casts or explicit conversions) is intented.

@@ -10,8 +10,8 @@ using namespace Texturize;
 
 FeatureExtractor::FeatureExtractor()
 {
-	_cascade.append(new DynamicThresholdFilter());
-	_cascade.append(new FeatureDistanceFilter());
+	_cascade.append(std::make_shared<DynamicThresholdFilter>());
+	_cascade.append(std::make_shared<FeatureDistanceFilter>());
 }
 
 void FeatureExtractor::apply(Sample& result, const Sample& sample) const

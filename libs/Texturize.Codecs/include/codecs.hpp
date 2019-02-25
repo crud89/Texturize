@@ -207,9 +207,6 @@ namespace Texturize {
 	class TEXTURIZE_API SamplePersistence
 	{
 	protected:
-		typedef const ISampleCodec* const LPCSAMPLECODEC;
-
-	protected:
 		struct _caseInsensitiveStringCmp {
 			bool operator() (const std::string& lhs, const std::string& rhs) const {
 				return _stricmp(lhs.c_str(), rhs.c_str()) < 0;
@@ -217,12 +214,12 @@ namespace Texturize {
 		};
 
 	protected:
-		LPCSAMPLECODEC _defaultCodec = nullptr;
-		std::map<std::string, LPCSAMPLECODEC, _caseInsensitiveStringCmp> _codecs;
+		std::unique_ptr<ISampleCodec> _defaultCodec = nullptr;
+		std::map<std::string, std::shared_ptr<ISampleCodec>, _caseInsensitiveStringCmp> _codecs;
 
 	public:
 		SamplePersistence() = default;
-		SamplePersistence(LPCSAMPLECODEC defaultCodec);
+		SamplePersistence(std::unique_ptr<ISampleCodec> defaultCodec);
 
 	public:
 		/// \brief Registers a new codec.
@@ -230,7 +227,7 @@ namespace Texturize {
 		/// \param codec An instance of the codec interface.
 		///
 		/// \see ISampleCodec
-		void registerCodec(const std::string& extension, LPCSAMPLECODEC codec);
+		void registerCodec(const std::string& extension, std::unique_ptr<ISampleCodec> codec);
 
 		/// \brief Loads a sample from a file.
 		/// \param fileName The file to load the sample from.
@@ -264,8 +261,8 @@ namespace Texturize {
 		static_assert(std::is_base_of<ISampleCodec, TDefaultCodec>::value, "The default codec type must implement the 'ISampleCodec' class.");
 
 	public:
-		SamplePersistence_();
-		virtual ~SamplePersistence_();
+		SamplePersistence_() : SamplePersistence(std::make_unique<TDefaultCodec>()) {}
+		virtual ~SamplePersistence_() = default;
 	};
 
 	typedef TEXTURIZE_API SamplePersistence_<> DefaultPersistence;
@@ -321,8 +318,6 @@ namespace Texturize {
 
 	/// @}
 }
-
-#include "persistence.hpp"
 
 // TODO: Example for implementing custom codecs
 // TODO: Example for using persistence codecs

@@ -8,18 +8,9 @@ using namespace Texturize;
 ///// Filter cascade implementation                                                           /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-FilterCascade::~FilterCascade()
-{
-	while (!_filters.empty())
-	{
-		delete _filters.front();
-		_filters.pop();
-	}
-}
-
 void FilterCascade::apply(Sample& result, const Sample& sample) const
 {
-	std::queue<const IFilter*> filters = _filters;
+	std::queue<std::shared_ptr<const IFilter>> filters = _filters;
 	Sample currentResult, previousResult = sample;
 
 	while (!filters.empty())
@@ -34,7 +25,7 @@ void FilterCascade::apply(Sample& result, const Sample& sample) const
 	result = currentResult;
 }
 
-void FilterCascade::append(const IFilter* filter)
+void FilterCascade::append(std::shared_ptr<const IFilter> filter)
 {
 	_filters.push(filter);
 }

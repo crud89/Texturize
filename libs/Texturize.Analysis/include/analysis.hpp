@@ -547,10 +547,10 @@ namespace Texturize {
 	{
 	protected:
 		/// \brief Stores the filters to execute in the order they have been appended.
-		std::queue<const IFilter*> _filters;
+		std::queue<std::shared_ptr<const IFilter>> _filters;
 
 	public:
-		virtual ~FilterCascade();
+		virtual ~FilterCascade() = default;
 
 	public:
 		/// \copydoc Texturize::IFilter::apply
@@ -560,7 +560,7 @@ namespace Texturize {
 
 		/// \brief Appends a filter to the cascade.
 		/// \param filter The filter to append to the cascade.
-		void append(const IFilter* filter);
+		void append(std::shared_ptr<const IFilter> filter);
 	};
 	
 	/// \brief The base class for filters that are capable of detecting edges.

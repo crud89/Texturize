@@ -25,7 +25,7 @@ namespace Texturize {
 		/// \param msg A description of the error.
 		Exception(int code, const char* msg);
 
-		virtual ~Exception() throw();
+		virtual ~Exception() throw() = default;
 		virtual const char* what() const throw();
 
 		std::string _msg;
