@@ -7,7 +7,6 @@
 
 #include <cmath>
 
-#include "anigauss.h"
 #include <opencv2/highgui.hpp>
 
 using namespace Texturize;

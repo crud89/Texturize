@@ -4,12 +4,13 @@
 #####                                                                                         #####
 ###################################################################################################
 
-OPTION(BUILD_ZLIB   "Include zlib in the build. You may disable this option if you provide zlib on your own."           ON)
-OPTION(WITH_TAPKEE  "Build advanced dimensionality reductors based on tapkee."                                          ON)
+OPTION(BUILD_ZLIB				"Include zlib in the build. You may disable this option if you provide zlib on your own."		ON)
+OPTION(WITH_TAPKEE				"Build advanced dimensionality reductors based on tapkee."										ON)
 
-OPTION(BUILD_APP_SANDBOX    "Builds the sandbox app."                                                                   OFF)
-OPTION(BUILD_APP_FILTERMR8  "Builds MR8 filter bank app."                                                               ON)
-OPTION(BUILD_APP_KMEANS     "Builds k-means clustering app."                                                            ON)
+OPTION(BUILD_APP_SANDBOX		"Builds the sandbox app."																		OFF)
+OPTION(BUILD_APP_FILTERMR8		"Builds MR8 filter bank app."																	ON)
+OPTION(BUILD_APP_KMEANS			"Builds k-means clustering app."																ON)
+OPTION(BUILD_APP_CONTROL_MAP	"Builds control map generation app."															ON)
 
 IF("${OpenCV_DIR}" STREQUAL "")
   SET(OpenCV_DIR "${CMAKE_MODULE_PATH}/opencv")

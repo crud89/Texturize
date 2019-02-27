@@ -130,27 +130,41 @@ ADD_SUBDIRECTORY(libs/Texturize.Codecs.EXR)
 
 #SET_TARGET_PROPERTIES(Texturize.Core Texturize.Codecs Texturize.Analysis Texturize.Sampling Texturize.Codecs.EXR PROPERTIES FOLDER "libs")
 
-ADD_DEPENDENCIES(Texturize.Codecs 		        Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Analysis 		      Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Sampling 		      Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Codecs		          Texturize.Analysis)
+ADD_DEPENDENCIES(Texturize.Codecs 					Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Analysis 				Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Sampling 				Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Codecs					Texturize.Analysis)
 
-ADD_DEPENDENCIES(Texturize.Codecs.EXR 		    Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Codecs.EXR 		    Texturize.Codecs)
+ADD_DEPENDENCIES(Texturize.Codecs.EXR 				Texturize.Core)
+ADD_DEPENDENCIES(Texturize.Codecs.EXR 				Texturize.Codecs)
 
 IF(BUILD_ZLIB)
   ADD_SUBDIRECTORY(${ZLIB_ROOT})
-  ADD_DEPENDENCIES(Texturize.Codecs.EXR 		  zlib)
+  ADD_DEPENDENCIES(Texturize.Codecs.EXR 			zlib)
 ENDIF(BUILD_ZLIB)
 
-ADD_DEPENDENCIES(Texturize.Sampling 		      Texturize.Analysis)
+ADD_DEPENDENCIES(Texturize.Sampling 				Texturize.Analysis)
 
+# Adapters
+IF(WITH_TAPKEE)
+  ADD_SUBDIRECTORY(adapters/Texturize.Adapters.Tapkee)
+  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Analysis)
+  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Sampling)
+
+  IF(BUILD_APP_SANDBOX)
+    ADD_DEPENDENCIES(Texturize.Sandbox				Texturize.Adapters.Tapkee)
+  ENDIF(BUILD_APP_SANDBOX)
+ENDIF(WITH_TAPKEE)
+
+# Apps
 IF(BUILD_APP_SANDBOX)
   ADD_SUBDIRECTORY(apps/Texturize.Sandbox)
   
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Core)
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.Sandbox   		      Texturize.Codecs.EXR)
+  ADD_DEPENDENCIES(Texturize.Sandbox   				Texturize.Codecs.EXR)
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Analysis)
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Sampling)
 
@@ -170,22 +184,23 @@ ENDIF(BUILD_APP_FILTERMR8)
 IF(BUILD_APP_KMEANS)
   ADD_SUBDIRECTORY(apps/Texturize.KMeans)
   
-  ADD_DEPENDENCIES(Texturize.KMeans 		          Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.KMeans 		          Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.KMeans 		          Texturize.Analysis)
+  ADD_DEPENDENCIES(Texturize.KMeans 		        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.KMeans 		        Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.KMeans 		        Texturize.Analysis)
 
   #SET_TARGET_PROPERTIES(Texturize.KMeans PROPERTIES FOLDER "apps")
 ENDIF(BUILD_APP_KMEANS)
 
-# Adapters
-IF(WITH_TAPKEE)
-  ADD_SUBDIRECTORY(adapters/Texturize.Adapters.Tapkee)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Analysis)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee  Texturize.Sampling)
+IF(BUILD_APP_CONTROL_MAP)
+  IF(NOT WITH_TAPKEE)
+	MESSAGE(FATAL_ERROR "The Control Map app requires the tapkee adapter. Enable WITH_TAPKEE to build the app.")
+  ENDIF(NOT WITH_TAPKEE)
+  
+  ADD_SUBDIRECTORY(apps/Texturize.ControlMap)
+  
+  ADD_DEPENDENCIES(Texturize.ControlMap		        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.ControlMap 		    Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.ControlMap		        Texturize.Analysis)
 
-  IF(BUILD_APP_SANDBOX)
-    ADD_DEPENDENCIES(Texturize.Sandbox          Texturize.Adapters.Tapkee)
-  ENDIF(BUILD_APP_SANDBOX)
-ENDIF(WITH_TAPKEE)
+  #SET_TARGET_PROPERTIES(Texturize.ControlMap PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_CONTROL_MAP)
