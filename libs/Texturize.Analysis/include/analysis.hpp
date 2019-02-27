@@ -706,10 +706,10 @@ namespace Texturize {
 		public IFilter
 	{
 	private:
-		const int _binsPerDimension;
+		const int _bins, _stride, _kernel;
 
 	public:
-		HistogramExtractionFilter(const int& binsPerDim = 4);
+		HistogramExtractionFilter(const int& bins = 64, const int& maskKernel = 49, const int& stride = 0);
 		virtual ~HistogramExtractionFilter() = default;
 
 	private:
@@ -755,7 +755,7 @@ namespace Texturize {
 		const Sample _rootFilterSet;
 
 	public:
-		MaxResponseFilterBank(const int kernelSize = 49);
+		MaxResponseFilterBank(const int kernelSize = 7);
 		virtual ~MaxResponseFilterBank() = default;
 
 	private:
@@ -763,7 +763,7 @@ namespace Texturize {
 
 		// IFilterBank
 	public:
-		void computeRootFilterSet(Sample& bank, const int kernelSize = 49) const override;
+		void computeRootFilterSet(Sample& bank, const int kernelSize = 7) const override;
 
 		// IFilter
 	public:

@@ -7,6 +7,9 @@
 
 #include <cmath>
 
+#include "anigauss.h"
+#include <opencv2/highgui.hpp>
+
 using namespace Texturize;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +73,7 @@ cv::Mat getLaplacianOfGaussianKernel(int ksize, float sigma) {
 		val = laplacianOfGaussian(idx[1] - halfSize, idx[0] - halfSize, sigma);
 	});
 
-	cv::normalize(kernel, kernel);
+	//cv::normalize(kernel, kernel);
 	return kernel;
 }
 
@@ -108,7 +111,7 @@ cv::Mat getDerivGaussianKernel(int ksize, float scale, float mean = 0, float phi
 	// Calculate the rotation matrix and rotate all points.
 	const float sine	= sinf(phi);
 	const float cosine	= cosf(phi);
-	std::vector<float> rotations = { cosine, sine, -sine, cosine };
+	std::vector<float> rotations = { -sine, cosine, cosine, sine };
 	cv::Mat rotator = cv::Mat(2, 2, CV_32FC1, rotations.data());
 	cv::Mat rotatedPoints(2, pts.size(), CV_32FC1);
 
@@ -128,7 +131,7 @@ cv::Mat getDerivGaussianKernel(int ksize, float scale, float mean = 0, float phi
 
 	for (int i(0); i < rotatedPoints.cols; ++i)
 		data[i] = rotatedPoints.at<float>(0, i) * rotatedPoints.at<float>(1, i);
-
+	
 	// Normalize.
 	cv::normalize(kernel, kernel);
 
@@ -192,8 +195,9 @@ void MaxResponseFilterBank::computeRootFilterSet(Sample& bank, const int kernelS
 		bank.setChannel(filterIdx++, kernel);
 
 	// Calculate Gaussian and Laplacian of Gaussian kernels.
-	bank.setChannel(filterIdx++, cv::getGaussianKernel(kernelSize, 10.f, CV_32F));
+	bank.setChannel(filterIdx++, ::getGaussianKernel(kernelSize, 10.f));
 	bank.setChannel(filterIdx++, ::getLaplacianOfGaussianKernel(kernelSize, 10.f));
+
 
 	TEXTURIZE_ASSERT_DBG(bank.channels() == 38);							// The MR filter bank RFS has 38 kernels.
 }
