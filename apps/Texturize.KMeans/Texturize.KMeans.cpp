@@ -6,6 +6,7 @@
 #include <texturize.hpp>
 #include <analysis.hpp>
 #include <codecs.hpp>
+#include <Codecs/exr.hpp>
 
 #include <opencv2/highgui.hpp>
 
@@ -41,6 +42,9 @@ int main(int argc, const char** argv) {
 		parser.printErrors();
 		return EXIT_FAILURE;
 	}
+
+	// Register EXR codec.
+	_persistence.registerCodec("txr", std::make_unique<EXRCodec>());
 
 	// Parse parameters.
 	std::string inputFileNames = parser.get<std::string>("input");
