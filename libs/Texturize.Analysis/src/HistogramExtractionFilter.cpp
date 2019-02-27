@@ -32,7 +32,7 @@ void HistogramExtractionFilter::apply(Sample& result, const Sample& sample) cons
 		TEXTURIZE_ERROR(TEXTURIZE_ERROR_ASSERT, "Histograms can only be extracted on greyscale or color (RGB/A) images.");
 
 	// One sample channel maps to one dimension in the histogram.
-	const int stepsX{ sample.width() / _stride + 1 }, stepsY{ sample.height() / _stride + 1 };
+	const int stepsX{ sample.width() / _stride }, stepsY{ sample.height() / _stride };
 	cv::Size histogramSize(_bins, stepsX * stepsY);
 	cv::Mat histogram = cv::Mat::zeros(histogramSize, CV_32FC1);
 
@@ -42,19 +42,21 @@ void HistogramExtractionFilter::apply(Sample& result, const Sample& sample) cons
 
 	// Calculate and return the histogram descriptor for each pixel.
 	tbb::parallel_for(tbb::blocked_range2d<size_t>(0, sample.height(), _stride, 0, sample.width(), _stride), [&source, &histogram, &ranges, &stepsX, this](const tbb::blocked_range2d<size_t>& range) {
-		for (size_t x = range.cols().begin(); x < range.cols().end(); ++x) {
-			for (size_t y = range.rows().begin(); y < range.rows().end(); ++y) {
+		for (size_t x = range.cols().begin(); x < range.cols().end(); x += range.cols().grainsize()) {
+			for (size_t y = range.rows().begin(); y < range.rows().end(); y += range.cols().grainsize()) {
 				// Generate a mask for a 49x49 pixel kernel at [x, y].
 				auto mask = this->mask(source.size(), cv::Point2i(x, y), this->_kernel);
 
 				// Calculate the histogram at this point.
 				cv::Mat descriptor;
 				cv::calcHist(&source, 1, nullptr, mask, descriptor, 1, &_bins, &ranges);
+				descriptor = descriptor.reshape(1, 1);
+				descriptor.convertTo(descriptor, CV_32F, 1. / static_cast<double>(this->_kernel * this->_kernel));
 
 				// Store the descriptor.
 				//auto row = y * source.cols + x;
-				auto row = (((y / _stride) * stepsX) + x / _stride);
-				histogram.row(row) = descriptor.reshape(1, 1);
+				auto row = (((y / _stride) * stepsX) + (x / _stride));
+				descriptor.copyTo(histogram.row(row));
 			}
 		}
 	});
@@ -91,7 +93,7 @@ cv::Mat HistogramExtractionFilter::mask(const cv::Size& sampleSize, const cv::Po
 				}
 
 				// Set the mask.
-				mask.at<TX_BYTE>(cv::Point2i(_x, _y)) = TRUE;
+				mask.at<TX_BYTE>(cv::Point2i(_x, _y)) = 255;
 			}
 		}
 	});
