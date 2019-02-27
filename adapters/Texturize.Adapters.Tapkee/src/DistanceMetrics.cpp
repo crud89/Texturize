@@ -9,12 +9,12 @@ using namespace Texturize::Tapkee;
 ///// Distance metric implementations.                                                        /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-float EuclideanDistanceMetric::calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::InputArray& cost) const
+float EuclideanDistanceMetric::calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::Mat& cost) const
 {
 	return static_cast<TAPKEE_CUSTOM_INTERNAL_NUMTYPE>(cv::norm(lhs, rhs, cv::NORM_L2));
 }
 
-float EarthMoversDistanceMetric::calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::InputArray& cost) const
+float EarthMoversDistanceMetric::calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::Mat& cost) const
 {
 	TEXTURIZE_ASSERT(lhs.channels() == 1 && rhs.channels() == 1);								// Only single-channel descriptors are allowed.
 	TEXTURIZE_ASSERT((lhs.cols == 1 || lhs.rows == 1) && (rhs.cols == 1 || rhs.rows == 1));		// The descriptors should be one-dimensional.

@@ -97,9 +97,23 @@ int main(int argc, const char** argv) {
 		std::cout << "Input [" << file + 1 << "/" << inputFiles.size() << "]: " << inputFiles[file] << std::endl;
 
 	std::cout << "Output: " << resultFileName << std::endl <<
-		"Method: " << reductionMethod << std::endl <<
 		"Stride: " << stride << std::endl <<
-		std::endl;
+		"Method: ";
+
+	switch (method)
+	{
+	case tapkee::DimensionReductionMethod::MultidimensionalScaling:
+		std::cout << "Multidimensional Scaling" << std::endl;
+		break;
+	case tapkee::DimensionReductionMethod::Isomap:
+		std::cout << "Isomap" << std::endl;
+		break;
+	case tapkee::DimensionReductionMethod::PCA:
+		std::cout << "Principal Component Analysis" << std::endl;
+		break;
+	}
+
+	std::cout << std::endl;
 
 	// Load all input samples.
 	HistogramExtractionFilter filter(bins, kernel, stride);
@@ -125,6 +139,7 @@ int main(int argc, const char** argv) {
 
 	std::cout << "Computing distance matrix... ";
 	Tapkee::PairwiseDistanceExtractor distanceExtractor(std::make_unique<Tapkee::EarthMoversDistanceMetric>());
+	//Tapkee::PairwiseDistanceExtractor distanceExtractor(std::make_unique<Tapkee::EuclideanDistanceMetric>());
 	tapkee::DenseSymmetricMatrix distances = distanceExtractor.computeDistances(samples, indices);
 	std::cout << "Done!" << std::endl;
 

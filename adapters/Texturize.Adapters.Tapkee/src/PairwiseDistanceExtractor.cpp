@@ -2,7 +2,8 @@
 
 #include <Adapters/tapkee.hpp>
 
-#include <tapkee/callbacks/precomputed_callbacks.hpp>
+#include <tbb/blocked_range2d.h>
+#include <tbb/parallel_for.h>
 
 #include <opencv2/core/eigen.hpp>
 
@@ -46,13 +47,15 @@ cv::Mat PairwiseDistanceExtractor::computeDistances(const std::vector<cv::Mat>& 
 
 		// Compute the distance matrix as a symmetric matrix of pairwise distances.
 		// NOTE: The diagonal represents the distances between a feature with itself, thus it always reduces to 0.
-		for (int x(1); x < numFeatures - 1; ++x)
-		for (int y(x + 1); y < numFeatures; ++y) {
-			TEXTURIZE_ASSERT_DBG(x != y);
+		// TODO: This could run in parallel.
+		for (int x(1); x < static_cast<int>(numFeatures) - 1; ++x) {
+			for (int y(x + 1); y < static_cast<int>(numFeatures); ++y) {
+				TEXTURIZE_ASSERT_DBG(x != y);
 
-			float distance = _distanceMetric->calculateDistance(sample.row(x), sample.row(y), cost);
-			distances.at<float>(x, y) += distance;
-			distances.at<float>(y, x) += distance;
+				float distance = _distanceMetric->calculateDistance(sample.row(x), sample.row(y), cost);
+				distances.at<float>(x, y) += distance;
+				distances.at<float>(y, x) += distance;
+			}
 		}
 	}
 

@@ -40,19 +40,20 @@ namespace Texturize {
 
 		class TEXTURIZE_API IDistanceMetric {
 		public:
-			virtual float calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::InputArray& cost = cv::noArray()) const = 0;
+			// TODO: cost is actually optional.
+			virtual float calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::Mat& cost) const = 0;
 		};
 
 		class TEXTURIZE_API EuclideanDistanceMetric :
 			public IDistanceMetric {
 		public:
-			float calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::InputArray& cost = cv::noArray()) const override;
+			float calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::Mat& cost) const override;
 		};
 
 		class TEXTURIZE_API EarthMoversDistanceMetric :
 			public IDistanceMetric {
 		public:
-			float calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::InputArray& cost = cv::noArray()) const override;
+			float calculateDistance(const cv::Mat& lhs, const cv::Mat& rhs, const cv::Mat& cost) const override;
 		};
 
 		class TEXTURIZE_API PairwiseDistanceExtractor {
