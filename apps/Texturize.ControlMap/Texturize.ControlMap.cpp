@@ -11,6 +11,7 @@
 #include <Adapters/tapkee.hpp>
 
 #include <opencv2/highgui.hpp>
+#include <opencv2/core/eigen.hpp>
 
 #include <tapkee/callbacks/precomputed_callbacks.hpp>
 
@@ -138,25 +139,33 @@ int main(int argc, const char** argv) {
 	std::vector<tapkee::IndexType> indices;
 
 	std::cout << "Computing distance matrix... ";
+	auto start = std::chrono::high_resolution_clock::now();
 	Tapkee::PairwiseDistanceExtractor distanceExtractor(std::make_unique<Tapkee::EarthMoversDistanceMetric>());
 	//Tapkee::PairwiseDistanceExtractor distanceExtractor(std::make_unique<Tapkee::EuclideanDistanceMetric>());
 	tapkee::DenseSymmetricMatrix distances = distanceExtractor.computeDistances(samples, indices);
-	std::cout << "Done!" << std::endl;
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 	// 
 	tapkee::precomputed_distance_callback distanceCallback(distances);
 	tapkee::ParametersSet parameters = tapkee::kwargs[
-		tapkee::method = method, tapkee::target_dimension = 1
+		tapkee::method = method, tapkee::target_dimension = 1, tapkee::num_neighbors = 7
 	];
 
 	std::cout << "Performing dimensionality reduction... ";
-	auto start = std::chrono::high_resolution_clock::now();
+	start = std::chrono::high_resolution_clock::now();
 	tapkee::TapkeeOutput output = tapkee::initialize()
 		.withParameters(parameters)
 		.withDistance(distanceCallback)
 		.embedUsing(indices);
-	auto end = std::chrono::high_resolution_clock::now();
+	end = std::chrono::high_resolution_clock::now();
 	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
-	tapkee::DenseMatrix manifold = output.embedding.transpose();
+	cv::Mat manifold;
+	cv::eigen2cv(output.embedding, manifold);
+	Sample result(manifold);
+	_persistence.saveSample(resultFileName, result);
+
+	cv::imshow("Manifold", manifold);
+	cv::waitKey(0);
 }
