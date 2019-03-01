@@ -48,7 +48,7 @@ cv::Mat PairwiseDistanceExtractor::computeDistances(const std::vector<cv::Mat>& 
 		// Compute the distance matrix as a symmetric matrix of pairwise distances.
 		// NOTE: The diagonal represents the distances between a feature with itself, thus it always reduces to 0.
 		// TODO: This could run in parallel.
-		tbb::parallel_for(tbb::blocked_range<int>(1, numFeatures), [&numFeatures, &distances, &cost, &sample, this] (const tbb::blocked_range<int>& range) {
+		tbb::parallel_for(tbb::blocked_range<int>(0, numFeatures), [&numFeatures, &distances, &cost, &sample, this] (const tbb::blocked_range<int>& range) {
 			for (int x = range.begin(); x != range.end(); ++x) {
 				const int _x{ x };
 
