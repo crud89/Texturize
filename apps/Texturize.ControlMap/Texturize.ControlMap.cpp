@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <algorithm>
 
@@ -119,6 +120,7 @@ int main(int argc, const char** argv) {
 	// Load all input samples.
 	HistogramExtractionFilter filter(bins, kernel, stride);
 	std::vector<cv::Mat> samples;
+	int totalRows{ -1 };
 
 	for each (auto& fileName in inputFiles)
 	{
@@ -127,6 +129,11 @@ int main(int argc, const char** argv) {
 		// Load the sample.
 		Sample sample, result;
 		_persistence.loadSample(fileName, sample);
+
+		if (totalRows == -1)
+			totalRows = sample.height();
+		else
+			TEXTURIZE_ASSERT(totalRows == sample.height());
 
 		// Get the pixel histograms from the sample and store it.
 		filter.apply(result, sample);
@@ -145,7 +152,7 @@ int main(int argc, const char** argv) {
 	tapkee::DenseSymmetricMatrix distances = distanceExtractor.computeDistances(samples, indices);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
-
+	
 	// 
 	tapkee::precomputed_distance_callback distanceCallback(distances);
 	tapkee::ParametersSet parameters = tapkee::kwargs[
@@ -163,6 +170,7 @@ int main(int argc, const char** argv) {
 
 	cv::Mat manifold;
 	cv::eigen2cv(output.embedding, manifold);
+	manifold = manifold.reshape(1, totalRows / stride);
 	Sample result(manifold);
 	_persistence.saveSample(resultFileName, result);
 
