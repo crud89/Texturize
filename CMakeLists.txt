@@ -204,3 +204,13 @@ IF(BUILD_APP_CONTROL_MAP)
 
   #SET_TARGET_PROPERTIES(Texturize.ControlMap PROPERTIES FOLDER "apps")
 ENDIF(BUILD_APP_CONTROL_MAP)
+
+IF(BUILD_APP_GUIDANCE_REFINE)
+  ADD_SUBDIRECTORY(apps/Texturize.GuidanceRefine)
+  
+  ADD_DEPENDENCIES(Texturize.GuidanceRefine	        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.GuidanceRefine		    Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.GuidanceRefine		    Texturize.Analysis)
+
+  #SET_TARGET_PROPERTIES(Texturize.GuidanceRefine PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_GUIDANCE_REFINE)
