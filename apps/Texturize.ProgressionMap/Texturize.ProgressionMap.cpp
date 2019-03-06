@@ -24,13 +24,12 @@ using namespace Texturize;
 const char* parameters =
 {
 	"{h help usage ?    |    | Displays this help message.}"
-	"{input in          |    | The name of a file, containing pairwise distances between pixel descriptors.}"
+	"{input in          |    | The name of the image file containing the exemplar albedo (rgb) or albedo intensities (greyscale).}"
+	"{distances d       |    | The name of a file, containing pairwise distances between pixel descriptors.}"
 	"{result r          |    | The name of the image file, the result is stored to.}"
 	"{method m          |    | The method used to reduce the input to the control map (\"mds\": Multidimensional Scaling (default), \"isomap\": Isometric Mapping, \"pca\": Principal Component Analysis).}"
-	"{neighbors kn      | 7  | The number of neighbors in the neighborhood graph.}"
-	"{width w           |    | The number of horizontal pixels of the progression map.}"
-	"{height h          |    | The number of vertical pixels of the progression map.}"
-	"{stride s          | 8  | The spacing between pixel samples.}"
+	"{neighbors knn     | 7  | The number of neighbors in the neighborhood graph.}"
+	"{sigma s           | 0  | Sigma for gaussian blur applied after upsampling.}"
 };
 
 // Persistence providers.
@@ -66,10 +65,9 @@ int main(int argc, const char** argv) {
 	std::string inputFileName = parser.get<std::string>("input");
 	std::string resultFileName = parser.get<std::string>("result");
 	std::string reductionMethod = parser.get<std::string>("method");
+	std::string distanceFileName = parser.get<std::string>("distances");
 	const int neighbors = parser.get<int>("neighbors");
-	const int width = parser.get<int>("width");
-	const int height = parser.get<int>("height");
-	const int stride = parser.get<int>("stride");
+	const double sigma = parser.get<double>("sigma");
 	tapkee::DimensionReductionMethod method;
 
 	// Parse the reduction method.
@@ -85,42 +83,58 @@ int main(int argc, const char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	std::cout << "Distances:" << inputFileName << std::endl <<
+	std::cout << "Input:" << inputFileName << std::endl <<
+		"Distances:" << distanceFileName << std::endl <<
 		"Output: " << resultFileName << std::endl <<
 		"Method: ";
 
 	switch (method)
 	{
 	case tapkee::DimensionReductionMethod::MultidimensionalScaling:
-		std::cout << "Multidimensional Scaling" << std::endl;
+		std::cout << "Multidimensional Scaling (" << neighbors << " neighbors)" << std::endl;
 		break;
 	case tapkee::DimensionReductionMethod::Isomap:
-		std::cout << "Isometric Mapping" << std::endl;
+		std::cout << "Isometric Mapping (" << neighbors << " neighbors)" << std::endl;
 		break;
 	case tapkee::DimensionReductionMethod::PCA:
-		std::cout << "Principal Component Analysis" << std::endl;
+		std::cout << "Principal Component Analysis (" << neighbors << " neighbors)" << std::endl;
 		break;
 	}
 
 	std::cout << std::endl;
 
-	// Load the matrix of pairwise distances.
-	Sample distanceMatrix;
-	tapkee::DenseSymmetricMatrix distances;
-	_persistence.loadSample(inputFileName, distanceMatrix);
-	cv::cv2eigen((cv::Mat)distanceMatrix, distances);
+	// Load the albedo and (if neccessary, convert it to greyscale).
+	Sample intensities;
+	_persistence.loadSample(inputFileName, intensities);
 
-	// Validate the input dimensions against the distance matrix.
-	const int horizontalSamples = width / stride;
-	const int verticalSamples = height / stride;
-	const int sampleCount = horizontalSamples * verticalSamples;
-	
-	if (sampleCount != distances.rows()) {
-		std::cout << "ERROR: The number of samples (" << sampleCount << ") mismatches the expected number of samples (" << distances.rows() << ")." << std::endl <<
-			"Make sure to provide the sample stride as used for calculating the distance matrix. Also the width and height parameters should match the exemplar dimensions." << std::endl;
+	// In case the sample is colored, convert it to greyscale.
+	if (intensities.channels() == 3 || intensities.channels() == 4)
+	{
+		cv::Mat greyscale;
+		cv::cvtColor((cv::Mat)intensities, greyscale, cv::COLOR_RGB2GRAY);
+		intensities = Sample(greyscale);
+	}
+	else if (intensities.channels() != 1)
+	{
+		std::cout << "The input sample has " << intensities.channels() << " channels and cannot be converted to greyscale. Please convert the sample manually or provide an RGB color image instead." << std::endl;
 		return EXIT_FAILURE;
 	}
 
+	// Load the matrix of pairwise distances.
+	Sample distanceMatrix;
+	tapkee::DenseSymmetricMatrix distances;
+	_persistence.loadSample(distanceFileName, distanceMatrix);
+	cv::cv2eigen((cv::Mat)distanceMatrix, distances);
+
+	// Compute and validate the stride.
+	const double aspectRatio = intensities.width() / intensities.height();
+	const int stride = intensities.width() / static_cast<int>(std::sqrt(static_cast<double>(distances.rows()) * aspectRatio));
+	const int horizontalSamples = intensities.width() / stride;
+	const int verticalSamples = intensities.height() / stride;
+	const int sampleCount = verticalSamples * horizontalSamples;
+
+	TEXTURIZE_ASSERT(sampleCount == distances.rows());
+	
 	// Create index vector.
 	std::vector<tapkee::IndexType> indices(distances.rows());
 
@@ -136,7 +150,7 @@ int main(int argc, const char** argv) {
 		//tapkee::check_connectivity = 0
 	];
 
-	std::cout << "Performing low-dimensional embedding...";
+	std::cout << "Computing low-dimensional embedding...";
 	auto start = std::chrono::high_resolution_clock::now();
 	tapkee::TapkeeOutput output = tapkee::initialize()
 		.withParameters(parameters)
@@ -151,7 +165,6 @@ int main(int argc, const char** argv) {
 
 	// Use the embedding to generate the progression map.
 	cv::Mat progressionMap = cv::Mat::zeros(horizontalSamples, verticalSamples, CV_32FC1);
-	cv::Mat frequencyMap = cv::Mat::zeros(horizontalSamples, verticalSamples, CV_32SC1);
 	
 	// Start by finding the maximum and minimum distances.
 	double minCoord, maxCoord;
@@ -159,19 +172,35 @@ int main(int argc, const char** argv) {
 
 	TEXTURIZE_ASSERT(maxCoord > minCoord);
 
-	// 
-	cv::subtract(manifold, cv::Scalar(minCoord), manifold);
-	std::cout << manifold << std::endl;
-	cv::divide(maxCoord - minCoord, manifold, manifold);
-	std::cout << manifold << std::endl;
+	// Normalize the manifold.
+	manifold -= minCoord;
+	manifold /= (maxCoord - minCoord);
 
-	// 
+	// Assign each point a 1D coordinate.
+	for (int s(0); s < sampleCount; ++s)
+	{
+		// Get coordinates of the current sample within the exemplar.
+		const cv::Point2i sampleCoords(s % horizontalSamples, s / horizontalSamples);
+		progressionMap.at<float>(sampleCoords) = 1.f - manifold.at<float>(s);
+	}
 
+	// Upsample the progression map.
+	cv::resize(progressionMap, progressionMap, cv::Size(intensities.width(), intensities.height()), 0.0, 0.0, cv::INTER_CUBIC);
+	
+	// Blur, if requested.
+	if (sigma > 0.0) {
+		const int kernelSize = stride % 2 == 0 ? stride + 1 : stride;
+		cv::GaussianBlur(progressionMap, progressionMap, cv::Size(kernelSize, kernelSize), sigma);
+	}
 
-	//manifold = manifold.reshape(1, totalRows / stride);
-	//Sample result(manifold);
-	//_persistence.saveSample(resultFileName, result);
+	// Compute difference between intensities and (inverse) progression map in order to maximize the progression amplitude.
+	cv::Mat difference = progressionMap - (cv::Mat)intensities;
+	cv::Mat inverse = (1.f - progressionMap) - (cv::Mat)intensities;
 
-	cv::imshow("Manifold", manifold);
-	cv::waitKey(0);
+	if (cv::sum(difference)[0] >= cv::sum(inverse)[0])
+		progressionMap = 1.f - progressionMap;
+
+	// Store the result.
+	Sample result(progressionMap);
+	_persistence.saveSample(resultFileName, result);
 }
