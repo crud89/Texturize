@@ -164,7 +164,7 @@ IF(BUILD_APP_SANDBOX)
   
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Core)
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.Sandbox   				Texturize.Codecs.EXR)
+  ADD_DEPENDENCIES(Texturize.Sandbox   				  Texturize.Codecs.EXR)
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Analysis)
   ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Sampling)
 
@@ -191,24 +191,34 @@ IF(BUILD_APP_KMEANS)
   #SET_TARGET_PROPERTIES(Texturize.KMeans PROPERTIES FOLDER "apps")
 ENDIF(BUILD_APP_KMEANS)
 
-IF(BUILD_APP_CONTROL_MAP)
+IF(BUILD_APP_DISTANCE_MATRIX)
+  ADD_SUBDIRECTORY(apps/Texturize.Distance)
+  
+  ADD_DEPENDENCIES(Texturize.Distance 		        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.Distance 		        Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.Distance 		        Texturize.Analysis)
+
+  #SET_TARGET_PROPERTIES(Texturize.Distance PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_DISTANCE_MATRIX)
+
+IF(BUILD_APP_PROGRESSION_MAP)
   IF(NOT WITH_TAPKEE)
-	MESSAGE(FATAL_ERROR "The Control Map app requires the tapkee adapter. Enable WITH_TAPKEE to build the app.")
+	MESSAGE(FATAL_ERROR "The Progression Map app requires the tapkee adapter. Enable WITH_TAPKEE to build the app.")
   ENDIF(NOT WITH_TAPKEE)
   
-  ADD_SUBDIRECTORY(apps/Texturize.ControlMap)
+  ADD_SUBDIRECTORY(apps/Texturize.ProgressionMap)
   
-  ADD_DEPENDENCIES(Texturize.ControlMap		        Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.ControlMap 		    Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.ControlMap		        Texturize.Analysis)
+  ADD_DEPENDENCIES(Texturize.ProgressionMap		        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.ProgressionMap 		      Texturize.Codecs)
+  ADD_DEPENDENCIES(Texturize.ProgressionMap		        Texturize.Analysis)
 
-  #SET_TARGET_PROPERTIES(Texturize.ControlMap PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_CONTROL_MAP)
+  #SET_TARGET_PROPERTIES(Texturize.ProgressionMap PROPERTIES FOLDER "apps")
+ENDIF(BUILD_APP_PROGRESSION_MAP)
 
 IF(BUILD_APP_GUIDANCE_REFINE)
   ADD_SUBDIRECTORY(apps/Texturize.GuidanceRefine)
   
-  ADD_DEPENDENCIES(Texturize.GuidanceRefine	        Texturize.Core)
+  ADD_DEPENDENCIES(Texturize.GuidanceRefine	      Texturize.Core)
   ADD_DEPENDENCIES(Texturize.GuidanceRefine		    Texturize.Codecs)
   ADD_DEPENDENCIES(Texturize.GuidanceRefine		    Texturize.Analysis)
 

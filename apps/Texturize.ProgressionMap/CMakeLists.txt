@@ -6,7 +6,7 @@
 ###################################################################################################
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12 FATAL_ERROR)
-SET(PROJECT_NAME Texturize.ControlMap)
+SET(PROJECT_NAME Texturize.ProgressionMap)
 PROJECT(${PROJECT_NAME} CXX)
 SET(CONFIG_NAME ${PROJECT_NAME}Config)
 
@@ -75,7 +75,7 @@ FILE(GLOB SRC_FILES
 )
 
 # Make the project an executable.
-ADD_EXECUTABLE(${PROJECT_NAME} Texturize.ControlMap.cpp ${SRC_FILES})
+ADD_EXECUTABLE(${PROJECT_NAME} Texturize.ProgressionMap.cpp ${SRC_FILES})
 
 # Append "_d" to artifact names for debug builds.
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX ".Dbg")

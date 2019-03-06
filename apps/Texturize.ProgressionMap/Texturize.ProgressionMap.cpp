@@ -4,6 +4,7 @@
 #include <fstream>
 #include <chrono>
 #include <algorithm>
+#include <filesystem>
 
 #include <texturize.hpp>
 #include <analysis.hpp>
@@ -23,12 +24,13 @@ using namespace Texturize;
 const char* parameters =
 {
 	"{h help usage ?    |    | Displays this help message.}"
-	"{input in          |    | The name of an image file or a list of image files (seperated by \";\") that should be mapped.}"
+	"{input in          |    | The name of a file, containing pairwise distances between pixel descriptors.}"
 	"{result r          |    | The name of the image file, the result is stored to.}"
 	"{method m          |    | The method used to reduce the input to the control map (\"mds\": Multidimensional Scaling (default), \"isomap\": Isometric Mapping, \"pca\": Principal Component Analysis).}"
-	"{stride s          | 8  | The stride between two descriptor windows, used to speed up calculation. Undersampled points are interpolated.}"
-	"{kernel k          | 49 | The size of the kernel window around each pixel to calculate the histogram in.}"
-	"{bins b            | 64 | The number of bins per sample histogram. This also represents the depth of an individual pixel descriptor.}"
+	"{neighbors kn      | 7  | The number of neighbors in the neighborhood graph.}"
+	"{width w           |    | The number of horizontal pixels of the progression map.}"
+	"{height h          |    | The number of vertical pixels of the progression map.}"
+	"{stride s          | 8  | The spacing between pixel samples.}"
 };
 
 // Persistence providers.
@@ -61,12 +63,13 @@ int main(int argc, const char** argv) {
 	_persistence.registerCodec("txr", std::make_unique<EXRCodec>());
 
 	// Parse parameters.
-	std::string inputFileNames = parser.get<std::string>("input");
+	std::string inputFileName = parser.get<std::string>("input");
 	std::string resultFileName = parser.get<std::string>("result");
 	std::string reductionMethod = parser.get<std::string>("method");
-	int stride = parser.get<int>("stride");
-	int kernel = parser.get<int>("kernel");
-	int bins = parser.get<int>("bins");
+	const int neighbors = parser.get<int>("neighbors");
+	const int width = parser.get<int>("width");
+	const int height = parser.get<int>("height");
+	const int stride = parser.get<int>("stride");
 	tapkee::DimensionReductionMethod method;
 
 	// Parse the reduction method.
@@ -82,24 +85,8 @@ int main(int argc, const char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	// Get the individual input file names.
-	std::vector<std::string> inputFiles;
-	std::istringstream tokens(inputFileNames);
-	std::string token;
-
-	while (std::getline(tokens, token, ';'))
-	{
-		if (token.empty())
-			continue;
-
-		inputFiles.push_back(token);
-	}
-
-	for (size_t file(0); file < inputFiles.size(); ++file)
-		std::cout << "Input [" << file + 1 << "/" << inputFiles.size() << "]: " << inputFiles[file] << std::endl;
-
-	std::cout << "Output: " << resultFileName << std::endl <<
-		"Stride: " << stride << std::endl <<
+	std::cout << "Distances:" << inputFileName << std::endl <<
+		"Output: " << resultFileName << std::endl <<
 		"Method: ";
 
 	switch (method)
@@ -108,7 +95,7 @@ int main(int argc, const char** argv) {
 		std::cout << "Multidimensional Scaling" << std::endl;
 		break;
 	case tapkee::DimensionReductionMethod::Isomap:
-		std::cout << "Isomap" << std::endl;
+		std::cout << "Isometric Mapping" << std::endl;
 		break;
 	case tapkee::DimensionReductionMethod::PCA:
 		std::cout << "Principal Component Analysis" << std::endl;
@@ -117,62 +104,73 @@ int main(int argc, const char** argv) {
 
 	std::cout << std::endl;
 
-	// Load all input samples.
-	HistogramExtractionFilter filter(bins, kernel, stride);
-	std::vector<cv::Mat> samples;
-	int totalRows{ -1 };
+	// Load the matrix of pairwise distances.
+	Sample distanceMatrix;
+	tapkee::DenseSymmetricMatrix distances;
+	_persistence.loadSample(inputFileName, distanceMatrix);
+	cv::cv2eigen((cv::Mat)distanceMatrix, distances);
 
-	for each (auto& fileName in inputFiles)
-	{
-		std::cout << "Computing descriptors for \"" << fileName << "\"... ";
-
-		// Load the sample.
-		Sample sample, result;
-		_persistence.loadSample(fileName, sample);
-
-		if (totalRows == -1)
-			totalRows = sample.height();
-		else
-			TEXTURIZE_ASSERT(totalRows == sample.height());
-
-		// Get the pixel histograms from the sample and store it.
-		filter.apply(result, sample);
-		samples.push_back((cv::Mat)result);
-
-		std::cout << "Done!" << std::endl;
+	// Validate the input dimensions against the distance matrix.
+	const int horizontalSamples = width / stride;
+	const int verticalSamples = height / stride;
+	const int sampleCount = horizontalSamples * verticalSamples;
+	
+	if (sampleCount != distances.rows()) {
+		std::cout << "ERROR: The number of samples (" << sampleCount << ") mismatches the expected number of samples (" << distances.rows() << ")." << std::endl <<
+			"Make sure to provide the sample stride as used for calculating the distance matrix. Also the width and height parameters should match the exemplar dimensions." << std::endl;
+		return EXIT_FAILURE;
 	}
 
-	// Compute the distance matrix.
-	std::vector<tapkee::IndexType> indices;
+	// Create index vector.
+	std::vector<tapkee::IndexType> indices(distances.rows());
 
-	std::cout << "Computing distance matrix... ";
-	auto start = std::chrono::high_resolution_clock::now();
-	Tapkee::PairwiseDistanceExtractor distanceExtractor(std::make_unique<Tapkee::EarthMoversDistanceMetric>());
-	//Tapkee::PairwiseDistanceExtractor distanceExtractor(std::make_unique<Tapkee::EuclideanDistanceMetric>());
-	tapkee::DenseSymmetricMatrix distances = distanceExtractor.computeDistances(samples, indices);
-	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
-	
-	// 
+	for (tapkee::IndexType idx(0); idx < indices.size(); ++idx)
+		indices[idx] = idx;
+
+	// Reduce dimensionality to a 1D manifold.
 	tapkee::precomputed_distance_callback distanceCallback(distances);
 	tapkee::ParametersSet parameters = tapkee::kwargs[
-		tapkee::method = method, tapkee::target_dimension = 1, tapkee::num_neighbors = 7
+		tapkee::method = method,
+		tapkee::num_neighbors = neighbors,
+		tapkee::target_dimension = 1 
+		//tapkee::check_connectivity = 0
 	];
 
-	std::cout << "Performing dimensionality reduction... ";
-	start = std::chrono::high_resolution_clock::now();
+	std::cout << "Performing low-dimensional embedding...";
+	auto start = std::chrono::high_resolution_clock::now();
 	tapkee::TapkeeOutput output = tapkee::initialize()
 		.withParameters(parameters)
 		.withDistance(distanceCallback)
 		.embedUsing(indices);
-	end = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
+	// Convert the manifold embedding into a matrix.
 	cv::Mat manifold;
 	cv::eigen2cv(output.embedding, manifold);
-	manifold = manifold.reshape(1, totalRows / stride);
-	Sample result(manifold);
-	_persistence.saveSample(resultFileName, result);
+
+	// Use the embedding to generate the progression map.
+	cv::Mat progressionMap = cv::Mat::zeros(horizontalSamples, verticalSamples, CV_32FC1);
+	cv::Mat frequencyMap = cv::Mat::zeros(horizontalSamples, verticalSamples, CV_32SC1);
+	
+	// Start by finding the maximum and minimum distances.
+	double minCoord, maxCoord;
+	cv::minMaxLoc(manifold, &minCoord, &maxCoord);
+
+	TEXTURIZE_ASSERT(maxCoord > minCoord);
+
+	// 
+	cv::subtract(manifold, cv::Scalar(minCoord), manifold);
+	std::cout << manifold << std::endl;
+	cv::divide(maxCoord - minCoord, manifold, manifold);
+	std::cout << manifold << std::endl;
+
+	// 
+
+
+	//manifold = manifold.reshape(1, totalRows / stride);
+	//Sample result(manifold);
+	//_persistence.saveSample(resultFileName, result);
 
 	cv::imshow("Manifold", manifold);
 	cv::waitKey(0);
