@@ -854,7 +854,7 @@ namespace Texturize {
 
 		/// \brief Gets a reference of the sample, containing search space descriptors.
 		/// \param sample A pointer to store the sample reference to.
-		virtual void sample(const Sample** const sample) const = 0;
+		virtual void sample(std::shared_ptr<const Sample>& sample) const = 0;
 
 		/// \brief Gets the kernel used to calculate the search space neighborhoods.
 		/// \param kernel A reference, the kernel gets stored to.
@@ -908,8 +908,8 @@ namespace Texturize {
 		/// \example ColorSearchSpace.cpp The example demonstrates how to implement a custom search space, that builds simple neighborhood descriptors from pixel color values.
 
 	private:
-		const cv::PCA* _projection;
-		const std::unique_ptr<Sample> _exemplar;
+		const std::shared_ptr<const cv::PCA> _projection;
+		const std::shared_ptr<const Sample> _exemplar;
 		const int _kernelSize;
 
 	public:
@@ -920,7 +920,7 @@ namespace Texturize {
 		///
 		/// Note: typically you do not want to directly construct an `AppearanceSpace` instance. Instead use the \ref `Texturize::AppearanceSpace::calculate` methods
 		/// to get a newly created instance or load them from a persistent asset.
-		AppearanceSpace(const cv::PCA* projection, Sample* exemplar, const int kernelSize);
+		AppearanceSpace(std::unique_ptr<const cv::PCA> projection, std::unique_ptr<const Sample> exemplar, const int kernelSize);
 
 	protected:
 		/// \brief Returns a matrix, containing all the pixel neighborhoods of the provided exemplar.
@@ -935,39 +935,39 @@ namespace Texturize {
 		/// \param desc A pointer that will be initialized with the calculated search space instance.
 		/// \param resultDim The number of dimensionality retained after transforming pixel neighborhoods into search space.
 		/// \param kernel The size of the kernel window used to extract search space neighborhoods.
-		static void calculate(const Sample& exemplar, AppearanceSpace** desc, size_t resultDim = 3, int kernelSize = 5);
+		static void calculate(const Sample& exemplar, std::unique_ptr<AppearanceSpace>& descriptor, size_t resultDim = 3, int kernelSize = 5);
 
 		/// \brief Calculates the appearance space for an individual exemplar.
 		/// \param exemplar The exemplar sample to calculate the seach space for.
 		/// \param desc A pointer that will be initialized with the calculated search space instance.
 		/// \param targetVariance The variance retained by the search space transform.
 		/// \param kernel The size of the kernel window used to extract search space neighborhoods.
-		static void calculate(const Sample& exemplar, AppearanceSpace** desc, float targetVariance = 0.9f, int kernelSize = 5);
+		static void calculate(const Sample& exemplar, std::unique_ptr<AppearanceSpace>& descriptor, float targetVariance = 0.9f, int kernelSize = 5);
 
 		/// \brief Calculates the appearance space for a set of exemplar samples.
 		/// \param exemplar The exemplar samples to calculate the seach space for.
 		/// \param desc A pointer that will be initialized with the calculated search space instance.
 		/// \param resultDim The number of dimensionality retained after transforming pixel neighborhoods into search space.
 		/// \param kernel The size of the kernel window used to extract search space neighborhoods.
-		static void calculate(std::initializer_list<const Sample> exemplarMaps, AppearanceSpace** desc, size_t resultDim, int kernelSize = 5);
+		static void calculate(std::initializer_list<const Sample> exemplarMaps, std::unique_ptr<AppearanceSpace>& descriptor, size_t resultDim, int kernelSize = 5);
 
 		/// \brief Calculates the appearance space for a set of exemplar samples.
 		/// \param exemplar The exemplar samples to calculate the seach space for.
 		/// \param desc A pointer that will be initialized with the calculated search space instance.
 		/// \param targetVariance The variance retained by the search space transform.
 		/// \param kernel The size of the kernel window used to extract search space neighborhoods.
-		static void calculate(std::initializer_list<const Sample> exemplarMaps, AppearanceSpace** desc, float targetVariance = 0.9f, int kernelSize = 5);
+		static void calculate(std::initializer_list<const Sample> exemplarMaps, std::unique_ptr<AppearanceSpace>& descriptor, float targetVariance = 0.9f, int kernelSize = 5);
 
 	public:
 		/// \brief Gets a reference of the projection matrix used to project pixel neighborhoods into the search space.
 		/// \param projection A pointer to a reference that will contain the projection matrix after the method returns.
-		void getProjector(const cv::PCA** projection) const;
+		void getProjector(std::shared_ptr<const cv::PCA>& projection) const;
 
 		/// \brief Gets a copy of the sample, containing search space descriptors.
 		/// \param exemplar A pointer to a sample that will be initialized with a copy of the exemplar descriptor sample.
 		///
 		/// \see Texturize::ISearchSpace::sample
-		void getExemplar(const Sample** exemplar) const;
+		void getExemplar(std::shared_ptr<const Sample>& exemplar) const;
 
 		/// \brief Gets the kernel used to get the exemplar sample neighborhood descriptors.
 		/// \param kernel The kernel used to get the exemplar sample neighborhood descriptors.
@@ -982,7 +982,7 @@ namespace Texturize {
 		void transform(const Sample& sample, const cv::Point& texelCoords, std::vector<float>& desc) const override;
 		void transform(const Sample& sample, Sample& to, const int ks = 5) const override;
 		void sample(Sample& sample) const override;
-		void sample(const Sample** const sample) const override;
+		void sample(std::shared_ptr<const Sample>& sample) const override;
 		void kernel(int& kernel) const override;
 		void sampleSize(cv::Size& size) const override;
 		void sampleSize(int& width, int& height) const override;

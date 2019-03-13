@@ -45,9 +45,10 @@ ANNIndex::ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<cons
 void ANNIndex::init(const cv::flann::IndexParams& indexParams)
 {
 	// Precompute the neighborhood descriptors used to train data.
-	const Sample* sample;
+	std::shared_ptr<const Sample> sample;
+	_searchSpace->sample(sample);
+
 	int height;
-	_searchSpace->sample(&sample);
 	sample->getSize(_sampleWidth, height);
 
 	// Form a descriptor vector from the sample.
@@ -143,8 +144,8 @@ CoherentIndex::CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 void CoherentIndex::init()
 {
 	// Precompute the neighborhood descriptors used to train data.
-	const Sample* sample;
-	_searchSpace->sample(&sample);
+	std::shared_ptr<const Sample> sample;
+	_searchSpace->sample(sample);
 
 	// Form a descriptor vector from the sample.
 	_exemplarDescriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(*sample);
@@ -153,8 +154,8 @@ void CoherentIndex::init()
 CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<float>& targetDescriptor, const cv::Point2i& towards) const
 {
 	// Get the search space transformed exemplar.
-	const Sample* exemplar;
-	_searchSpace->sample(&exemplar);
+	std::shared_ptr<const Sample> exemplar;
+	_searchSpace->sample(exemplar);
 
 	std::vector<float> exemplarDescriptor = _exemplarDescriptors.row(towards.y * exemplar->width() + towards.x);
 
@@ -167,8 +168,8 @@ CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<
 void CoherentIndex::getCoherentCandidate(const std::vector<float>& targetDescriptor, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, TMatch& match) const
 {
 	// Get the search space transformed exemplar.
-	const Sample* exemplar;
-	_searchSpace->sample(&exemplar);
+	std::shared_ptr<const Sample> exemplar;
+	_searchSpace->sample(exemplar);
 	int width = exemplar->width();
 	int height = exemplar->height();
 
@@ -343,8 +344,8 @@ bool RandomWalkIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::
 	{
 		// Randomly walk around the environment of the match, trying to find a better one.
 		// The radius around the pixel is calculated from the smaller dimension. Initially it is half as large as the exemplar width.
-		const Sample* exemplar;
-		_searchSpace->sample(&exemplar);
+		std::shared_ptr<const Sample> exemplar;
+		_searchSpace->sample(exemplar);
 
 		// Perform as long, as the environment is non-trivial, i.e. there is an environment which does not only contain the candidate pixel.
 		// The radius get's halved with each iteration.

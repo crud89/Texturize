@@ -21,12 +21,12 @@ void AppearanceSpaceAsset::store(IFileStorage* storage, const AppearanceSpace* a
 	storage->write("META", "}");
 
 	// Get the current asset state.
-	const cv::PCA* projection;
-	const Sample* exemplar;
+	std::shared_ptr<const cv::PCA> projection;
+	std::shared_ptr<const Sample> exemplar;
 	int kernel;
 
-	asset->getProjector(&projection);
-	asset->getExemplar(&exemplar);
+	asset->getProjector(projection);
+	asset->getExemplar(exemplar);
 	asset->getKernel(kernel);
 
 	// Serialize the asset state.
@@ -80,7 +80,7 @@ void AppearanceSpaceAsset::restore(const IFileStorage* storage, AppearanceSpace*
 
 	// Initialize a new descriptor instance.
 	std::unique_ptr<Sample> exemplar = std::make_unique<Sample>(ex);
-	std::unique_ptr<AppearanceSpace> descriptor = std::make_unique<AppearanceSpace>(projector.release(), exemplar.release(), kernel);
+	std::unique_ptr<AppearanceSpace> descriptor = std::make_unique<AppearanceSpace>(std::move(projector), std::move(exemplar), kernel);
 	
 	// Return the instance.
 	*asset = descriptor.release();

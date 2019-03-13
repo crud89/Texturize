@@ -14,11 +14,11 @@ using namespace Texturize;
 ///// Appearance Space implementation                                                         /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-AppearanceSpace::AppearanceSpace(const cv::PCA* projection, Sample* exemplar, const int kernelSize) :
-	_projection(projection), _exemplar(exemplar), _kernelSize(kernelSize)
+AppearanceSpace::AppearanceSpace(std::unique_ptr<const cv::PCA> projection, std::unique_ptr<const Sample> exemplar, const int kernelSize) :
+	_projection(std::move(projection)), _exemplar(std::move(exemplar)), _kernelSize(kernelSize)
 {
-	TEXTURIZE_ASSERT(projection != nullptr);							// The PCA for dimensionality reduction must be initialized.
-	TEXTURIZE_ASSERT(exemplar != nullptr);								// The exemplar must be initialized.
+	TEXTURIZE_ASSERT(_projection != nullptr);							// The PCA for dimensionality reduction must be initialized.
+	TEXTURIZE_ASSERT(_exemplar != nullptr);								// The exemplar must be initialized.
 	TEXTURIZE_ASSERT(kernelSize > 0);									// The kernel size must not be negative.
 	TEXTURIZE_ASSERT(kernelSize % 2 == 1);								// The kernel must have an uneven size.
 }
@@ -60,9 +60,8 @@ cv::Mat AppearanceSpace::getComponents(const Sample& exemplar, int ks)
 	return components;
 }
 
-void AppearanceSpace::calculate(const Sample& exemplar, AppearanceSpace** desc, size_t rd, int ks)
+void AppearanceSpace::calculate(const Sample& exemplar, std::unique_ptr<AppearanceSpace>& descriptor, size_t rd, int ks)
 {
-	TEXTURIZE_ASSERT(desc != nullptr);
 	TEXTURIZE_ASSERT(ks % 2 == 1);										// The kernel size must be odd (extent in two opposite directions - i.e. right/left or top/down - plus 1 for the center row/column)
 	//TEXTURIZE_ASSERT(rd > 0 && rd <= exemplar.channels());			// The exemplar is required to be reduceable to a dimensionality larger than 0 and smaller than the original one.
 	TEXTURIZE_ASSERT(rd > 0);											// The exemplar is required to be reduceable to a dimensionality larger than 0.
@@ -89,12 +88,11 @@ void AppearanceSpace::calculate(const Sample& exemplar, AppearanceSpace** desc, 
 	TEXTURIZE_ASSERT(projected.channels() == channels.size());
 	TEXTURIZE_ASSERT(projected.rows == exemplar.height());
 	std::unique_ptr<Sample> transformedExemplar = std::make_unique<Sample>(projected);
-	*desc = new AppearanceSpace(projector.release(), transformedExemplar.release(), ks);
+	descriptor = std::make_unique<AppearanceSpace>(std::move(projector), std::move(transformedExemplar), ks);
 }
 
-void AppearanceSpace::calculate(const Sample& exemplar, AppearanceSpace** desc, float tv, int ks)
+void AppearanceSpace::calculate(const Sample& exemplar, std::unique_ptr<AppearanceSpace>& descriptor, float tv, int ks)
 {
-	TEXTURIZE_ASSERT(desc != nullptr);
 	TEXTURIZE_ASSERT(ks % 2 == 1);										// The kernel size must be odd (extent in two opposite directions - i.e. right/left or top/down - plus 1 for the center row/column)
 	TEXTURIZE_ASSERT(tv > 0 && tv <= 1);								// Variance must be a value between 0.0 and 1.0.
 
@@ -120,34 +118,27 @@ void AppearanceSpace::calculate(const Sample& exemplar, AppearanceSpace** desc, 
 	TEXTURIZE_ASSERT(projected.channels() == channels.size());
 	TEXTURIZE_ASSERT(projected.rows == exemplar.height());
 	std::unique_ptr<Sample> transformedExemplar = std::make_unique<Sample>(projected);
-	*desc = new AppearanceSpace(projector.release(), transformedExemplar.release(), ks);
+	descriptor = std::make_unique<AppearanceSpace>(std::move(projector), std::move(transformedExemplar), ks);
 }
 
-void AppearanceSpace::calculate(std::initializer_list<const Sample> exemplarMaps, AppearanceSpace** desc, size_t rd, int ks)
+void AppearanceSpace::calculate(std::initializer_list<const Sample> exemplarMaps, std::unique_ptr<AppearanceSpace>& descriptor, size_t rd, int ks)
 {
-	AppearanceSpace::calculate(Sample::mergeSamples(exemplarMaps), desc, rd, ks);
+	AppearanceSpace::calculate(Sample::mergeSamples(exemplarMaps), descriptor, rd, ks);
 }
 
-void AppearanceSpace::calculate(std::initializer_list<const Sample> exemplarMaps, AppearanceSpace** desc, float tv, int ks)
+void AppearanceSpace::calculate(std::initializer_list<const Sample> exemplarMaps, std::unique_ptr<AppearanceSpace>& descriptor, float tv, int ks)
 {
-	AppearanceSpace::calculate(Sample::mergeSamples(exemplarMaps), desc, tv, ks);
+	AppearanceSpace::calculate(Sample::mergeSamples(exemplarMaps), descriptor, tv, ks);
 }
 
-void AppearanceSpace::getProjector(const cv::PCA** projection) const
+void AppearanceSpace::getProjector(std::shared_ptr<const cv::PCA>& projection) const
 {
-	std::unique_ptr<cv::PCA> projector = std::make_unique<cv::PCA>();
-	projector->eigenvectors = _projection->eigenvectors.clone();
-	projector->eigenvalues = _projection->eigenvalues.clone();
-	projector->mean = _projection->mean.clone();
-
-	*projection = projector.release();
+	projection = _projection;
 }
 
-void AppearanceSpace::getExemplar(const Sample** exemplar) const
+void AppearanceSpace::getExemplar(std::shared_ptr<const Sample>& exemplar) const
 {
-	Sample* copy;
-	_exemplar->clone(&copy);
-	*exemplar = copy;
+	exemplar = _exemplar;
 }
 
 void AppearanceSpace::getKernel(int& kernel) const
@@ -221,11 +212,9 @@ void AppearanceSpace::sample(Sample& sample) const
 	sample.map(channelMap, *_exemplar);
 }
 
-void AppearanceSpace::sample(const Sample** const sample) const
+void AppearanceSpace::sample(std::shared_ptr<const Sample>& sample) const
 {
-	TEXTURIZE_ASSERT(sample != nullptr);
-
-	*sample = _exemplar.get();
+	this->getExemplar(sample);
 }
 
 void AppearanceSpace::kernel(int& kernel) const

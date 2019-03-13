@@ -166,8 +166,8 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 	std::shared_ptr<IDescriptorExtractor> descriptorExtractor = _catalog->getDescriptorExtractor();
 	
 	// Request a reference of the exemplar.
-	const Sample* exemplar;
-	_catalog->getSearchSpace()->sample(&exemplar);
+	std::shared_ptr<const Sample> exemplar;
+	_catalog->getSearchSpace()->sample(exemplar);
 
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
@@ -386,8 +386,8 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 	std::shared_ptr<IDescriptorExtractor> descriptorExtractor = searchIndex->getDescriptorExtractor();
 
 	// Request a reference of the exemplar.
-	const Sample* exemplar;
-	searchIndex->getSearchSpace()->sample(&exemplar);
+	std::shared_ptr<const Sample> exemplar;
+	searchIndex->getSearchSpace()->sample(exemplar);
 
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
