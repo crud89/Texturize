@@ -27,7 +27,7 @@ DefaultPersistence _persistence;
 int main(int argc, const char** argv) {
 	// Parse the command line.
 	cv::CommandLineParser parser(argc, argv, parameters);
-	parser.about(cv::format("Texturize %d.%d -- MR8 Filter Bank", TEXTURIZE_VER_MAJOR, TEXTURIZE_VER_MINOR));
+	parser.about(cv::format("Texturize %d.%d -- Synthesizer", TEXTURIZE_VER_MAJOR, TEXTURIZE_VER_MINOR));
 
 	if (parser.has("help") || argc == 1)
 	{
@@ -55,7 +55,7 @@ int main(int argc, const char** argv) {
 	// Load the input sample.
 	Sample sample;
 	_persistence.loadSample(inputFileName, sample);
-	
+
 	// Store the sample.
 	_persistence.saveSample(resultFileName, result);
 }
