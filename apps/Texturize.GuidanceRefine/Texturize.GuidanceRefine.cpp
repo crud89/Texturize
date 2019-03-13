@@ -100,13 +100,13 @@ int main(int argc, const char** argv) {
 	referencePyramid.construct(referenceSample, referenceLevel);
 
 	// Convert the level count variables to valid indices of the coarsest levels.
-	referenceLevel--; inputLevel--;
+	//referenceLevel--; inputLevel--;
 
 	// Match histograms of both coarsest levels.
 	Sample referenceCoarsestLevel;
-	referenceCoarsestLevel = referencePyramid.getLevel(referenceLevel);
+	referenceCoarsestLevel = referencePyramid.getLevel(0);
 	std::unique_ptr<IFilter> filter = std::make_unique<HistogramMatchingFilter>(referenceCoarsestLevel);
-	inputPyramid.filterLevel(filter, inputLevel);
+	inputPyramid.filterLevel(filter, 0);
 
 	// Apply noise to each level from the second-coarsest to the finest level.
 	int maxLevel = std::min(referenceLevel, inputLevel);

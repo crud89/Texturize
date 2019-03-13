@@ -60,7 +60,7 @@ void GaussianImagePyramid::construct(const Sample& sample, const unsigned int to
 
 void GaussianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel)
 {
-    TEXTURIZE_ASSERT(toLevel < _levels.size());                 // toLevel must be a valid level index.
+    TEXTURIZE_ASSERT(toLevel <= _levels.size());                 // toLevel must be a valid level index.
 
     // Reconstruction is done by starting at the coarsest level, iterating upwards.
 	cv::Mat reconstruction = (cv::Mat)_levels.front();
@@ -103,7 +103,7 @@ void LaplacianImagePyramid::construct(const Sample& sample, const unsigned int t
 
 void LaplacianImagePyramid::reconstruct(Sample& to, const unsigned int toLevel)
 {
-    TEXTURIZE_ASSERT(toLevel < _levels.size());                 // toLevel must be a valid level index.
+    TEXTURIZE_ASSERT(toLevel <= _levels.size());                 // toLevel must be a valid level index.
 
     // Reconstruction is done by starting at the coarsest level, iterating upwards.
     cv::Mat reconstruction = (cv::Mat)_levels.front();
