@@ -142,6 +142,7 @@ DEFINE_APP(BUILD_APP_KMEANS                      "apps/Texturize.KMeans")
 DEFINE_APP(BUILD_APP_DISTANCE_MATRIX             "apps/Texturize.Distance")
 DEFINE_APP(BUILD_APP_PROGRESSION_MAP             "apps/Texturize.ProgressionMap")
 DEFINE_APP(BUILD_APP_GUIDANCE_REFINE             "apps/Texturize.GuidanceRefine")
+DEFINE_APP(BUILD_APP_SYNTHESIZE                  "apps/Texturize.Synthesize")
 
 #SET_TARGET_PROPERTIES(Texturize.Adapters.Tapkee PROPERTIES FOLDER "adapter")
 #SET_TARGET_PROPERTIES(Texturize.Sandbox PROPERTIES FOLDER "legacy")
