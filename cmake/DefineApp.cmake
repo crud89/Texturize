@@ -9,10 +9,10 @@
 ###################################################################################################
 
 FUNCTION(DEFINE_APP OPTION_NAME APP_DIRECTORY)
-  IF(OPTION_NAME)
+  IF(${OPTION_NAME})
     MESSAGE(STATUS "Adding app at '${APP_DIRECTORY}'...")
     ADD_SUBDIRECTORY(${APP_DIRECTORY})
-  ELSE(OPTION_NAME)
-    MESSAGE(STATUS "Skipping app at '${APP_DIRECTORY}'")
-  ENDIF(OPTION_NAME)
+  ELSE(${OPTION_NAME})
+    MESSAGE(STATUS "Skipping app at '${APP_DIRECTORY}'.")
+  ENDIF(${OPTION_NAME})
 ENDFUNCTION(DEFINE_APP OPTION_NAME APP_DIRECTORY)
