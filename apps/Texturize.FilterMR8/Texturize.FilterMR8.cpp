@@ -83,15 +83,6 @@ int main(int argc, const char** argv) {
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
-
-	for (int i(0); i < result.channels(); ++i)
-	{
-		cv::Mat filtered = result.getChannel(i);
-		std::cout << filtered;
-		cv::imshow("Filtered", filtered);
-		cv::waitKey(0);
-	}
-
 	// Store the sample.
 	_persistence.saveSample(resultFileName, result);
 }
