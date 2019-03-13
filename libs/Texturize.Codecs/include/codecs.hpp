@@ -162,7 +162,7 @@ namespace Texturize {
 
 	public:
 		/// \brief Creates a file storage, based on a file name and format.
-		virtual void createStorage(const std::string& fileName, IFileStorage** storage, StorageMode mode, StorageFormat format = StorageFormat::FSF_XML, const std::string& encoding = std::string()) const;
+		virtual void createStorage(const std::string& fileName, std::unique_ptr<IFileStorage>& storage, StorageMode mode, StorageFormat format = StorageFormat::FSF_XML, const std::string& encoding = std::string()) const;
 	};
 
 	/// \brief An interface that is used to load and save images.
@@ -276,12 +276,12 @@ namespace Texturize {
 		/// \brief Writes an asset to a file storage.
 		/// \param storage The storage to write the asset to.
 		/// \param asset The asset to write to the storage.
-		virtual void store(IFileStorage* storage, const TAsset* asset) const = 0;
+		virtual void store(std::shared_ptr<IFileStorage> storage, std::shared_ptr<const TAsset> asset) const = 0;
 
 		/// \brief Restores an asset from a file storage.
 		/// \param storage The storage to restore the asset from.
 		/// \param asset The asset to restore from the storage.
-		virtual void restore(const IFileStorage* storage, TAsset** asset) const = 0;
+		virtual void restore(std::shared_ptr<const IFileStorage> storage, std::unique_ptr<TAsset>& asset) const = 0;
 	};
 
 	template <typename TAsset>
@@ -289,8 +289,8 @@ namespace Texturize {
 		public AssetPersistence<TAsset>
 	{
 	public:
-		typedef std::function<void(IFileStorage*, const TAsset*)> ASSET_WRITER;
-		typedef std::function<void(const IFileStorage*, TAsset**)> ASSET_READER;
+		typedef std::function<void(std::shared_ptr<IFileStorage>, std::shared_ptr<const TAsset>)> ASSET_WRITER;
+		typedef std::function<void(std::shared_ptr<const IFileStorage>, std::unique_ptr<TAsset>&)> ASSET_READER;
 
 	private:
 		ASSET_WRITER _writerFunc;
@@ -300,8 +300,8 @@ namespace Texturize {
 		FunctionalAssetPersistence(ASSET_WRITER writer, ASSET_READER reader);
 
 	public:
-		void store(IFileStorage* storage, const TAsset* asset) const override;
-		void restore(const IFileStorage* storage, TAsset** asset) const override;
+		void store(std::shared_ptr<IFileStorage> storage, std::shared_ptr<const AppearanceSpace> asset) const override;
+		void restore(std::shared_ptr<const IFileStorage> storage, std::unique_ptr<AppearanceSpace>& asset) const override;
 	};
 
 	/// \brief An object that allows to store `AppearanceSpace` instances inside an asset.
@@ -309,11 +309,11 @@ namespace Texturize {
 		public AssetPersistence<AppearanceSpace>
 	{
 	public:
-		void store(IFileStorage* storage, const AppearanceSpace* asset) const override;
-		void restore(const IFileStorage* storage, AppearanceSpace** asset) const override;
+		void store(std::shared_ptr<IFileStorage> storage, std::shared_ptr<const AppearanceSpace> asset) const override;
+		void restore(std::shared_ptr<const IFileStorage> storage, std::unique_ptr<AppearanceSpace>& asset) const override;
 
-		void write(const std::string& fileName, const AppearanceSpace* descriptor, const StorageFactory& storages = StorageFactory()) const;
-		void read(const std::string& fileName, AppearanceSpace** descriptor, const StorageFactory& storages = StorageFactory()) const;
+		void write(const std::string& fileName, std::shared_ptr<const AppearanceSpace> descriptor, const StorageFactory& storages = StorageFactory()) const;
+		void read(const std::string& fileName, std::unique_ptr<AppearanceSpace>& descriptor, const StorageFactory& storages = StorageFactory()) const;
 	};
 
 	/// @}

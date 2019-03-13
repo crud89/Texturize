@@ -100,16 +100,17 @@ int main(int argc, const char** argv) {
 	Sample material = Sample::mergeSamples(std::initializer_list<const Sample>(inputSamples.data(), inputSamples.data() + inputSamples.size()));
 
 	// The "exemplar" now contains all descriptive channels that are used to calculate the appearance space.
-	std::unique_ptr<AppearanceSpace> descriptor;
+	std::unique_ptr<AppearanceSpace> dscr;
 	std::cout << "Computing appearance space descriptors...";
 	auto start = std::chrono::high_resolution_clock::now();
-	AppearanceSpace::calculate(material, descriptor, dimensionality);
+	AppearanceSpace::calculate(material, dscr, dimensionality);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 	// Save the asset.
 	AppearanceSpaceAsset asset;
-	asset.write(resultFileName, descriptor.get());
+	std::shared_ptr<AppearanceSpace> descriptor{ std::move(dscr) };
+	asset.write(resultFileName, descriptor);
 
 	// Print some statistics.
 	// NOTE: Only works on CV_32F currently.

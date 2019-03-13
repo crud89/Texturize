@@ -15,7 +15,7 @@ FunctionalAssetPersistence<TAsset>::FunctionalAssetPersistence(ASSET_WRITER writ
 }
 
 template <typename TAsset>
-void FunctionalAssetPersistence<TAsset>::store(IFileStorage* storage, const TAsset* asset) const
+void FunctionalAssetPersistence<TAsset>::store(std::shared_ptr<IFileStorage> storage, std::shared_ptr<const AppearanceSpace> asset) const
 {
 	TEXTURIZE_ASSERT(storage != nullptr);
 	TEXTURIZE_ASSERT(asset != nullptr);
@@ -24,7 +24,7 @@ void FunctionalAssetPersistence<TAsset>::store(IFileStorage* storage, const TAss
 }
 
 template <typename TAsset>
-void FunctionalAssetPersistence<TAsset>::restore(const IFileStorage* storage, TAsset** asset) const
+void FunctionalAssetPersistence<TAsset>::restore(std::shared_ptr<const IFileStorage> storage, std::unique_ptr<AppearanceSpace>& asset) const
 {
 	TEXTURIZE_ASSERT(storage != nullptr);
 	TEXTURIZE_ASSERT(asset != nullptr);

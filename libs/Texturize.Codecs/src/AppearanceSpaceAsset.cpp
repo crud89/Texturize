@@ -9,7 +9,7 @@ using namespace Texturize;
 ///// Appearance Space Descriptor persistence implementation                                  /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void AppearanceSpaceAsset::store(IFileStorage* storage, const AppearanceSpace* asset) const
+void AppearanceSpaceAsset::store(std::shared_ptr<IFileStorage> storage, std::shared_ptr<const AppearanceSpace> asset) const
 {
 	TEXTURIZE_ASSERT(asset != nullptr);
 	TEXTURIZE_ASSERT(storage != nullptr);
@@ -42,13 +42,11 @@ void AppearanceSpaceAsset::store(IFileStorage* storage, const AppearanceSpace* a
 	storage->write("HEIGHT", exemplar->height());
 	storage->write("SAMPLE", (cv::Mat)*exemplar);
 	storage->write("EXEMPLAR", "}");
-
-	// TODO: Maybe put a map of samples (i.e. map["albedo"], map["normal"] in here, so that we do not have to specify those each time during synthesis stage.
 }
 
-void AppearanceSpaceAsset::restore(const IFileStorage* storage, AppearanceSpace** asset) const
+void AppearanceSpaceAsset::restore(std::shared_ptr<const IFileStorage> storage, std::unique_ptr<AppearanceSpace>& asset) const
 {
-	TEXTURIZE_ASSERT(asset != nullptr);
+	TEXTURIZE_ASSERT(asset == nullptr);
 	TEXTURIZE_ASSERT(storage != nullptr);
 
 	// Read asset metadata.
@@ -80,23 +78,19 @@ void AppearanceSpaceAsset::restore(const IFileStorage* storage, AppearanceSpace*
 
 	// Initialize a new descriptor instance.
 	std::unique_ptr<Sample> exemplar = std::make_unique<Sample>(ex);
-	std::unique_ptr<AppearanceSpace> descriptor = std::make_unique<AppearanceSpace>(std::move(projector), std::move(exemplar), kernel);
-	
-	// Return the instance.
-	*asset = descriptor.release();
+	asset = std::make_unique<AppearanceSpace>(std::move(projector), std::move(exemplar), kernel);
 }
 
-void AppearanceSpaceAsset::write(const std::string& fileName, const AppearanceSpace* descriptor, const StorageFactory& storages) const
+void AppearanceSpaceAsset::write(const std::string& fileName, std::shared_ptr<const AppearanceSpace> descriptor, const StorageFactory& storages) const
 {
 	// Create a new file storage instance.
-	IFileStorage* rawStorage;
-	storages.createStorage(fileName, &rawStorage, StorageFactory::FSM_WRITE, StorageFactory::FSF_HDF5);
-	std::unique_ptr<IFileStorage> storage(rawStorage);
+	std::unique_ptr<IFileStorage> storage;
+	storages.createStorage(fileName, storage, StorageFactory::FSM_WRITE, StorageFactory::FSF_HDF5);
 
 	try
 	{
 		// Store the asset.
-		this->store(storage.get(), descriptor);
+		this->store(std::move(storage), descriptor);
 	}
 	catch (const H5::Exception& ex)
 	{
@@ -105,17 +99,16 @@ void AppearanceSpaceAsset::write(const std::string& fileName, const AppearanceSp
 	}
 }
 
-void AppearanceSpaceAsset::read(const std::string& fileName, AppearanceSpace** descriptor, const StorageFactory& storages) const
+void AppearanceSpaceAsset::read(const std::string& fileName, std::unique_ptr<AppearanceSpace>& descriptor, const StorageFactory& storages) const
 {
 	// Create a new file storage instance.
-	IFileStorage* rawStorage;
-	storages.createStorage(fileName, &rawStorage, StorageFactory::FSM_READ, StorageFactory::FSF_HDF5);
-	std::unique_ptr<IFileStorage> storage(rawStorage);
+	std::unique_ptr<IFileStorage> storage;
+	storages.createStorage(fileName, storage, StorageFactory::FSM_READ, StorageFactory::FSF_HDF5);
 
 	try
 	{
 		// Restore the asset.
-		this->restore(storage.get(), descriptor);
+		this->restore(std::move(storage), descriptor);
 	}
 	catch (const H5::Exception& ex)
 	{
