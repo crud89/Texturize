@@ -14,6 +14,10 @@ MESSAGE(STATUS "----------------------------------------------------------------
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Setting up project: ${PROJECT_NAME}...")
 
+IF(NOT WITH_TAPKEE)
+  MESSAGE(FATAL_ERROR "The Progression Map app requires the tapkee adapter. Enable WITH_TAPKEE to build the app.")
+ENDIF(NOT WITH_TAPKEE)
+
 # Set compiler flags
 IF(MSVC)
   # Switch from Multi-Thread (/MT) to Multi-Thread Debug (/MTd) for debug builds.

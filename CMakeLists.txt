@@ -95,6 +95,8 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS "  Looking up macros and functions...")
 MESSAGE(STATUS "  > ${CMAKE_SOURCE_DIR}/GetModuleInfo.cmake")
 INCLUDE("${CMAKE_SOURCE_DIR}/cmake/GetPackageInfo.cmake")
+MESSAGE(STATUS "  > ${CMAKE_SOURCE_DIR}/DefineApp.cmake")
+INCLUDE("${CMAKE_SOURCE_DIR}/cmake/DefineApp.cmake")
 MESSAGE(STATUS "  > ${CMAKE_SOURCE_DIR}/TexturizeSettings.cmake")
 INCLUDE("${CMAKE_SOURCE_DIR}/cmake/TexturizeSettings.cmake")
 MESSAGE(STATUS "")
@@ -130,97 +132,17 @@ ADD_SUBDIRECTORY(libs/Texturize.Codecs.EXR)
 
 #SET_TARGET_PROPERTIES(Texturize.Core Texturize.Codecs Texturize.Analysis Texturize.Sampling Texturize.Codecs.EXR PROPERTIES FOLDER "libs")
 
-ADD_DEPENDENCIES(Texturize.Codecs 					Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Analysis 				Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Sampling 				Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Codecs					Texturize.Analysis)
+DEFINE_APP(BUILD_ZLIB                            ${ZLIB_ROOT})
 
-ADD_DEPENDENCIES(Texturize.Codecs.EXR 				Texturize.Core)
-ADD_DEPENDENCIES(Texturize.Codecs.EXR 				Texturize.Codecs)
+DEFINE_APP(WITH_TAPKEE                           "adapters/Texturize.Adapters.Tapkee")
 
-IF(BUILD_ZLIB)
-  ADD_SUBDIRECTORY(${ZLIB_ROOT})
-  ADD_DEPENDENCIES(Texturize.Codecs.EXR 			zlib)
-ENDIF(BUILD_ZLIB)
+DEFINE_APP(BUILD_APP_SANDBOX                     "apps/Texturize.Sandbox")
+DEFINE_APP(BUILD_APP_FILTERMR8                   "apps/Texturize.FilterMR8")
+DEFINE_APP(BUILD_APP_KMEANS                      "apps/Texturize.KMeans")
+DEFINE_APP(BUILD_APP_DISTANCE_MATRIX             "apps/Texturize.Distance")
+DEFINE_APP(BUILD_APP_PROGRESSION_MAP             "apps/Texturize.ProgressionMap")
+DEFINE_APP(BUILD_APP_GUIDANCE_REFINE             "apps/Texturize.GuidanceRefine")
 
-ADD_DEPENDENCIES(Texturize.Sampling 				Texturize.Analysis)
-
-# Adapters
-IF(WITH_TAPKEE)
-  ADD_SUBDIRECTORY(adapters/Texturize.Adapters.Tapkee)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Analysis)
-  ADD_DEPENDENCIES(Texturize.Adapters.Tapkee		Texturize.Sampling)
-
-  IF(BUILD_APP_SANDBOX)
-    ADD_DEPENDENCIES(Texturize.Sandbox				Texturize.Adapters.Tapkee)
-  ENDIF(BUILD_APP_SANDBOX)
-ENDIF(WITH_TAPKEE)
-
-# Apps
-IF(BUILD_APP_SANDBOX)
-  ADD_SUBDIRECTORY(apps/Texturize.Sandbox)
-  
-  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.Sandbox   				  Texturize.Codecs.EXR)
-  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Analysis)
-  ADD_DEPENDENCIES(Texturize.Sandbox 		        Texturize.Sampling)
-
-  #SET_TARGET_PROPERTIES(Texturize.Sandbox PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_SANDBOX)
-
-IF(BUILD_APP_FILTERMR8)
-  ADD_SUBDIRECTORY(apps/Texturize.FilterMR8)
-  
-  ADD_DEPENDENCIES(Texturize.FilterMR8 		        Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.FilterMR8 		        Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.FilterMR8 		        Texturize.Analysis)
-
-  #SET_TARGET_PROPERTIES(Texturize.FilterMR8 PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_FILTERMR8)
-
-IF(BUILD_APP_KMEANS)
-  ADD_SUBDIRECTORY(apps/Texturize.KMeans)
-  
-  ADD_DEPENDENCIES(Texturize.KMeans 		        Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.KMeans 		        Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.KMeans 		        Texturize.Analysis)
-
-  #SET_TARGET_PROPERTIES(Texturize.KMeans PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_KMEANS)
-
-IF(BUILD_APP_DISTANCE_MATRIX)
-  ADD_SUBDIRECTORY(apps/Texturize.Distance)
-  
-  ADD_DEPENDENCIES(Texturize.Distance 		        Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.Distance 		        Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.Distance 		        Texturize.Analysis)
-
-  #SET_TARGET_PROPERTIES(Texturize.Distance PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_DISTANCE_MATRIX)
-
-IF(BUILD_APP_PROGRESSION_MAP)
-  IF(NOT WITH_TAPKEE)
-	MESSAGE(FATAL_ERROR "The Progression Map app requires the tapkee adapter. Enable WITH_TAPKEE to build the app.")
-  ENDIF(NOT WITH_TAPKEE)
-  
-  ADD_SUBDIRECTORY(apps/Texturize.ProgressionMap)
-  
-  ADD_DEPENDENCIES(Texturize.ProgressionMap		        Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.ProgressionMap 		      Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.ProgressionMap		        Texturize.Analysis)
-
-  #SET_TARGET_PROPERTIES(Texturize.ProgressionMap PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_PROGRESSION_MAP)
-
-IF(BUILD_APP_GUIDANCE_REFINE)
-  ADD_SUBDIRECTORY(apps/Texturize.GuidanceRefine)
-  
-  ADD_DEPENDENCIES(Texturize.GuidanceRefine	      Texturize.Core)
-  ADD_DEPENDENCIES(Texturize.GuidanceRefine		    Texturize.Codecs)
-  ADD_DEPENDENCIES(Texturize.GuidanceRefine		    Texturize.Analysis)
-
-  #SET_TARGET_PROPERTIES(Texturize.GuidanceRefine PROPERTIES FOLDER "apps")
-ENDIF(BUILD_APP_GUIDANCE_REFINE)
+#SET_TARGET_PROPERTIES(Texturize.Adapters.Tapkee PROPERTIES FOLDER "adapter")
+#SET_TARGET_PROPERTIES(Texturize.Sandbox PROPERTIES FOLDER "legacy")
+#SET_TARGET_PROPERTIES(Texturize.FilterMR8 Texturize.KMeans Texturize.Distance Texturize.ProgressionMap Texturize.GuidanceRefine PROPERTIES FOLDER "apps")
