@@ -13,6 +13,7 @@ OPTION(BUILD_APP_KMEANS             "Builds k-means clustering app."            
 OPTION(BUILD_APP_DISTANCE_MATRIX    "Builds app that computes pairwise distances."                                               ON)
 OPTION(BUILD_APP_PROGRESSION_MAP    "Builds scalar progression map generation app."                                              ON)
 OPTION(BUILD_APP_GUIDANCE_REFINE    "Builds app for target guidance refinement."                                                 ON)
+OPTION(BUILD_APP_APPEARANCE_SPACE   "Builds app that transforms exemplars into appearance space."                                ON)
 OPTION(BUILD_APP_SYNTHESIZE         "Builds synthesizer app."                                                                    ON)
 
 IF("${OpenCV_DIR}" STREQUAL "")
