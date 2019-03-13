@@ -24,8 +24,8 @@ const char* parameters =
 {
 	"{h help usage ?    |    | Displays this help message.}"
 	"{input in          |    | The name of an image file, containing the guidance channel that should be refined.}"
-	"{reference ref     |    | The name of an image file, containing the reference guidance channel that the input should be refined to.}"
 	"{result r          |    | The name of the image file, the result is stored to.}"
+	"{reference ref     |    | The name of an image file, containing the reference guidance channel that the input should be refined to.}"
 };
 
 // Persistence providers.
@@ -56,10 +56,24 @@ int main(int argc, const char** argv) {
 	std::string resultFileName = parser.get<std::string>("result");
 	std::string referenceFileName = parser.get<std::string>("reference");
 
+	std::cout << "Input: " << inputFileName << std::endl <<
+		"Output: " << resultFileName << std::endl <<
+		"Reference: " << referenceFileName << std::endl <<
+		std::endl;
+
 	// Load the input and reference samples.
 	Sample inputSample, referenceSample;
 	_persistence.loadSample(inputFileName, inputSample);
 	_persistence.loadSample(referenceFileName, referenceSample);
+
+	// Try to convert the input samples to grayscale, if they aren't already.
+	GrayscaleFilter toGrey;
+
+	if (inputSample.channels() > 1)
+		toGrey.apply(inputSample, inputSample);
+
+	if (referenceSample.channels() > 1)
+		toGrey.apply(referenceSample, referenceSample);
 
 	// Comput the coarsest (smallest) level of the pyramid from the maximum possible number of levels, skipping the 3 coarsest ones.
 	int inputLevel = (inputSample.width() >= inputSample.height() ? log2(inputSample.width()) : log2(inputSample.height())) - 3;
@@ -76,6 +90,9 @@ int main(int argc, const char** argv) {
 		std::cout << "Error: the provided image \"" << referenceFileName << "\" resolution (" << referenceSample.width() << "x" << referenceSample.height() << " Px) is too low." << std::endl;
 		return EXIT_FAILURE;
 	}
+
+	std::cout << "Refining guidance... ";
+	auto start = std::chrono::high_resolution_clock::now();
 
 	// Build up Laplacian pyramids for both, input and refrence samples. 
 	LaplacianImagePyramid inputPyramid, referencePyramid;
@@ -97,22 +114,23 @@ int main(int argc, const char** argv) {
 	for (int lvl(1); lvl < maxLevel; ++lvl)
 	{
 		// Reconstruct image pyramid at this level in order to deduce the noise function.
-		Sample reference = referencePyramid.getLevel(referenceLevel - lvl);
-		//referencePyramid.reconstruct(reference, referenceLevel - l);
+		Sample reference = referencePyramid.getLevel(lvl);
+		//referencePyramid.reconstruct(reference, referenceLevel - lvl);
 		std::unique_ptr<IFilter> noise = MatchingVarianceNoise::FromSample(reference);
 
 		// Add perlin noise to the laplacian at the current level.
-		inputPyramid.filterLevel(noise, inputLevel - lvl);
+		inputPyramid.filterLevel(noise, lvl);
 	}
 
 	// Reconstruct the sample that now contains per-level noise.
 	Sample refined;
-	inputPyramid.reconstruct(refined);
+	inputPyramid.reconstruct(refined, maxLevel);
+
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 	// Normalize and store the sample.
 	//std::unique_ptr<IFilter> normalizationFilter = std::make_unique<NormalizationFilter>();
 	//normalizationFilter->apply(refined, refined);
 	_persistence.saveSample(resultFileName, refined);
-
-	return 0;
 }

@@ -61,14 +61,17 @@ void MatchingVarianceNoise::makeNoise(Sample& sample) const
 		// In case only one reference variance value is provided, it is used over all channels, otherwise
 		// it is selected for the current channel.
 		float amplitude = _referenceVariance.size() == 1 ?
-			_referenceVariance[0] / static_cast<float>(pow(mean.val[channel], 2)) :
-			_referenceVariance[channel] / static_cast<float>(pow(mean.val[channel], 2));
+			_referenceVariance[0] / std::pow(static_cast<float>(deviation.val[channel]), 2.f) :
+			_referenceVariance[channel] / std::pow(static_cast<float>(deviation.val[channel]), 2.f);
 
-		// Scale the noise according to the amplitude.
 		noise *= amplitude;
 
 		// Mix the results and store it within the respective sample channel.
 		cv::add(sample.getChannel(channel), noise, buffer, cv::noArray(), CV_32F);
+
+		// TODO: Normalizing here should affect the variance ratio and should typically not be required. On the other
+		//       hand, not normalizing results in invalid refined channels.
+		cv::normalize(buffer, buffer);
 		result.setChannel(channel, buffer);
 	}
 
@@ -83,7 +86,7 @@ std::unique_ptr<IFilter> MatchingVarianceNoise::FromSample(const Sample& sample)
 	cv::meanStdDev((cv::Mat)sample, mean, deviation);
 
 	for (int channel(0); channel < sample.channels(); ++channel)
-		variances.push_back(static_cast<float>(pow(mean.val[channel], 2)));
+		variances.push_back(static_cast<float>(pow(deviation.val[channel], 2)));
 
     return std::make_unique<MatchingVarianceNoise>(variances);
 }
