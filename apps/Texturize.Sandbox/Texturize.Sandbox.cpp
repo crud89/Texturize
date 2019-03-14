@@ -164,9 +164,8 @@ int appearanceSpace(const std::unordered_map<std::string, std::string>& exemplar
 	}
 
 	// The "exemplar" now contains all descriptive channels that are used to calculate the appearance space.
-	AppearanceSpace* rawDescriptor;
-	AppearanceSpace::calculate(std::initializer_list<const Sample>(samples.data(), samples.data() + samples.size()), &rawDescriptor, dimensionality);
-	std::unique_ptr<AppearanceSpace> descriptor(rawDescriptor);
+	std::unique_ptr<AppearanceSpace> descriptor;
+	AppearanceSpace::calculate(std::initializer_list<const Sample>(samples.data(), samples.data() + samples.size()), descriptor, dimensionality);
 	
 	// Save the asset.
 	AppearanceSpaceAsset asset;
