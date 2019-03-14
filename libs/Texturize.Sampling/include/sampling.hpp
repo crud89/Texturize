@@ -5,10 +5,12 @@
 
 #include <vector>
 #include <random>
+#include <optional>
 
 #include <opencv2\core.hpp>
 #include <opencv2\ml.hpp>
 #include <opencv2\features2d.hpp>
+#include <opencv2\flann\flann_base.hpp>
 
 /// \namespace Texturize
 /// \brief The root namespace, that contains all framework classes.
@@ -241,17 +243,86 @@ namespace Texturize {
 	class TEXTURIZE_API ANNIndex :
 		public SearchIndex
 	{
+	protected:
+		template <typename TVal = float>
+		struct _L2Ex {
+		private:
+			int _weightDims{ -1 };
+
+		public:
+			_L2Ex(int weightDims = -1) : _weightDims(weightDims) {}
+
+		public:
+			typedef ::cvflann::True                         is_kdtree_distance;
+			typedef ::cvflann::True                         is_vector_space_distance;
+			typedef TVal                                    ElementType;
+			typedef typename cv::Accumulator<TVal>::Type    ResultType;
+
+			template <typename Tlhs, typename Trhs>
+			ResultType operator()(Tlhs lhs, Trhs rhs, size_t size, ResultType worstDist = -1) const {
+				ResultType result = ResultType();
+				ResultType diff0, diff1, diff2, diff3;
+				Tlhs lastElement = lhs + size;
+
+				// At least one dimension is responsible for holding additional weights, if `_weightDims` >= 0.
+				if (_weightDims >= 0)
+					lastElement -= _weightDims;
+
+				Tlhs lastGroup = lastElement - 3;
+
+				// Group-wise process each value.
+				while (lhs < lastGroup) {
+					diff0 = (ResultType)(lhs[0] - rhs[0]); diff1 = (ResultType)(lhs[1] - rhs[1]);
+					diff2 = (ResultType)(lhs[2] - rhs[2]); diff3 = (ResultType)(lhs[3] - rhs[3]);
+
+					result += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
+
+					// Move on...
+					lhs += 4; rhs += 4;
+
+					//if ((worstDist > 0) && result > worstDist)
+					//	return result;
+				}
+
+				// Process the remaining values.
+				while (lhs < lastElement) {
+					diff0 = (ResultType)(*lhs++ - *rhs++);
+					result += diff0 * diff0;
+				}
+
+				// Finally, process the weight maps, which are added in differently (non-squared).
+				while (lhs < lastElement + _weightDims)
+					result += (ResultType)(*lhs++ - *rhs++);
+
+				return result;
+			}
+
+			template <typename Tlhs, typename Trhs>
+			inline ResultType accum_dist(const Tlhs& lhs, const Trhs& rhs, int) const {
+				return std::pow((lhs - rhs), 2);
+			}
+		};
+
+		typedef typename ANNIndex::_L2Ex<float>           DistanceType;
+		typedef typename ::cvflann::Index<DistanceType>   IndexType;
+		typedef typename DistanceType::ElementType        ElementType;
+		typedef typename ::cvflann::Matrix<ElementType>   MatrixType;
+
 	private:
-		cv::Ptr<cv::flann::Index> _index;
+		std::unique_ptr<IndexType> _index;
 		cv::Mat _descriptors;
 		int _sampleWidth{ 0 };
 
 	protected:
 		void init(const cv::flann::IndexParams& indexParams);
+		void init(const cv::flann::IndexParams& indexParams, std::optional<std::reference_wrapper<const Sample>> weightMap);
 
 	public:
 		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
+
+		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const Sample& weightMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
+		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& weightMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 
 	public:
 		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
