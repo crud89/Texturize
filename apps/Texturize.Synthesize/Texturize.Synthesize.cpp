@@ -24,7 +24,7 @@ const char* parameters =
 	"{srcprog           |    | The name of a greyscale image, containing the source texture homogeneity progression.}"
 	"{trgprog           |    | The name of a greyscale image, containing the control homogeneity progression for the target texture.}"
 	"{homogeneity h     | 0.9| The importance factor of the source and target homgeneneity on the result.}"
-	/*"{anisotropy ai     | 0.5| The importance of local anisotropy, i.e. how much weight goes into homogeneity progression and how much into orientation differences.}"*/
+	"{anisotropy ai     | 0.5| The importance of local anisotropy, i.e. how much weight goes into homogeneity progression and how much into orientation differences.}"
 };
 
 // Persistence providers.
@@ -63,7 +63,7 @@ int main(int argc, const char** argv) {
 		"Seed: " << seed << std::endl;
 
 	// Non-stationary synthesis can only be done, if a source homogeneity map is provided.
-	if (sourceProgressionFileName.empty()) {
+	if (!sourceProgressionFileName.empty()) {
 		std::cout << "Source progression channel: " << sourceProgressionFileName << std::endl;
 
 		if (!targetProgressionFileName.empty())
@@ -83,32 +83,13 @@ int main(int argc, const char** argv) {
 	// Declare all samples and variables required.
 	Sample sample, exemplar, result, srcProgression, trgProgression;
 	int kernel, width, height;
-
-	// Load the input samples, if they are provided.
-	_persistence.loadSample(inputFileName, sample);
-	srcProgression = Sample(cv::Mat::zeros(sample.size(), CV_32FC1));
-	trgProgression = Sample(cv::Mat::zeros(sample.size(), CV_32FC1));
-
-	if (!sourceProgressionFileName.empty()) {
-		_persistence.loadSample(sourceProgressionFileName, srcProgression);
-
-		if (!targetProgressionFileName.empty())
-			_persistence.loadSample(targetProgressionFileName, trgProgression);
-
-
-		// TODO: Weight the progression maps, based on the homogeneity.
-		// TODO: Pass target progression map during synthesis.
-		// TODO: Automatic jitter amplitude, based on variances.
-	}
-
-	TEXTURIZE_ASSERT(srcProgression.channels() == 1);
-	TEXTURIZE_ASSERT(trgProgression.channels() == 1);
+	std::shared_ptr<ISearchIndex> index;
+	std::unique_ptr<AppearanceSpace> descriptor;
 
 	// Load the appearance space descriptor.
-	std::unique_ptr<AppearanceSpace> descriptor;
 	AppearanceSpaceAsset asset;
 	asset.read(inputFileName, descriptor);
-		
+
 	// Get the exemplar and define the synthesis result.
 	descriptor->sample(exemplar);
 	descriptor->getKernel(kernel);
@@ -116,30 +97,58 @@ int main(int argc, const char** argv) {
 	// Validate dimensions.
 	height = exemplar.height();
 	width = exemplar.width();
-	
+
 	//TEXTURIZE_ASSERT(height == width);
 
-	// Build up the search index.
-	//std::unique_ptr<IDescriptorExtractor> descriptorExtractor = std::make_unique<Tapkee::PCADescriptorExtractor>();
-	//std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor), std::move(descriptorExtractor));
-	std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor));
+	// Load the input samples, if they are provided.
+	srcProgression = Sample(cv::Mat::zeros(exemplar.size(), CV_32FC1));
+	trgProgression = Sample(cv::Mat::zeros(exemplar.size(), CV_32FC1));
+
+	if (!sourceProgressionFileName.empty()) {
+		_persistence.loadSample(sourceProgressionFileName, srcProgression);
+		srcProgression.weight(homogeneity);
+
+		if (!targetProgressionFileName.empty()) {
+			_persistence.loadSample(targetProgressionFileName, trgProgression);
+			trgProgression.weight(homogeneity);
+		} else {
+			// TODO: In case no control map is provided, generate one based on hierarchical perlin noise.
+			// For now, just print an error.
+			std::cout << "Error: No progression control map has been provided." << std::endl;
+			return EXIT_FAILURE;
+		}
+
+		TEXTURIZE_ASSERT(srcProgression.channels() == 1);
+		TEXTURIZE_ASSERT(trgProgression.channels() == 1);
+
+		// TODO: Pass target progression map during synthesis.
+		// TODO: Automatic jitter amplitude, based on variances.
+
+		// Build up the search index.
+		//std::unique_ptr<IDescriptorExtractor> descriptorExtractor = std::make_unique<Tapkee::PCADescriptorExtractor>();
+		//std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor), std::move(descriptorExtractor));
+		index = std::make_shared<KNNIndex>(std::move(descriptor), srcProgression);
+	} else {
+		index = std::make_shared<KNNIndex>(std::move(descriptor));
+	}
 
 #ifdef _DEBUG
 	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
 	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
 #else
-	//auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
-	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
+	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
+	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
 #endif
 
 	// Randomness Selector Function
 	int depth = log2(width);
 	std::vector<float> randomness(0);
 
+	// TODO: ...
 	for (size_t n = randomness.size(); n < depth; ++n)
 		randomness.push_back(0.f);
 
-	PyramidSynthesisSettings config(exemplar.width(), cv::Point2f(0.f, 0.f), randomness, kernel, seed);
+	PyramidSynthesisSettings config(width, cv::Point2f(0.f, 0.f), randomness, kernel, seed);
 	
 	config._progressHandler.add([depth](int level, int pass, const cv::Mat& uv) -> void {
 		if (pass == -1)
