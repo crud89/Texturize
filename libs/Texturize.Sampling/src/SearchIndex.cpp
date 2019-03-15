@@ -185,6 +185,16 @@ KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 {
 }
 
+KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const Sample& weightMap) :
+	ANNIndex(searchSpace, descriptorExtractor, weightMap, cv::makePtr<const KDTreeSingleIndexParams>())
+{
+}
+
+KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& weightMap) :
+	ANNIndex(searchSpace, weightMap, cv::makePtr<const KDTreeSingleIndexParams>())
+{
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// SearchIndex implementation based on coherent pixels.                                    /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////

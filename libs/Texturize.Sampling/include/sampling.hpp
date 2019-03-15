@@ -356,6 +356,9 @@ namespace Texturize {
 		/// \brief Creates a search index based on exact kd-tree matching.
 		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor);
 		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace);
+
+		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const Sample& weightMap);
+		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& weightMap);
 	};
 
 	//class TEXTURIZE_API LSHIndex :
