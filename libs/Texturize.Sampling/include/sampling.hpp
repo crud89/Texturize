@@ -260,7 +260,7 @@ namespace Texturize {
 
 			template <typename Tlhs, typename Trhs>
 			ResultType operator()(Tlhs lhs, Trhs rhs, size_t size, ResultType worstDist = -1) const {
-				ResultType result = ResultType();
+				ResultType result = ResultType(), weight = ResultType();
 				ResultType diff0, diff1, diff2, diff3;
 				Tlhs lastElement = lhs + size;
 
@@ -292,9 +292,9 @@ namespace Texturize {
 
 				// Finally, process the weight maps, which are added in differently (non-squared).
 				while (lhs < lastElement + _weightDims)
-					result += (ResultType)(*lhs++ - *rhs++);
+					weight += std::abs<ResultType>((ResultType)(*lhs++ - *rhs++));
 
-				return result;
+				return result * (weight / static_cast<ResultType>(_weightDims));
 			}
 
 			template <typename Tlhs, typename Trhs>
@@ -321,8 +321,8 @@ namespace Texturize {
 		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 
-		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const Sample& weightMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
-		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& weightMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
+		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, const Sample& guidanceMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
+		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 
 	public:
 		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
@@ -361,14 +361,6 @@ namespace Texturize {
 		KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& weightMap);
 	};
 
-	//class TEXTURIZE_API LSHIndex :
-	//	public ANNIndex
-	//{
-	//public:
-	//	/// \brief Creates a search index that uses locality-sensitive hashing to represent and match neighborhood descriptors.
-	//	LSHIndex(std::shared_ptr<ISearchSpace> searchSpace, int tables = 20, int keySize = 12, int probeLevel = 2);
-	//};
-
 	/// \brief Implements a search index, that matches pixel neighborhoods based on coherent pixels.
 	///
 	/// Coherent pixels have first been described by Michael Ashikhmin and are based on the observation that typically good match candidates are direct neighbors of already
@@ -393,13 +385,14 @@ namespace Texturize {
 		
 	private:
 		cv::Mat _exemplarDescriptors;
-		cv::NormTypes _normType;
+		const Sample _guidanceMap;
 
 	public:
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
 		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace);
+		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap);
 
 	private:
 		void init();
@@ -457,6 +450,7 @@ namespace Texturize {
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
 		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace);
+		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap);
 
 	private:
 		cv::Vec2f getRandomPixelAround(const cv::Vec2f& point, int radius, int dominantDimensionExtent) const;
@@ -656,8 +650,7 @@ namespace Texturize {
 
 
 
-		//std::optional<Sample> _guidanceMap;
-		Sample _guidanceMap;
+		std::optional<Sample> _guidanceMap;
 
 	public:
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.

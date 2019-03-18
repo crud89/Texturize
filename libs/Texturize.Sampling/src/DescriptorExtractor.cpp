@@ -163,7 +163,9 @@ cv::Mat DescriptorExtractor::getPixelNeighborhoods(const Sample& exemplar, const
 		pixels[3] = DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(1, 1));
 		rowDesc.insert(rowDesc.end(), pixels[3].begin(), pixels[3].end());
 
-		neighborhoods.row(idx[0] * size.width + idx[1]) = cv::Mat(rowDesc);
+		// Copy the neighborhood descriptor to the matrix row.
+		auto* row = neighborhoods.ptr<float>(idx[0] * size.width + idx[1]);
+		std::copy(rowDesc.begin(), rowDesc.end(), row);
 	});
 
 	// Finally, transpose the neighborhood descriptor matrix, so that each column stores one descriptor.

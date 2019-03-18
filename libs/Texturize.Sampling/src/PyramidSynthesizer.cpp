@@ -169,11 +169,14 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 	std::shared_ptr<const Sample> exemplar;
 	_catalog->getSearchSpace()->sample(exemplar);
 
-	// TODO: Handle case where no guidance is provided.
 	// Get the guidance channel map for the current scale and reshape it. After reshaping, the matrix contains one row that can be appended to the descriptors.
-	cv::Mat guidanceMap = (cv::Mat)state.config()._guidanceMap;
-	cv::resize(guidanceMap, guidanceMap, cv::Size(width, height));
-	Sample guidanceDescriptors(guidanceMap.reshape(guidanceMap.channels(), 1));
+	std::optional<Sample> guidanceDescriptors;
+
+	if (state.config()._guidanceMap.has_value()) {
+		cv::Mat guidanceMap = (cv::Mat)state.config()._guidanceMap.value();
+		cv::resize(guidanceMap, guidanceMap, cv::Size(width, height));
+		guidanceDescriptors = Sample(guidanceMap.reshape(guidanceMap.channels(), 1));
+	}
 
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp) {
@@ -181,8 +184,9 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 		cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample).t();
 
 		// Append guidance channels.
-		for (int cn(0); cn < guidanceMap.channels(); ++cn)
-			descriptors.push_back(guidanceDescriptors.getChannel(cn));
+		if (guidanceDescriptors.has_value())
+			for (int cn(0); cn < guidanceDescriptors.value().channels(); ++cn)
+				descriptors.push_back(guidanceDescriptors.value().getChannel(cn));
 
 		descriptors = descriptors.t();
 
@@ -399,11 +403,14 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 	std::shared_ptr<const Sample> exemplar;
 	searchIndex->getSearchSpace()->sample(exemplar);
 
-	// TODO: Handle case where no guidance is provided.
 	// Get the guidance channel map for the current scale and reshape it. After reshaping, the matrix contains one row that can be appended to the descriptors.
-	cv::Mat guidanceMap = (cv::Mat)state.config()._guidanceMap;
-	cv::resize(guidanceMap, guidanceMap, cv::Size(width, height));
-	Sample guidanceDescriptors(guidanceMap.reshape(guidanceMap.channels(), 1));
+	std::optional<Sample> guidanceDescriptors;
+
+	if (state.config()._guidanceMap.has_value()) {
+		cv::Mat guidanceMap = (cv::Mat)state.config()._guidanceMap.value();
+		cv::resize(guidanceMap, guidanceMap, cv::Size(width, height));
+		guidanceDescriptors = Sample(guidanceMap.reshape(guidanceMap.channels(), 1));
+	}
 
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
@@ -412,8 +419,9 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 		cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample).t();
 
 		// Append guidance channels.
-		for (int cn(0); cn < guidanceMap.channels(); ++cn)
-			descriptors.push_back(guidanceDescriptors.getChannel(cn));
+		if (guidanceDescriptors.has_value())
+			for (int cn(0); cn < guidanceDescriptors.value().channels(); ++cn)
+				descriptors.push_back(guidanceDescriptors.value().getChannel(cn));
 
 		descriptors = descriptors.t();
 

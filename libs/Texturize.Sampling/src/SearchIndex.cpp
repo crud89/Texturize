@@ -205,6 +205,12 @@ CoherentIndex::CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 	this->init();
 }
 
+CoherentIndex::CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap) :
+	SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>()), _guidanceMap(guidanceMap)
+{
+	this->init();
+}
+
 void CoherentIndex::init()
 {
 	// Precompute the neighborhood descriptors used to train data.
@@ -223,10 +229,22 @@ CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<
 
 	std::vector<float> exemplarDescriptor = _exemplarDescriptors.row(towards.y * exemplar->width() + towards.x);
 
-	// Measure the visual distance based on the provided norm type (default is sum of squared distances).
-	TEXTURIZE_ASSERT(exemplarDescriptor.size() == targetDescriptor.size());
+	// Only compare the dimensions of the target descriptor, that are also present in the exemplar descriptor.
+	std::vector<float> descriptor(&targetDescriptor[0], &targetDescriptor[exemplarDescriptor.size()]);
 
-	return static_cast<float>(cv::norm(targetDescriptor, exemplarDescriptor, _normType));
+	// Measure the visual distance based on the provided norm type (default is sum of squared distances).
+	TEXTURIZE_ASSERT(exemplarDescriptor.size() == descriptor.size());
+
+	// Compute the guidance weight.
+	float weight(0.f);
+	Sample::Texel texel;
+	_guidanceMap.getNeighborhood(towards, 1, texel);
+
+	for (size_t cn(exemplarDescriptor.size()); cn < targetDescriptor.size(); ++cn)
+		weight += std::abs(texel[cn - exemplarDescriptor.size()] - targetDescriptor[cn]);
+
+	weight /= static_cast<float>(targetDescriptor.size() - exemplarDescriptor.size());
+	return static_cast<float>(cv::norm(descriptor, exemplarDescriptor, _normType)) * weight;
 }
 
 void CoherentIndex::getCoherentCandidate(const std::vector<float>& targetDescriptor, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, TMatch& match) const
@@ -371,6 +389,13 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 
 RandomWalkIndex::RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 	CoherentIndex(searchSpace)
+{
+	std::random_device seed;
+	_rng = std::mt19937(seed());
+}
+
+RandomWalkIndex::RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap) :
+	CoherentIndex(searchSpace, guidanceMap)
 {
 	std::random_device seed;
 	_rng = std::mt19937(seed());
