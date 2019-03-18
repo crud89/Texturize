@@ -654,6 +654,11 @@ namespace Texturize {
 		/// Values greater than 3 typically do not improve synthesis quality significantly.
 		unsigned int _correctionSubPasses = 2;
 
+
+
+		//std::optional<Sample> _guidanceMap;
+		Sample _guidanceMap;
+
 	public:
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.

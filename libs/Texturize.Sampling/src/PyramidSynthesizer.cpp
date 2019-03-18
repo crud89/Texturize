@@ -169,15 +169,25 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 	std::shared_ptr<const Sample> exemplar;
 	_catalog->getSearchSpace()->sample(exemplar);
 
+	// TODO: Handle case where no guidance is provided.
+	// Get the guidance channel map for the current scale and reshape it. After reshaping, the matrix contains one row that can be appended to the descriptors.
+	cv::Mat guidanceMap = (cv::Mat)state.config()._guidanceMap;
+	cv::resize(guidanceMap, guidanceMap, cv::Size(width, height));
+	Sample guidanceDescriptors(guidanceMap.reshape(guidanceMap.channels(), 1));
+
 	// Apply each sub-pass subsequently.
-	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
-	{
+	for (unsigned int sp(0); sp < totalSubPasses; ++sp) {
 		// Get the neighborhood descriptors for the current sub-pass. The descriptors are rebuild for each sub-pass, so that the sample converges against the expected result.
-		const cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample);
+		cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample).t();
+
+		// Append guidance channels.
+		for (int cn(0); cn < guidanceMap.channels(); ++cn)
+			descriptors.push_back(guidanceDescriptors.getChannel(cn));
+
+		descriptors = descriptors.t();
 
 		for (int r = 0; r < sample.rows; ++r)
-		for (int c = 0; c < sample.cols; ++c)
-		{
+		for (int c = 0; c < sample.cols; ++c) {
 			// Check if the pixel should be corrected within the current sub-pass.
 			int col = c % subPasses;
 			int row = r % subPasses;
@@ -389,11 +399,23 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 	std::shared_ptr<const Sample> exemplar;
 	searchIndex->getSearchSpace()->sample(exemplar);
 
+	// TODO: Handle case where no guidance is provided.
+	// Get the guidance channel map for the current scale and reshape it. After reshaping, the matrix contains one row that can be appended to the descriptors.
+	cv::Mat guidanceMap = (cv::Mat)state.config()._guidanceMap;
+	cv::resize(guidanceMap, guidanceMap, cv::Size(width, height));
+	Sample guidanceDescriptors(guidanceMap.reshape(guidanceMap.channels(), 1));
+
 	// Apply each sub-pass subsequently.
 	for (unsigned int sp(0); sp < totalSubPasses; ++sp)
 	{
 		// Get the neighborhood descriptors for the current sub-pass. The descriptors are rebuild for each sub-pass, so that the sample converges against the expected result.
-		const cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample);
+		cv::Mat descriptors = descriptorExtractor->calculateNeighborhoodDescriptors(*exemplar, sample).t();
+
+		// Append guidance channels.
+		for (int cn(0); cn < guidanceMap.channels(); ++cn)
+			descriptors.push_back(guidanceDescriptors.getChannel(cn));
+
+		descriptors = descriptors.t();
 
 		sample.forEach<cv::Vec2f>([&sample, &searchIndex, &descriptors, &sp, &subPasses, &width, &height](cv::Vec2f& coords, const int* idx) -> void {
 			// Check if the pixel should be corrected within the current sub-pass.
