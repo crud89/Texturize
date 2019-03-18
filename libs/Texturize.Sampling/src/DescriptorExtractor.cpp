@@ -2,6 +2,8 @@
 
 #include <sampling.hpp>
 
+#include <opencv2/highgui.hpp>
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Descriptor extractor implementation                                                     /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,12 +133,12 @@ cv::Mat DescriptorExtractor::getPixelNeighborhoods(const Sample& exemplar, const
 {
 	TEXTURIZE_ASSERT(uv.type() == CV_32FC2);						// The UV-Map must be a two-channel single-precision floating point matrix.
 	//TEXTURIZE_ASSERT(uv.size() == sample.size());					// The UV-Map must be equally sized as the sample.
-	
+
 	// Calculate the neighborhoods for each pixel.
 	const cv::Size size = uv.size();
 
 	// Create a matrix that stores 4 proxy pixels of each pixel of the sample in a row.
-	cv::Mat neighborhoods(uv.rows * uv.cols, exemplar.channels() * 4, CV_32F);
+	cv::Mat neighborhoods(uv.rows * uv.cols, exemplar.channels() * 4, CV_32FC1);
 
 	// TODO: This should be re-written and can probably be ported to a GPU-implementation. Something like:
 	//	For each pixel in uv: Get 5x5 neighborhood and spawn new thread.
@@ -144,23 +146,26 @@ cv::Mat DescriptorExtractor::getPixelNeighborhoods(const Sample& exemplar, const
 	//      Calculate proxy pixel color values
 	//      Return 4xN vector of proxy pixel color values.
 	uv.forEach<cv::Vec2f>([&neighborhoods, &exemplar, &size, &uv](const cv::Vec2f& at, const int* idx) -> void {
-		// Get a pointer to the row, receiving the pixel values.
-		auto* row = neighborhoods.ptr<float>(idx[0] * size.width + idx[1]);
+		std::vector<float> pixels[4], rowDesc;
+		rowDesc.reserve(exemplar.channels() * 4);
 
 		// Top Left
-		DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(-1, -1), row);
-		row += sizeof(float) * exemplar.channels();
-		
+		pixels[0] = DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(-1, -1));
+		rowDesc.insert(rowDesc.end(), pixels[0].begin(), pixels[0].end());
+
 		// Bottom Left
-		DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(-1, 1), row);
-		row += sizeof(float) * exemplar.channels();
+		pixels[1] = DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(-1, 1));
+		rowDesc.insert(rowDesc.end(), pixels[1].begin(), pixels[1].end());
 
 		// Top Right
-		DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(1, -1), row);
-		row += sizeof(float) * exemplar.channels();
+		pixels[2] = DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(1, -1));
+		rowDesc.insert(rowDesc.end(), pixels[2].begin(), pixels[2].end());
 
 		// Bottom Right
-		DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(1, 1), row);
+		pixels[3] = DescriptorExtractor::getProxyPixel(exemplar, uv, cv::Point2i(idx[1], idx[0]), cv::Vec2i(1, 1));
+		rowDesc.insert(rowDesc.end(), pixels[3].begin(), pixels[3].end());
+
+		neighborhoods.row(idx[0] * size.width + idx[1]) = cv::Mat(rowDesc);
 	});
 
 	// Finally, transpose the neighborhood descriptor matrix, so that each column stores one descriptor.
