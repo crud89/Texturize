@@ -144,6 +144,7 @@ DEFINE_APP(BUILD_APP_PROGRESSION_MAP             "apps/Texturize.ProgressionMap"
 DEFINE_APP(BUILD_APP_GUIDANCE_REFINE             "apps/Texturize.GuidanceRefine")
 DEFINE_APP(BUILD_APP_APPEARANCE_SPACE            "apps/Texturize.AppearanceSpace")
 DEFINE_APP(BUILD_APP_SYNTHESIZE                  "apps/Texturize.Synthesize")
+DEFINE_APP(BUILD_APP_UV_MAP                      "apps/Texturize.UVMap")
 
 #SET_TARGET_PROPERTIES(Texturize.Adapters.Tapkee PROPERTIES FOLDER "adapter")
 #SET_TARGET_PROPERTIES(Texturize.Sandbox PROPERTIES FOLDER "legacy")

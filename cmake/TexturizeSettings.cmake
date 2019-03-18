@@ -15,6 +15,7 @@ OPTION(BUILD_APP_PROGRESSION_MAP    "Builds scalar progression map generation ap
 OPTION(BUILD_APP_GUIDANCE_REFINE    "Builds app for target guidance refinement."                                                 ON)
 OPTION(BUILD_APP_APPEARANCE_SPACE   "Builds app that transforms exemplars into appearance space."                                ON)
 OPTION(BUILD_APP_SYNTHESIZE         "Builds synthesizer app."                                                                    ON)
+OPTION(BUILD_APP_UV_MAP             "Builds app that remaps an input based on an user-provided UV map."                          ON)
 
 IF("${OpenCV_DIR}" STREQUAL "")
   SET(OpenCV_DIR "${CMAKE_MODULE_PATH}/opencv")
