@@ -23,12 +23,25 @@ const char* parameters =
 	"{seed s            | 0  | The seed to initialize random number generators with.}"
 	"{srcprog           |    | The name of a greyscale image, containing the source texture homogeneity progression.}"
 	"{trgprog           |    | The name of a greyscale image, containing the control homogeneity progression for the target texture.}"
-	"{homogeneity h     | 0.9| The importance factor of the source and target homgeneneity on the result.}"
+	"{inhomogeneity ih  | 0.9| The importance factor of the source and target inhomgeneneity on the result.}"
 	"{anisotropy ai     | 0.5| The importance of local anisotropy, i.e. how much weight goes into homogeneity progression and how much into orientation differences.}"
 };
 
 // Persistence providers.
 DefaultPersistence _persistence;
+
+void displayProgress(const float& progress) {
+	const int numChars = 100;
+	const int currentPos = static_cast<int>(progress * static_cast<float>(numChars));
+
+	std::cout << "[";
+
+	for (int i(0); i < numChars; ++i)
+		if (i <= currentPos) std::cout << "="; else std::cout << " ";
+
+	std::cout << "] " << int(progress * 100.0) << " %\r";
+	std::cout.flush();
+}
 
 int main(int argc, const char** argv) {
 	// Parse the command line.
@@ -56,7 +69,7 @@ int main(int argc, const char** argv) {
 	std::string sourceProgressionFileName = parser.get<std::string>("srcprog");
 	std::string targetProgressionFileName = parser.get<std::string>("trgprog");
 	uint64_t seed = parser.get<uint64_t>("seed");
-	float homogeneity = parser.get<float>("homogeneity");
+	float inhomogeneity = parser.get<float>("inhomogeneity");
 
 	std::cout << "Input: " << inputFileName << std::endl <<
 		"Output: " << resultFileName << std::endl <<
@@ -75,13 +88,13 @@ int main(int argc, const char** argv) {
 			"Target progression channel: ignored" << std::endl;
 
 		// Homogenious synthesis does not need weights for stationarity maps.
-		homogeneity = 0.f;
+		inhomogeneity = 0.f;
 	}
 
-	std::cout << "Homogeneity: " << homogeneity << std::endl << std::endl;
+	std::cout << "Inhomogeneity: " << inhomogeneity << std::endl << std::endl;
 
 	// Declare all samples and variables required.
-	Sample sample, exemplar, result, srcProgression, trgProgression;
+	Sample exemplar, result, srcProgression, trgProgression;
 	int kernel, width, height;
 	std::shared_ptr<ISearchIndex> index;
 	std::unique_ptr<AppearanceSpace> descriptor;
@@ -106,11 +119,11 @@ int main(int argc, const char** argv) {
 
 	if (!sourceProgressionFileName.empty()) {
 		_persistence.loadSample(sourceProgressionFileName, srcProgression);
-		srcProgression.weight(homogeneity);
+		srcProgression.weight(inhomogeneity);
 
 		if (!targetProgressionFileName.empty()) {
 			_persistence.loadSample(targetProgressionFileName, trgProgression);
-			trgProgression.weight(homogeneity);
+			trgProgression.weight(inhomogeneity);
 		} else {
 			// TODO: In case no control map is provided, generate one based on hierarchical perlin noise.
 			// For now, just print an error.
@@ -121,48 +134,80 @@ int main(int argc, const char** argv) {
 		TEXTURIZE_ASSERT(srcProgression.channels() == 1);
 		TEXTURIZE_ASSERT(trgProgression.channels() == 1);
 
-		// TODO: Pass target progression map during synthesis.
-		// TODO: Automatic jitter amplitude, based on variances.
-
 		// Build up the search index.
 		//std::unique_ptr<IDescriptorExtractor> descriptorExtractor = std::make_unique<Tapkee::PCADescriptorExtractor>();
 		//std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor), std::move(descriptorExtractor));
-		index = std::make_shared<KNNIndex>(std::move(descriptor), srcProgression);
+		//index = std::make_shared<ANNIndex>(std::move(descriptor), srcProgression);
+		//index = std::make_shared<KNNIndex>(std::move(descriptor), srcProgression);
+		index = std::make_shared<CoherentIndex>(std::move(descriptor), srcProgression);
+		//index = std::make_shared<RandomWalkIndex>(std::move(descriptor), srcProgression);
 	} else {
-		index = std::make_shared<KNNIndex>(std::move(descriptor));
+		//index = std::make_shared<ANNIndex>(std::move(descriptor));
+		//index = std::make_shared<KNNIndex>(std::move(descriptor));
+		index = std::make_shared<CoherentIndex>(std::move(descriptor));
+		//index = std::make_shared<RandomWalkIndex>(std::move(descriptor));
 	}
 
 #ifdef _DEBUG
 	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
 	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
 #else
-	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
-	//auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
+	//auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
+	auto synthesizer = ParallelPyramidSynthesizer::createSynthesizer(index);
 #endif
 
 	// Randomness Selector Function
+	// TODO: This should go into the framework.
 	int depth = log2(width);
-	std::vector<float> randomness(0);
+	PyramidSynthesisSettings::RandomnessSelectorFunction randmonessSelector([&exemplar](int level, const cv::Mat& uv) -> float {
+		// Sample the exemplar.
+		Sample currentSample;
+		exemplar.sample(uv, currentSample);
 
-	// TODO: ...
-	for (size_t n = randomness.size(); n < depth; ++n)
-		randomness.push_back(0.f);
+		// Get a resized copy of the exemplar.
+		cv::Mat downsampled;
+		cv::resize((cv::Mat)exemplar, downsampled, uv.size());
 
-	PyramidSynthesisSettings config(width, cv::Point2f(0.f, 0.f), randomness, kernel, seed);
+		// Calculate variances from both: current sample and exemplar at current scale.
+		cv::Mat meanSample, devSample, meanEx, devEx;
+		cv::meanStdDev((cv::Mat)currentSample, meanSample, devSample);
+		cv::meanStdDev(downsampled, meanEx, devEx);
+
+		// Calculate average variances.
+		cv::multiply(devSample, devSample, devSample);
+		cv::multiply(devEx, devEx, devEx);
+		float avgVarSample = cv::sum(devSample).val[0];
+		float avgVarEx = cv::sum(devEx).val[0];
+
+		// Set jitter amplitude to difference of variances.
+		return std::abs(avgVarSample - avgVarEx);
+	});
+
+	PyramidSynthesisSettings config(1.f, cv::Point2f(0.f, 0.f), randmonessSelector, kernel, seed);
+
+	// Toggle target guidance map.
+	if (!sourceProgressionFileName.empty())
+		config._guidanceMap = trgProgression;
+
+	// Setup progress handler.
+	const int passesPerLevel = config._correctionPasses;
 	
-	config._progressHandler.add([depth](int level, int pass, const cv::Mat& uv) -> void {
-		if (pass == -1)
-			std::cout << "Executed level " << level + 1 << "/" << depth << " (Correction pass skipped)" << std::endl;
-		else
-			std::cout << "Executed level " << level + 1 << "/" << depth << " (Correction pass " << pass + 1 << ")" << std::endl;
+	config._progressHandler.add([depth, passesPerLevel](int level, int pass, const cv::Mat& uv) -> void {
+		float progressPerCallback = (static_cast<float>(1.f) / static_cast<float>(depth)) / static_cast<float>(passesPerLevel);
+		float currentProgress = static_cast<float>(level) / static_cast<float>(depth);
+
+		if (pass != -1)
+			currentProgress += static_cast<float>(pass + 1) * progressPerCallback;
+			
+		displayProgress(currentProgress);
 	});
 
 	// Perform the synthesis.
-	std::cout << "Performing synthesis...";
+	std::cout << "Performing synthesis..." << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
 	synthesizer->synthesize(width, height, result, config);
 	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << " Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
+	std::cout << std::endl << "Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 	// Store the result uv map.
 	_persistence.saveSample(resultFileName, result);
