@@ -2,6 +2,8 @@
 
 #include <sampling.hpp>
 
+#include <algorithm>
+
 #include "log2.h"
 
 using namespace Texturize;
@@ -202,26 +204,118 @@ KNNIndex::KNNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& weig
 CoherentIndex::CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 	SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>())
 {
+	std::random_device seed;
+	_rng = std::mt19937(seed());
+
 	this->init();
 }
 
 CoherentIndex::CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap) :
 	SearchIndex(searchSpace, std::make_unique<PCADescriptorExtractor>()), _guidanceMap(guidanceMap)
 {
+	std::random_device seed;
+	_rng = std::mt19937(seed());
+
 	this->init();
 }
 
 void CoherentIndex::init()
+//void CoherentIndex::init(const int& k)
 {
+	const int k = 10;
+
 	// Precompute the neighborhood descriptors used to train data.
+	int kernel, kernelDev;
 	std::shared_ptr<const Sample> sample;
 	_searchSpace->sample(sample);
-	
+	_searchSpace->kernel(kernel);
+	kernelDev = (kernel - 1) / 2;
+
 	TEXTURIZE_ASSERT(sample->width() == sample->height());
+	TEXTURIZE_ASSERT_DBG(kernel % 2 == 1);
+	TEXTURIZE_ASSERT(k < kernel * kernel - 1);				// k should be smaller than the number of pixels inside the window around a pixel, excluding itself.
 
+	// Get appearance space descriptors at each level.
+	// TODO: min level should be the same as in config -> Need to pass this!
+	const int sampleLevel = log2(sample->width());
+	TEXTURIZE_ASSERT(sampleLevel >= 3);
 
-	// Form a descriptor vector from the sample.
-	_exemplarDescriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(*sample);
+	for (int level(3); level <= sampleLevel; ++level) {
+		// Blur the image for levels below the exemplar level.
+		cv::Mat blurred = (cv::Mat)(*sample);
+		double sigma = static_cast<double>(sampleLevel - level - 1);
+
+		// NOTE: This should be the preferred implementation, since it is memory-constant. However, OpenCV does currently not allow
+		//       BORDER_WRAP in it's cv::FilterEngine implementation, hence this workaround. See:
+		//       - https://github.com/opencv/opencv/issues/4599
+		//       - https://github.com/opencv/opencv/pull/10197
+		//if (level < sampleLevel)
+		//	cv::GaussianBlur(blurred, blurred, cv::Size(kernel, kernel), sigma, sigma, cv::BORDER_WRAP);
+		if (level < sampleLevel) {
+			cv::Rect mask(blurred.cols, blurred.rows, blurred.cols, blurred.rows);
+			cv::Mat buffer;
+			cv::repeat(blurred, 3, 3, buffer);
+			cv::GaussianBlur(buffer, buffer, cv::Size(kernel, kernel), sigma);
+			blurred = cv::Mat(buffer, mask);
+		}
+
+		// Form a descriptor vector from the sample at the current scale. Each row contains a descriptor.
+		cv::Mat descriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(Sample(blurred));
+		
+		// Store the descriptors at each level.
+		_exemplarDescriptors.push_back(descriptors);
+
+		// TODO: Discard border pixels here.
+
+		// Now that the descriptors are extracted, compute a set of candidates from a neighborhood around 
+		// each pixel. The neighborhood candidates are fetched from an increasing grid around it.
+		int stride = sample->width() / static_cast<int>((std::pow<int>(2, level)));
+
+		// Create a candidate array, where each row stores k candidate indices.
+		cv::Mat candidates = cv::Mat::zeros(0, k, CV_32S);
+
+		// Search distances for each descriptor.
+		for (int r(0); r < descriptors.rows; ++r) {
+			// Compute x and y coordinates from the row.
+			int x{ r % sample->width() }, y{ r / sample->width() };
+
+			// Collect indices of the neighborhood.
+			std::vector<std::pair<int, double>> neighbors;
+
+			for (int i(-kernelDev); i <= kernelDev; ++i)
+			for (int j(-kernelDev); j <= kernelDev; ++j) {
+				// Exclude the center pixel.
+				if (i == 0 && j == 0)
+					continue;
+
+				// Compute the neighborhood coordinate index and distance.
+				int cx{ x + (i * stride) }, cy{ y + (j * stride) };
+				Sample::wrapCoords(sample->width(), sample->height(), cx, cy);
+				int index = cy * sample->width() + cx;
+
+				// TODO: Maybe we can factor in difference between (source) guidance channels, need to think this through.
+				double distance = cv::norm(descriptors.row(r), descriptors.row(index), _normType);
+				neighbors.push_back(std::make_pair(index, distance));
+			}
+
+			// Sort the indices, based on the distances.
+			std::sort(neighbors.begin(), neighbors.end(), [](std::pair<int, double> lhs, std::pair<int, double> rhs) {
+				return lhs.second < rhs.second;
+			});
+
+			// Keep the k candidates.
+			std::vector<int> matches;
+
+			for (int n(0); n < k; ++n)
+				matches.push_back(neighbors[n].first);
+
+			cv::Mat c = cv::Mat(matches).t();
+			candidates.push_back(c);
+		}
+
+		// Store the candidate set for the current level.
+		_candidates.push_back(candidates);
+	}
 }
 
 CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<float>& targetDescriptor, const cv::Point2i& towards) const
@@ -230,7 +324,7 @@ CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<
 	std::shared_ptr<const Sample> exemplar;
 	_searchSpace->sample(exemplar);
 
-	std::vector<float> exemplarDescriptor = _exemplarDescriptors.row(towards.y * exemplar->width() + towards.x);
+	std::vector<float> exemplarDescriptor = _exemplarDescriptors[0].row(towards.y * exemplar->width() + towards.x);
 
 	// Only compare the dimensions of the target descriptor, that are also present in the exemplar descriptor.
 	std::vector<float> descriptor(&targetDescriptor[0], &targetDescriptor[exemplarDescriptor.size()]);
@@ -261,24 +355,39 @@ void CoherentIndex::getCoherentCandidate(const std::vector<float>& targetDescrip
 	_searchSpace->sample(exemplar);
 	int width = exemplar->width();
 	int height = exemplar->height();
+	int level = log2(width);
 
-	// From the sample neighbor described by the UV coordinates and the delta, retrieve the respective exemplar pixel.
-	cv::Point2i uvPos(at.x + delta[0], at.y + delta[1]);
-	Sample::wrapCoords(uv.cols, uv.rows, uvPos);
-	cv::Vec2f exemplarCoords = uv.at<cv::Vec2f>(uvPos);
+	cv::Point2i coherentPos(at.x + delta[0], at.y + delta[1]);
+	Sample::wrapCoords(width, height, coherentPos);
+	std::vector<int> candidates; 
+	_candidates[level].row(coherentPos.y * width + coherentPos.x).copyTo(candidates);
+	std::uniform_int_distribution<int> dist(0, candidates.size() - 1);
+	int candidateIndex = candidates[dist(_rng)];
 
-	// Calculate the pixel position in the exemplar from the UV coordinates.
-	cv::Point2i exemplarPos;
-	exemplarPos.x = static_cast<int>(roundf(exemplarCoords[0] * static_cast<float>(width))) - delta[0];
-	exemplarPos.y = static_cast<int>(roundf(exemplarCoords[1] * static_cast<float>(height))) - delta[1];
-	Sample::wrapCoords(width, height, exemplarPos);
+	// Convert index to coords.
+	// Compute distance, factor in difference of guidance channels.
+	// In NN-Search: select lowest distance of all candidates.
 
-	// Compare the exemplar descriptor to the target descriptor.
-	TDistance distance = this->measureVisualDistance(targetDescriptor, exemplarPos);
+	//int width = exemplar->width();
+	//int height = exemplar->height();
 
-	// Create and return a match instance.
-	std::get<0>(match) = cv::Vec2f(static_cast<float>(exemplarPos.x) / static_cast<float>(exemplar->width()), static_cast<float>(exemplarPos.y) / static_cast<float>(exemplar->height()));
-	std::get<1>(match) = distance;
+	//// From the sample neighbor described by the UV coordinates and the delta, retrieve the respective exemplar pixel.
+	//cv::Point2i uvPos(at.x + delta[0], at.y + delta[1]);
+	//Sample::wrapCoords(uv.cols, uv.rows, uvPos);
+	//cv::Vec2f exemplarCoords = uv.at<cv::Vec2f>(uvPos);
+
+	//// Calculate the pixel position in the exemplar from the UV coordinates.
+	//cv::Point2i exemplarPos;
+	//exemplarPos.x = static_cast<int>(roundf(exemplarCoords[0] * static_cast<float>(width))) - delta[0];
+	//exemplarPos.y = static_cast<int>(roundf(exemplarCoords[1] * static_cast<float>(height))) - delta[1];
+	//Sample::wrapCoords(width, height, exemplarPos);
+
+	//// Compare the exemplar descriptor to the target descriptor.
+	//TDistance distance = this->measureVisualDistance(targetDescriptor, exemplarPos);
+
+	//// Create and return a match instance.
+	//std::get<0>(match) = cv::Vec2f(static_cast<float>(exemplarPos.x) / static_cast<float>(exemplar->width()), static_cast<float>(exemplarPos.y) / static_cast<float>(exemplar->height()));
+	//std::get<1>(match) = distance;
 }
 
 bool CoherentIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist, float* dist) const
@@ -397,15 +506,11 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 RandomWalkIndex::RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace) :
 	CoherentIndex(searchSpace)
 {
-	std::random_device seed;
-	_rng = std::mt19937(seed());
 }
 
 RandomWalkIndex::RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap) :
 	CoherentIndex(searchSpace, guidanceMap)
 {
-	std::random_device seed;
-	_rng = std::mt19937(seed());
 }
 
 cv::Vec2f RandomWalkIndex::getRandomPixelAround(const cv::Vec2f& point, int radius, int dominantDimensionExtent) const

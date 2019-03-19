@@ -382,10 +382,13 @@ namespace Texturize {
 
 		/// \brief Describes a match as a set of candidate coordinates and similarity.
 		typedef std::tuple<TCandidate, TDistance>	TMatch;						// Matches are tuples of candidates and their distance towards the sample descriptor.
-		
+
 	private:
-		cv::Mat _exemplarDescriptors;
+		std::vector<cv::Mat> _exemplarDescriptors, _candidates;
 		const Sample _guidanceMap;
+
+	protected:
+		mutable std::mt19937 _rng;
 
 	public:
 		/// \brief Creates a new search index.
@@ -442,9 +445,6 @@ namespace Texturize {
 	class TEXTURIZE_API RandomWalkIndex :
 		public CoherentIndex
 	{
-	private:
-		mutable std::mt19937 _rng;
-
 	public:
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
