@@ -217,18 +217,20 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 
 cv::Vec2f PyramidSynthesizer::scaleTexel(const cv::Vec2f& uv, const cv::Vec2f& delta, float spacing) const
 {
-	// Factor `2.f` results from upsampled (row = 2 * currRow).
-	cv::Vec2f r = (2.f * uv) + (spacing * delta);
-	//cv::Vec2f r = uv + (spacing * delta);
-	Sample::wrapCoords(r);
+	// Spacing is calculated from 1/(2^lvl); delta is a vector from {[0, 0]; [1, 0]; [0, 1]; [1, 1]}.
+	cv::Vec2f scaled = uv + (delta * spacing);
+	
+	// Normalize the coords to be in 0 <= x, y < 1.
+	scaled[0] -= (int)scaled[0];
+	scaled[1] -= (int)scaled[1];
 
-	return r;
+	return scaled;
 }
 
 cv::Vec2f PyramidSynthesizer::translateTexel(const cv::Point2i& at, const PyramidSynthesizerState& state) const
 {
 	float spacing = state.getSpacing();
-	float randomness = state.getRandomness(state.level());
+	float randomness = state.getRandomness();
 
 	// NOTE: state.getHash() returns a quantized vector H:Z² -> [-1, 1]². The implicit cast happening here produces non-null
 	// vectors during the calculation of `t`, which would not be possible otherwise.
@@ -350,7 +352,7 @@ void ParallelPyramidSynthesizer::upsample(cv::Mat& sample, const PyramidSynthesi
 	// Create a new sample that is twice as large.
 	cv::Mat upsample(sample.size() * 2, CV_32FC2);
 
-	// One pixel within the current sample results in four pixels in the result sample.
+	// Get the interpolation offset.
 	float spacing = state.getSpacing();
 
 	sample.forEach<cv::Vec2f>([this, spacing, &upsample](const cv::Vec2f& coords, const int* idx) -> void {
