@@ -117,6 +117,8 @@ int main(int argc, const char** argv) {
 	srcProgression = Sample(cv::Mat::zeros(exemplar.size(), CV_32FC1));
 	trgProgression = Sample(cv::Mat::zeros(exemplar.size(), CV_32FC1));
 
+	std::cout << "Initializing search index... ";
+	auto start = std::chrono::high_resolution_clock::now();
 	if (!sourceProgressionFileName.empty()) {
 		_persistence.loadSample(sourceProgressionFileName, srcProgression);
 		srcProgression.weight(inhomogeneity);
@@ -147,6 +149,8 @@ int main(int argc, const char** argv) {
 		index = std::make_shared<CoherentIndex>(std::move(descriptor));
 		//index = std::make_shared<RandomWalkIndex>(std::move(descriptor));
 	}
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout << std::endl << "Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 #ifdef _DEBUG
 	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
@@ -204,9 +208,9 @@ int main(int argc, const char** argv) {
 
 	// Perform the synthesis.
 	std::cout << "Performing synthesis..." << std::endl;
-	auto start = std::chrono::high_resolution_clock::now();
+	start = std::chrono::high_resolution_clock::now();
 	synthesizer->synthesize(width, height, result, config);
-	auto end = std::chrono::high_resolution_clock::now();
+	end = std::chrono::high_resolution_clock::now();
 	std::cout << std::endl << "Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 	// Store the result uv map.
