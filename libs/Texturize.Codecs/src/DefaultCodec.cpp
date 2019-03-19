@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include <codecs.hpp>
-#include <opencv2\highgui.hpp>
 
 using namespace Texturize;
 
