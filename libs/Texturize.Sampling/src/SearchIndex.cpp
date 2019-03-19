@@ -216,6 +216,9 @@ void CoherentIndex::init()
 	// Precompute the neighborhood descriptors used to train data.
 	std::shared_ptr<const Sample> sample;
 	_searchSpace->sample(sample);
+	
+	TEXTURIZE_ASSERT(sample->width() == sample->height());
+
 
 	// Form a descriptor vector from the sample.
 	_exemplarDescriptors = _descriptorExtractor->calculateNeighborhoodDescriptors(*sample);
@@ -235,16 +238,20 @@ CoherentIndex::TDistance CoherentIndex::measureVisualDistance(const std::vector<
 	// Measure the visual distance based on the provided norm type (default is sum of squared distances).
 	TEXTURIZE_ASSERT(exemplarDescriptor.size() == descriptor.size());
 
-	// Compute the guidance weight.
+	// If there are any guidance channels, compute the guidance weight.
 	float weight(0.f);
-	Sample::Texel texel;
-	_guidanceMap.getNeighborhood(towards, 1, texel);
+	
+	if (exemplarDescriptor.size() != targetDescriptor.size()) {
+		Sample::Texel texel;
+		_guidanceMap.getNeighborhood(towards, 1, texel);
 
-	for (size_t cn(exemplarDescriptor.size()); cn < targetDescriptor.size(); ++cn)
-		weight += std::abs(texel[cn - exemplarDescriptor.size()] - targetDescriptor[cn]);
+		for (size_t cn(exemplarDescriptor.size()); cn < targetDescriptor.size(); ++cn)
+			weight += std::abs(texel[cn - exemplarDescriptor.size()] - targetDescriptor[cn]);
 
-	weight /= static_cast<float>(targetDescriptor.size() - exemplarDescriptor.size());
-	return static_cast<float>(cv::norm(descriptor, exemplarDescriptor, _normType)) * weight;
+		weight /= static_cast<float>(targetDescriptor.size() - exemplarDescriptor.size());
+	}
+
+	return static_cast<float>(cv::norm(descriptor, exemplarDescriptor, _normType)) + weight;
 }
 
 void CoherentIndex::getCoherentCandidate(const std::vector<float>& targetDescriptor, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, TMatch& match) const
