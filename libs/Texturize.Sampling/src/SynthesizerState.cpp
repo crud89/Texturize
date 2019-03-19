@@ -48,20 +48,22 @@ const CoordinateHash* PyramidSynthesizerState::getHash() const
 	return _hash.get();
 }
 
-float PyramidSynthesizerState::getRandomness(int level) const
+float PyramidSynthesizerState::getRandomness() const
 {
-	return _configEx._randomnessSelector(level);
+	return _randomness;
 }
 
 float PyramidSynthesizerState::getSpacing() const
 {
-	return 1.f / _configEx._scale;
+	float power = 1.f / std::pow<float>(2.f, static_cast<float>(this->level() + 1.f));
+	return power * _configEx._scale;
 }
 
 void PyramidSynthesizerState::update(const int level, const cv::Mat& sample)
 {
 	_level = level;
 	_sample = sample;
+	_randomness = _configEx._randomnessSelector(level, sample);
 }
 
 cv::Mat PyramidSynthesizerState::sample() const

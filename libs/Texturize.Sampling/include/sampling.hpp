@@ -561,7 +561,7 @@ namespace Texturize {
 		/// \brief Defines a function, that returns a value between 0.0 and 1.0, based on a pyramid level, passed to it as an integer.
 		///
 		/// \see _randomnessSelector
-		typedef std::function<float(int)> RandomnessSelectorFunction;
+		typedef std::function<float(int, const cv::Mat&)> RandomnessSelectorFunction;
 
 		/// \brief A callback that can report the current synthesis progress.
 		///
@@ -599,17 +599,6 @@ namespace Texturize {
 		/// \see Texturize::PyramidSynthesisSettings::ProgressHandler
 		SubpassFeedbackHandler _feedbackHandler;
 
-	public:
-		/// \brief The scale factor that is used to align the output spacing within scale-invariant algorithms.
-		///
-		/// Pyramid-based algorithms typically start synthesis within a single point that gets upsampled over and over again until the final sample size has been reached. 
-		/// However, such scale-invariant implementations have no deal of the actual extent of the original exemplar. Therefor the scale factor is used to adjust the output 
-		/// spacing within the synthesis result between two texels.
-		/// 
-		/// For example an 128 square texel exemplar will appear scaled up by a factor of two, if a scale value of 256 is provided and scaled down by a factor of two for 
-		/// a value of 64.0.
-		float _scale;
-
 		/// \brief A function that returns the amount of randomness per pyramid level.
 		///
 		/// The randomness selector function is used to control the amount of jitter per pyramid level. It is a function that returns a value between 0.0 and 1.0, based on
@@ -622,6 +611,10 @@ namespace Texturize {
 		/// \see Sylvain Lefebvre and Hugues Hoppe. "Parallel Controllable Texture Synthesis." In: ACM Trans. Graph. 24.3 (July 2005), pp. 777-786. issn: 0730-0301. doi: 10.1145/1073204.1073261. url: http://doi.acm.org/10.1145/1073204.1073261
 		/// \see Sylvain Lefebvre and Hugues Hoppe. "Appearance-space Texture Synthesis." In: ACM Trans. Graph. 25.3 (July 2006), pp. 541-548. issn: 0730-0301. doi: 10.1145/1141911.1141921. url: http://doi.acm.org/10.1145/1141911.1141921. 
 		RandomnessSelectorFunction _randomnessSelector;
+
+	public:
+		/// \brief The scale factor that is used to align the output spacing within scale-invariant algorithms.
+		float _scale{ 1.f };
 
 		/// \brief The lower threshold, defining the pyramid level from which correction passes are executed.
 		///
@@ -782,9 +775,9 @@ namespace Texturize {
 		const CoordinateHash* getHash() const;
 
 		/// \brief Returns the jitter amplitude at a certain pyramid level.
-		/// \param level The pyramid level at which the jitter amplitude is requested.
+		/// 
 		/// \returns A value between 0.0 and 1.0, stating the jitter amplitude at the requested pyramid level.
-		float getRandomness(int level) const;
+		float getRandomness() const;
 
 		/// \brief Returns the synthesis scale factor.
 		/// \returns The synthesis scale factor.
@@ -795,6 +788,7 @@ namespace Texturize {
 	private:
 		cv::Mat _sample = cv::Mat();
 		int _level = 0;
+		float _randomness = 0.f;
 
 	public:
 		/// \brief Updates the synthesizer state.

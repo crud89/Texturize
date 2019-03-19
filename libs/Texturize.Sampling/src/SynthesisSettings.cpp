@@ -58,12 +58,12 @@ PyramidSynthesisSettings::PyramidSynthesisSettings(float scale, RandomnessSelect
 }
 
 PyramidSynthesisSettings::PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, float randomness, int kernel, uint64_t rngState) :
-	PyramidSynthesisSettings(scale, cv::Point2f(0.f, 0.f), [randomness](int) { return randomness; }, rngState)
+	PyramidSynthesisSettings(scale, cv::Point2f(0.f, 0.f), [randomness](int, const cv::Mat&) { return randomness; }, rngState)
 {
 }
 
 PyramidSynthesisSettings::PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, const std::vector<float>& randomness, int kernel, uint64_t rngState) :
-	PyramidSynthesisSettings(scale, cv::Point2f(0.f, 0.f), [randomness](int l) { return l >= randomness.size() ? 0.5f : randomness[l]; }, rngState)
+	PyramidSynthesisSettings(scale, cv::Point2f(0.f, 0.f), [randomness](int l, const cv::Mat&) { return l >= randomness.size() ? 0.5f : randomness[l]; }, rngState)
 {
 }
 
