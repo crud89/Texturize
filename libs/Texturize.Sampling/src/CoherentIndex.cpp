@@ -121,8 +121,9 @@ void CoherentIndex::init(const int& k)
 						guidanceDistance += abs(sourceGuidance[i] - targetGuidance[i]);
 				}
 
-				neighbors.push_back(std::make_pair(index, guidanceDistance));
-				//neighbors.push_back(std::make_pair(index, distance + guidanceDistance));
+				//neighbors.push_back(std::make_pair(index, guidanceDistance));
+				//neighbors.push_back(std::make_pair(index, distance));
+				neighbors.push_back(std::make_pair(index, distance + guidanceDistance));
 			}
 
 			// Sort the indices, based on the distances.
@@ -145,14 +146,16 @@ void CoherentIndex::init(const int& k)
 	}
 }
 
-void CoherentIndex::getCoherentCandidate(const cv::Point2i& exemplarCoords, int& candidate) const
+void CoherentIndex::getCoherentCandidate(const int level, const cv::Point2i& exemplarCoords, int& candidate) const
 {
+	// TODO: Rewrite, return neighboring pixels.
+
 	// Get the search space transformed exemplar.
 	std::shared_ptr<const Sample> exemplar;
 	_searchSpace->sample(exemplar);
 	int width = exemplar->width();
 	int height = exemplar->height();
-	int level = log2(width);
+	//int level = log2(width);
 
 	// Make sure the coords are valid.
 	cv::Point2i coherentPos = exemplarCoords;
@@ -167,12 +170,12 @@ void CoherentIndex::getCoherentCandidate(const cv::Point2i& exemplarCoords, int&
 	candidate = candidates[dist(_rng)];
 }
 
-void CoherentIndex::getCoherentCandidate(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int& candidate) const
+void CoherentIndex::getCoherentCandidate(const int level, const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int& candidate) const
 {
 	// Resolve the delta and return the candidate.
 	cv::Point2i coords(exemplarCoords.x + delta[0], exemplarCoords.y + delta[1]);
 
-	this->getCoherentCandidate(coords, candidate);
+	this->getCoherentCandidate(level, coords, candidate);
 }
 
 cv::Mat CoherentIndex::getDescriptor(const int level, const int index) const
@@ -208,7 +211,7 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 	_searchSpace->sample(exemplar);
 	CoordinateType width = static_cast<CoordinateType>(exemplar->width());
 	CoordinateType height = static_cast<CoordinateType>(exemplar->height());
-	int level = log2(exemplar->width());
+	int level = log2(uv.cols);
 
 	// For each neighboring pixel, request the coherent candidate coordinates.
 	std::vector<int> candidates;
@@ -227,20 +230,20 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 
 		// Get a candidate for the neighbor and remember it.
 		int candidate;
-		this->getCoherentCandidate(coords, cv::Vec2i(x, y), candidate);
+		this->getCoherentCandidate(level, coords, cv::Vec2i(x, y), candidate);
 		candidates.push_back(candidate);
 
 		//// Get the neighboring uv coords at the position and make them absolute
 		//cv::Point2i coords(at.x + x, at.y + y);
 		//Sample::wrapCoords(uv.cols, uv.rows, coords);
 		//PositionType uvCoords = uv.at<PositionType>(coords);
-		//coords = cv::Point2i(uvCoords[0] * width, uvCoords[1] * height);
+		//coords = cv::Point2i(static_cast<int>(uvCoords[0] * width), static_cast<int>(uvCoords[1] * height));
 
 		//// Get a candidate for the neighbor and remember it. 
 		//// The coordinate shift in uvCoords is inversely applied in the exemplar to get the neighbor of the pixel 
 		//// inside the exemplar and then search for candidates of this pixel.
 		//int candidate;
-		//this->getCoherentCandidate(coords, cv::Vec2i(-x, -y), candidate);
+		//this->getCoherentCandidate(level, coords, cv::Vec2i(-x, -y), candidate);
 		//candidates.push_back(candidate);
 	}
 
@@ -284,8 +287,8 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 			for (size_t i(0); i < sourceGuidance.size(); ++i)
 				guidanceDistance += abs(sourceGuidance[i] - targetGuidance[i]);
 
-			distance = guidanceDistance;
-			//distance += guidanceDistance;
+			//distance = guidanceDistance;
+			distance += guidanceDistance;
 		}
 
 		// Discard candidates that are too similar.

@@ -428,8 +428,8 @@ namespace Texturize {
 		void init(const int& k);
 
 	protected:
-		void getCoherentCandidate(const cv::Point2i& exemplarCoords, int& candidate) const;
-		void getCoherentCandidate(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int& candidate) const;
+		void getCoherentCandidate(const int level, const cv::Point2i& exemplarCoords, int& candidate) const;
+		void getCoherentCandidate(const int level, const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int& candidate) const;
 		//void getCoherentCandidates(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int k, std::vector<int>& candidates) const;
 		cv::Mat getDescriptor(const int level, const int index) const;
 

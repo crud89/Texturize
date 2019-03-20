@@ -174,16 +174,16 @@ int main(int argc, const char** argv) {
 		//std::shared_ptr<ISearchIndex> index = std::make_shared<KNNIndex>(std::move(descriptor), std::move(descriptorExtractor));
 		//index = std::make_shared<ANNIndex>(std::move(descriptor), srcProgression);
 		//index = std::make_shared<KNNIndex>(std::move(descriptor), srcProgression);
-		index = std::make_shared<CoherentIndex>(std::move(descriptor), srcProgression);
+		index = std::make_shared<CoherentIndex>(std::move(descriptor), srcProgression, 10);
 		//index = std::make_shared<RandomWalkIndex>(std::move(descriptor), srcProgression);
 	} else {
 		//index = std::make_shared<ANNIndex>(std::move(descriptor));
 		//index = std::make_shared<KNNIndex>(std::move(descriptor));
-		index = std::make_shared<CoherentIndex>(std::move(descriptor));
+		index = std::make_shared<CoherentIndex>(std::move(descriptor), 10);
 		//index = std::make_shared<RandomWalkIndex>(std::move(descriptor));
 	}
 	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << std::endl << "Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
+	std::cout << "Done! (" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms)" << std::endl;
 
 #ifdef _DEBUG
 	auto synthesizer = PyramidSynthesizer::createSynthesizer(index);
@@ -196,31 +196,33 @@ int main(int argc, const char** argv) {
 	// Randomness Selector Function
 	// TODO: This should go into the framework.
 	int depth = log2(width);
-	PyramidSynthesisSettings::RandomnessSelectorFunction randmonessSelector([&exemplar, &jitterIntensity](int level, const cv::Mat& uv) -> float {
-		// Sample the exemplar.
-		Sample currentSample;
-		exemplar.sample(uv, currentSample);
+	PyramidSynthesisSettings::RandomnessSelectorFunction randomnessSelector([&exemplar, &jitterIntensity, &depth](int level, const cv::Mat& uv) -> float {
+		//// Sample the exemplar.
+		//Sample currentSample;
+		//exemplar.sample(uv, currentSample);
 
-		// Get a resized copy of the exemplar.
-		cv::Mat downsampled;
-		cv::resize((cv::Mat)exemplar, downsampled, uv.size());
+		//// Get a resized copy of the exemplar.
+		//cv::Mat downsampled;
+		//cv::resize((cv::Mat)exemplar, downsampled, uv.size());
 
-		// Calculate variances from both: current sample and exemplar at current scale.
-		cv::Mat meanSample, devSample, meanEx, devEx;
-		cv::meanStdDev((cv::Mat)currentSample, meanSample, devSample);
-		cv::meanStdDev(downsampled, meanEx, devEx);
+		//// Calculate variances from both: current sample and exemplar at current scale.
+		//cv::Mat meanSample, devSample, meanEx, devEx;
+		//cv::meanStdDev((cv::Mat)currentSample, meanSample, devSample);
+		//cv::meanStdDev(downsampled, meanEx, devEx);
 
-		// Calculate average variances.
-		cv::multiply(devSample, devSample, devSample);
-		cv::multiply(devEx, devEx, devEx);
-		float avgVarSample = cv::sum(devSample).val[0];
-		float avgVarEx = cv::sum(devEx).val[0];
+		//// Calculate average variances.
+		//cv::multiply(devSample, devSample, devSample);
+		//cv::multiply(devEx, devEx, devEx);
+		//float avgVarSample = cv::sum(devSample).val[0];
+		//float avgVarEx = cv::sum(devEx).val[0];
 
-		// Set jitter amplitude to difference of variances.
-		return jitterIntensity * std::abs(avgVarSample - avgVarEx);
+		//// Set jitter amplitude to difference of variances.
+		//return jitterIntensity * std::abs(avgVarSample - avgVarEx);
+
+		return 0.0f;
 	});
 
-	PyramidSynthesisSettings config(1.f, cv::Point2f(0.f, 0.f), randmonessSelector, kernel, seed);
+	PyramidSynthesisSettings config(1.f, cv::Point2f(0.f, 0.f), randomnessSelector, kernel, seed);
 
 	// Toggle target guidance map.
 	if (!sourceProgressionFileName.empty())
