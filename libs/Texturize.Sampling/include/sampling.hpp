@@ -261,7 +261,7 @@ namespace Texturize {
 	protected:
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
-		SearchIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, cv::NormTypes normType = cv::NORM_L2SQR);
+		SearchIndex(std::shared_ptr<ISearchSpace> searchSpace, std::shared_ptr<IDescriptorExtractor> descriptorExtractor, cv::NormTypes normType = cv::NORM_L2);
 
 		virtual ~SearchIndex() = default;
 
@@ -411,7 +411,7 @@ namespace Texturize {
 	{
 	private:
 		std::vector<cv::Mat> _exemplarDescriptors, _candidates;
-		const Sample _guidanceMap;
+		const std::optional<const Sample> _guidanceMap;
 		const unsigned int _candidatesPerDescriptor;
 
 	protected:

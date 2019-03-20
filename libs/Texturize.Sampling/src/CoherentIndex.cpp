@@ -106,11 +106,23 @@ void CoherentIndex::init(const int& k)
 				// Compute the neighborhood coordinate index and distance.
 				int cx{ x + (i * stride) }, cy{ y + (j * stride) };
 				Sample::wrapCoords(sample->width(), sample->height(), cx, cy);
-				int index = cy * sample->width() + cx;
 
-				// TODO: Maybe we can factor in difference between (source) guidance channels, need to think this through.
-				double distance = cv::norm(descriptors.row(r), descriptors.row(index), _normType);
-				neighbors.push_back(std::make_pair(index, distance));
+				// Get the index of the candidate and compute the distance.
+				int index = cy * sample->width() + cx;
+				double distance = cv::norm(descriptors.row(r), descriptors.row(index), _normType), guidanceDistance{ 0 };
+
+				// If there are source guidance channels, also factor them in.
+				if (_guidanceMap.has_value()) {
+					Sample::Texel sourceGuidance, targetGuidance;
+					_guidanceMap.value().at(cv::Point2i(x, y), sourceGuidance);
+					_guidanceMap.value().at(cv::Point2i(cx, cy), targetGuidance);
+
+					for (size_t i(0); i < sourceGuidance.size(); ++i)
+						guidanceDistance += abs(sourceGuidance[i] - targetGuidance[i]);
+				}
+
+				neighbors.push_back(std::make_pair(index, guidanceDistance));
+				//neighbors.push_back(std::make_pair(index, distance + guidanceDistance));
 			}
 
 			// Sort the indices, based on the distances.
@@ -198,37 +210,83 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 	CoordinateType height = static_cast<CoordinateType>(exemplar->height());
 	int level = log2(exemplar->width());
 
-	// Get the uv coords at the position.
-	PositionType uvCoords = uv.at<PositionType>(at);
-
-	// Make them absolute.
-	cv::Point2i coords = cv::Point2i(uvCoords[0] * width, uvCoords[1] * height);
-
 	// For each neighboring pixel, request the coherent candidate coordinates.
 	std::vector<int> candidates;
 
 	for (int x(-1); x <= 1; ++x)
-		for (int y(-1); y <= 1; ++y) {
-			// Do not include self.
-			if (x == 0 && y == 0)
-				continue;
+	for (int y(-1); y <= 1; ++y) {
+		// Do not include self.
+		if (x == 0 && y == 0)
+			continue;
 
-			// Get a candidate for the neighbor and remember it.
-			int candidate;
-			this->getCoherentCandidate(coords, cv::Vec2i(x, y), candidate);
-			candidates.push_back(candidate);
-		}
+		// Get the uv coords at the position.
+		PositionType uvCoords = uv.at<PositionType>(at);
+
+		// Make them absolute.
+		cv::Point2i coords = cv::Point2i(uvCoords[0] * width, uvCoords[1] * height);
+
+		// Get a candidate for the neighbor and remember it.
+		int candidate;
+		this->getCoherentCandidate(coords, cv::Vec2i(x, y), candidate);
+		candidates.push_back(candidate);
+
+		//// Get the neighboring uv coords at the position and make them absolute
+		//cv::Point2i coords(at.x + x, at.y + y);
+		//Sample::wrapCoords(uv.cols, uv.rows, coords);
+		//PositionType uvCoords = uv.at<PositionType>(coords);
+		//coords = cv::Point2i(uvCoords[0] * width, uvCoords[1] * height);
+
+		//// Get a candidate for the neighbor and remember it. 
+		//// The coordinate shift in uvCoords is inversely applied in the exemplar to get the neighbor of the pixel 
+		//// inside the exemplar and then search for candidates of this pixel.
+		//int candidate;
+		//this->getCoherentCandidate(coords, cv::Vec2i(-x, -y), candidate);
+		//candidates.push_back(candidate);
+	}
 
 	// Get the descriptor for the current sample at the requested position.
-	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.rows + at.x);
+	Sample::Texel targetGuidance, targetDescriptor = descriptors.row(at.y * uv.rows + at.x);
+
+	// If there is a guidance map, ensure that all guidance channels are provided in the descriptor.
+	if (_guidanceMap.has_value()) {
+		int guidanceChannels = _exemplarDescriptors[level].cols;
+		TEXTURIZE_ASSERT(targetDescriptor.size() == guidanceChannels + _guidanceMap.value().channels());
+
+		// Furthermore, divide the target descriptor in two parts: The actual descriptor values and the appended guidance values.
+		targetGuidance = std::vector<float>(targetDescriptor.begin() + guidanceChannels, targetDescriptor.end());
+		targetDescriptor = std::vector<float>(targetDescriptor.begin(), targetDescriptor.begin() + guidanceChannels);
+	}
 
 	// Compare each candidate descriptor with target descriptor.
 	std::vector<MatchType> matches;
 
 	for each (const auto& candidate in candidates) {
-		// Compute the distance between the descriptors.
-		DistanceType distance = static_cast<DistanceType>(cv::norm(_exemplarDescriptors[level].row(candidate), targetDescriptor, _normType));
+		// Compute the position of the candidate.
 		PositionType candidatePos(static_cast<CoordinateType>(candidate % exemplar->width()) / width, static_cast<CoordinateType>(candidate / exemplar->width()) / height);
+
+		// Get the pixel descriptor of the pixel in the exemplar.
+		Sample::Texel sourceGuidance, sourceDescriptor = _exemplarDescriptors[level].row(candidate);
+
+		// Compute the distance between the descriptors.
+		DistanceType distance = static_cast<DistanceType>(cv::norm(sourceDescriptor, targetDescriptor, _normType));
+
+		// If a guidance map is provided, get the guidance channel values of the candidate and factor the distance 
+		// between the guidance channels into the actual distance.
+		if (_guidanceMap.has_value()) {
+			// Get the source guidance channels.
+			_guidanceMap.value().at(candidatePos, sourceGuidance);
+			
+			TEXTURIZE_ASSERT(sourceGuidance.size() == targetGuidance.size());
+
+			// Get the distance between each channel.
+			DistanceType guidanceDistance;
+
+			for (size_t i(0); i < sourceGuidance.size(); ++i)
+				guidanceDistance += abs(sourceGuidance[i] - targetGuidance[i]);
+
+			distance = guidanceDistance;
+			//distance += guidanceDistance;
+		}
 
 		// Discard candidates that are too similar.
 		if (minDist > distance)
