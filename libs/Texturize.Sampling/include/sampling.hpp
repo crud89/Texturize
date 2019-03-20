@@ -133,19 +133,32 @@ namespace Texturize {
 		cv::Mat calculateNeighborhoodDescriptors(const Sample& exemplar, const cv::Mat& uv, const std::unique_ptr<cv::PCA>& projector) const;
 	};
 
-	/// \brief An interface that is used to access index search spaces.
-	///
-	/// A *search index* is created from a *search space* prior to synthesis in order to match pixel neighborhoods. There are different approaches to this, so this 
-	/// interface only provides methods for neighborhood matching. The actual indexing process needs to be provided along implementations of this interface.
-	class TEXTURIZE_API ISearchIndex {
+	/// \brief
+	template <typename TDistance, typename TCoord>
+	class TEXTURIZE_API ISearchIndex_ {
+	public:
+		/// \brief The type used to describe differences between descriptors.
+		typedef TDistance DistanceType;
+
+		/// \brief The type used to describe a coordinate.
+		typedef TCoord CoordinateType;
+
+		/// \brief The type used to describe a position as a two-dimensional vector of coordinates.
+		typedef cv::Vec<CoordinateType, 2> PositionType;
+
+		/// \brief The type used to describe a match as a set of a position and a distance.
+		typedef std::pair<PositionType, TDistance> MatchType;
+
+		/////\brief The type of a descriptor value.
+		// typedef TValue ValueType
+
 	public:
 		/// \brief Finds the best match for a given pixel neighborhood.
 		/// \param descriptors An array, containing all neighborhood descriptors of the currently synthesized sample.
 		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
 		/// \param at The x and y coordinates of the pixel to match.
-		/// \param match The u and v coordinates of the best match.
+		/// \param match A pair of coordinates of the best match and the distance between the match and the sample descriptor.
 		/// \param minDist The minimum distance between the source texel and match within the exemplar.
-		/// \param dist A pointer to a value, containing the distance between the source texel and match, after the method has returned.
 		/// \returns True, if a match has been found, given the provided constraints.
 		///
 		/// Actual synthesis is a two-phase process. After analyzing the exemplar, a set of neighborhood descriptors is stored within a *search space*. Those neighborhoods,
@@ -156,24 +169,46 @@ namespace Texturize {
 		/// describes the L2 distance between both texel vectors, i.e. their "similarity".
 		///
 		/// \see Texturize::ISearchSpace
-		virtual bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const = 0;
+		virtual bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const = 0;
 
 		/// \brief Finds the best matches for a given pixel neighborhood.
 		/// \param descriptors An array, containing all neighborhood descriptors of the currently synthesized sample.
 		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
 		/// \param at The x and y coordinates of the pixel to match.
-		/// \param matches A vector of u and v coordinates of the best matches.
+		/// \param matches A vector of pairs of coordinates of the best matches and the distances between the match and the sample descriptor.
 		/// \param k The number of matches to find.
 		/// \param minDist The minimum distance between the source texel and a match within the exemplar.
-		/// \param dist A pointer to a vector, containing the distances between the source texel and match, after the method has returned.
 		/// \returns True, if at least one match has been found, given the provided constraints.
 		///
 		/// This method typically runs `findNearestNeighbor` multiple times, excluding the already found matches. Please refer to the notes there.
 		///
 		/// \see Texturize::ISearchSpace
 		/// \see Texturize::ISearchIndex::findNearestNeighbor
-		virtual bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const = 0;
+		virtual bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const = 0;
+	};
 
+	/// \brief A search index interface that uses single precision distances and coordinates.
+	typedef ISearchIndex_<float, float> ISinglePrecisionSearchIndex32;
+
+	/// \brief A search index interface that uses double precision distances and coordinates.
+	typedef ISearchIndex_<double, double> IDoublePrecisionSearchIndex64;
+
+	/// \brief A search index interface that uses single precision distances and double precision coordinates.
+	typedef ISearchIndex_<float, double> ISinglePrecisionSearchIndex64;
+
+	/// \brief A search index interface that uses double precision distances and single precision coordinates.
+	typedef ISearchIndex_<double, float> IDoublePrecisionSearchIndex32;
+
+	/// \brief A commonly used search index interface.
+	typedef IDoublePrecisionSearchIndex32 IDefaultSearchIndex;
+
+	/// \brief An interface that is used to access index search spaces.
+	///
+	/// A *search index* is created from a *search space* prior to synthesis in order to match pixel neighborhoods. There are different approaches to this, so this 
+	/// interface only provides methods for neighborhood matching. The actual indexing process needs to be provided along implementations of this interface.
+	class TEXTURIZE_API ISearchIndex :
+		public IDefaultSearchIndex {
+	public:
 		/// \brief Returns a reference of the search space, indexed by the current instance.
 		/// \returns A reference of the search space, indexed by the current instance.
 		virtual std::shared_ptr<ISearchSpace> getSearchSpace() const = 0;
@@ -244,6 +279,7 @@ namespace Texturize {
 		public SearchIndex
 	{
 	protected:
+		//template <typename TVal = ValueType>
 		template <typename TVal = float>
 		struct _L2Ex {
 		private:
@@ -303,13 +339,13 @@ namespace Texturize {
 			}
 		};
 
-		typedef typename ANNIndex::_L2Ex<float>           DistanceType;
-		typedef typename ::cvflann::Index<DistanceType>   IndexType;
-		typedef typename DistanceType::ElementType        ElementType;
-		typedef typename ::cvflann::Matrix<ElementType>   MatrixType;
+		typedef typename ANNIndex::_L2Ex<float>           TDistance;
+		typedef typename ::cvflann::Index<TDistance>      TIndex;
+		typedef typename TDistance::ElementType           TElement;
+		typedef typename ::cvflann::Matrix<TElement>      TMatrix;
 
 	private:
-		std::unique_ptr<IndexType> _index;
+		std::unique_ptr<TIndex> _index;
 		cv::Mat _descriptors;
 		int _sampleWidth{ 0 };
 
@@ -325,13 +361,13 @@ namespace Texturize {
 		ANNIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const cv::Ptr<const cv::flann::IndexParams> indexParams = cv::makePtr<const cv::flann::KDTreeIndexParams>(), cv::NormTypes normType = cv::NORM_L2SQR);
 
 	public:
-		bool findNearestNeighbor(const std::vector<float>& descriptor, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const;
-		bool findNearestNeighbors(const std::vector<float>& descriptor, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const;
+		bool findNearestNeighbor(const std::vector<float>& descriptor, MatchType& match, DistanceType minDist = 0.0f) const;
+		bool findNearestNeighbors(const std::vector<float>& descriptor, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0.0f) const;
 
 		// ISearchIndex
 	public:
-		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const override;
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const override;
+		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const override;
 	};
 
 	/// \brief A search index implementation that clusters the search space using a quantized kd-tree, which allows for fast neighborhood queries.
@@ -373,19 +409,10 @@ namespace Texturize {
 	class TEXTURIZE_API CoherentIndex :
 		public SearchIndex
 	{
-	protected:
-		/// \brief The type of a match candidate.
-		typedef cv::Vec2f							TCandidate;					// A candidate is described by it's position within the exemplar.
-		
-		/// The type of the similarity distance.
-		typedef float								TDistance;					// The distance between two candidates is described by a single-precision floating point value.
-
-		/// \brief Describes a match as a set of candidate coordinates and similarity.
-		typedef std::tuple<TCandidate, TDistance>	TMatch;						// Matches are tuples of candidates and their distance towards the sample descriptor.
-
 	private:
 		std::vector<cv::Mat> _exemplarDescriptors, _candidates;
 		const Sample _guidanceMap;
+		const unsigned int _candidatesPerDescriptor;
 
 	protected:
 		mutable std::mt19937 _rng;
@@ -394,42 +421,22 @@ namespace Texturize {
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
-		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace);
-		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap);
+		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const int k = 10);
+		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const int k = 10);
 
 	private:
-		void init();
+		void init(const int& k);
 
 	protected:
-		/// \brief Calculates the similarity between a candidate and descriptor.
-		/// \param targetDescriptor The descriptor to compare against a candidate from the exemplar sample.
-		/// \param towards The point from which the candidate descriptor should be compared towards the provided target.
-		/// \returns A value, describing the similarity between the target descriptor and exemplar descriptor at the provided point. The similarity is measured by the norm, 
-		///			 the index has been initialized with.
-		TDistance measureVisualDistance(const std::vector<float>& targetDescriptor, const cv::Point2i& towards) const;
-
-		/// \brief Gets a coherent candidate from a neighborhood pixel.
-		/// \param targetDescriptor The descriptor to compare against a candidate from the exemplar sample.
-		/// \param uv A two-dimensional map, where each pixel contains the continuous u and v coordinates of the exemplar texel at the pixel's location.
-		/// \param at The x and y coordinate within the uv map of the pixel to extract the coherent candidate from.
-		/// \param delta The direction into which the coherent pixel should be extracted.
-		/// \param match A buffer to store the coherent candidate in.
-		///
-		/// The method resolves the u and v coordinates of the pixel addressed by the `at` parameter and then applies the `delta` to it to get the actual coherent u and v 
-		/// coordinates from the `uv` map. It then resolves those coordinates in the exemplar and shifts them into negative `delta` location. The descriptor retrieved by this
-		/// process is then compared towards the `targetDescriptor`. The result is stored inside `match`.
-		void getCoherentCandidate(const std::vector<float>& targetDescriptor, const cv::Mat& uv, const cv::Point2i& at, const cv::Vec2i& delta, TMatch& match) const;
+		void getCoherentCandidate(const cv::Point2i& exemplarCoords, int& candidate) const;
+		void getCoherentCandidate(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int& candidate) const;
+		//void getCoherentCandidates(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int k, std::vector<int>& candidates) const;
+		cv::Mat getDescriptor(const int level, const int index) const;
 
 		// ISearchIndex
 	public:
-		/// \param minDist A lower thresold for similarity measures.
-		/// \param dist The similarity between the candidate and the match.
-		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const override;
-
-		/// \param minDist A lower thresold for similarity measures.
-		/// \param dist The similarity between the candidate and the match.
-		/// \param k The number of coherent candidates to return. Must be a value between 1 and 8.
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const override;
+		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const override;
 	};
 
 	// class TEXTURIZE_API kCoherentIndex : public SearchIndex { };
@@ -449,23 +456,17 @@ namespace Texturize {
 		/// \brief Creates a new search index.
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
-		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace);
-		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap);
+		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const int k = 10);
+		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const int k = 10);
 
 	private:
-		cv::Vec2f getRandomPixelAround(const cv::Vec2f& point, int radius, int dominantDimensionExtent) const;
-		cv::Vec2f getRandomPixelAround(const cv::Vec2f& point, float radius) const;
+		PositionType getRandomPixelAround(const PositionType& point, int radius, int dominantDimensionExtent) const;
+		PositionType getRandomPixelAround(const PositionType& point, CoordinateType radius) const;
 
 		// ISearchIndex
 	public:
-		/// \param minDist A lower thresold for similarity measures.
-		/// \param dist The similarity between the candidate and the match.
-		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, cv::Vec2f& match, float minDist = 0.0f, float* dist = nullptr) const override;
-
-		/// \param minDist A lower thresold for similarity measures.
-		/// \param dist The similarity between the candidate and the match.
-		/// \param k The number of coherent candidates to return. Must be a value between 1 and 8.
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<cv::Vec2f>& matches, const int k = 1, float minDist = 0.0f, std::vector<float>* dist = nullptr) const override;
+		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const override;
 	};
 
 	/// \brief Generates a permutation vector from a set of coordinates.
