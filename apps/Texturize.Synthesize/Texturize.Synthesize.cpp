@@ -25,10 +25,13 @@ const char* parameters =
 	"{trgprog           |    | The name of a greyscale image, containing the control homogeneity progression for the target texture.}"
 	"{inhomogeneity ih  | 0.9| The importance factor of the source and target inhomgeneneity on the result.}"
 	"{anisotropy ai     | 0.5| The importance of local anisotropy, i.e. how much weight goes into homogeneity progression and how much into orientation differences.}"
+	"{chaos c ji        | 1.0| A factor to scale the jitter amplitudes. Increasing this value will produce more random results.}"
+	"{albedo            |    | The name of an image file. If provided, the synthesizer displays feedback after each operation. Only usefull for debugging purposes.}"
 };
 
 // Persistence providers.
 DefaultPersistence _persistence;
+std::optional<Sample> _albedo;
 
 void displayProgress(const float& progress) {
 	const int numChars = 100;
@@ -41,6 +44,34 @@ void displayProgress(const float& progress) {
 
 	std::cout << "] " << int(progress * 100.0) << " %\r";
 	std::cout.flush();
+}
+
+void giveFeedback(const std::string& name, const cv::Mat& map) {
+
+	Sample image(cv::Mat::zeros(map.size(), CV_32FC3));
+	cv::Mat rgb = cv::Mat::zeros(map.size(), CV_32FC3);
+
+	if (map.channels() == 2) {
+		Sample s(map);
+		s.extract({ 0, 2, 1, 1 }, image);	// Since CV uses BGR representation.
+	} else {
+		image = Sample(map);
+	}
+
+	cv::imshow(name, (cv::Mat)image);
+
+	if (_albedo.has_value()) {
+		cv::Mat ex = (cv::Mat)_albedo.value();
+		rgb.forEach<cv::Vec3f>([&map, &ex](cv::Vec3f& val, const int* idx) -> void {
+			cv::Vec2f coords = map.at<cv::Vec2f>(idx);
+			cv::Point2i exc(static_cast<int>(coords[0] * ex.cols), static_cast<int>(coords[1] * ex.rows));
+			val = ex.at<cv::Vec3f>(exc);
+		});
+
+		cv::imshow("RGB", rgb);
+	}
+
+	cv::waitKey(0);
 }
 
 int main(int argc, const char** argv) {
@@ -68,8 +99,10 @@ int main(int argc, const char** argv) {
 	std::string resultFileName = parser.get<std::string>("result");
 	std::string sourceProgressionFileName = parser.get<std::string>("srcprog");
 	std::string targetProgressionFileName = parser.get<std::string>("trgprog");
+	std::string albedoFileName = parser.get<std::string>("albedo");
 	uint64_t seed = parser.get<uint64_t>("seed");
 	float inhomogeneity = parser.get<float>("inhomogeneity");
+	float jitterIntensity = parser.get<float>("chaos");
 
 	std::cout << "Input: " << inputFileName << std::endl <<
 		"Output: " << resultFileName << std::endl <<
@@ -163,7 +196,7 @@ int main(int argc, const char** argv) {
 	// Randomness Selector Function
 	// TODO: This should go into the framework.
 	int depth = log2(width);
-	PyramidSynthesisSettings::RandomnessSelectorFunction randmonessSelector([&exemplar](int level, const cv::Mat& uv) -> float {
+	PyramidSynthesisSettings::RandomnessSelectorFunction randmonessSelector([&exemplar, &jitterIntensity](int level, const cv::Mat& uv) -> float {
 		// Sample the exemplar.
 		Sample currentSample;
 		exemplar.sample(uv, currentSample);
@@ -184,7 +217,7 @@ int main(int argc, const char** argv) {
 		float avgVarEx = cv::sum(devEx).val[0];
 
 		// Set jitter amplitude to difference of variances.
-		return std::abs(avgVarSample - avgVarEx);
+		return jitterIntensity * std::abs(avgVarSample - avgVarEx);
 	});
 
 	PyramidSynthesisSettings config(1.f, cv::Point2f(0.f, 0.f), randmonessSelector, kernel, seed);
@@ -192,6 +225,14 @@ int main(int argc, const char** argv) {
 	// Toggle target guidance map.
 	if (!sourceProgressionFileName.empty())
 		config._guidanceMap = trgProgression;
+
+	// Toggle feedback provider.
+	if (!albedoFileName.empty()) {
+		Sample albedo;
+		_persistence.loadSample(albedoFileName, albedo);
+		_albedo = albedo;
+		config._feedbackHandler.add(giveFeedback);
+	}
 
 	// Setup progress handler.
 	const int passesPerLevel = config._correctionPasses;
