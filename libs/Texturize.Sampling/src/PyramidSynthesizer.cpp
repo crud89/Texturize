@@ -203,11 +203,11 @@ void PyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesizerState&
 
 			// Match the descriptor with the search space.
 			cv::Point2i point(c, r);
-			cv::Vec2f newCoords;
+			SearchIndex::MatchType match;
 			cv::Vec2f& coords = sample.at<cv::Vec2f>(point);
 
-			if (_catalog->findNearestNeighbor(descriptors, sample, point, newCoords))
-				coords = newCoords;
+			if (_catalog->findNearestNeighbor(descriptors, sample, point, match))
+				coords = std::move(match.first);
 		}
 
 		// Send the temporary result to handlers.
@@ -318,12 +318,11 @@ void PyramidSynthesizer::transferTo(const Sample& target, Sample& result, const 
 
 			// Match the descriptor with the search space.
 			cv::Point2i point(c, r);
-			cv::Vec2f newCoords;
+			SearchIndex::MatchType match;
 			cv::Vec2f& coords = sample.at<cv::Vec2f>(point);
 
-			// Get the descriptor at the current location.
-			_catalog->findNearestNeighbor(descriptors, sample, point, newCoords);
-			coords = newCoords;
+			if (_catalog->findNearestNeighbor(descriptors, sample, point, match))
+				coords = std::move(match.first);
 		}
 
 		// TODO: Run correction passes.
@@ -438,10 +437,10 @@ void ParallelPyramidSynthesizer::correct(cv::Mat& sample, const PyramidSynthesiz
 				return;
 
 			// Match the descriptor with the search space.
-			cv::Vec2f newCoords;
+			SearchIndex::MatchType match;
 
-			if (searchIndex->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), newCoords))
-				coords = newCoords;
+			if (searchIndex->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), match))
+				coords = std::move(match.first);
 		});
 
 		// Send the temporary result to handlers.
@@ -488,7 +487,10 @@ void ParallelPyramidSynthesizer::transferTo(const Sample& target, Sample& result
 				return;
 
 			// Get the descriptor at the current location.
-			searchIndex->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), coords);
+			SearchIndex::MatchType match;
+
+			if (searchIndex->findNearestNeighbor(descriptors, sample, cv::Point2i(idx[1], idx[0]), match))
+				coords = std::move(match.first);
 		});
 
 		// TODO: Run correction passes.
