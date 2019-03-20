@@ -64,18 +64,20 @@ void Sample::wrapCoords(int& x, int& y) const
 
 void Sample::wrapCoords(int width, int height, int& x, int& y)
 {
-	while (x < 0) x += width;
-	while (x >= width) x -= width;
-	while (y < 0) y += height;
-	while (y >= height) y -= height;
+	if ((x %= width) < 0)
+		x = width + x;
+
+	if ((y %= height) < 0)
+		y = height + y;
 }
 
 void Sample::wrapCoords(int width, int height, cv::Point2i& coords)
 {
-	while (coords.x < 0) coords.x += width;
-	while (coords.x >= width) coords.x -= width;
-	while (coords.y < 0) coords.y += height;
-	while (coords.y >= height) coords.y -= height;
+	int x = coords.x % width;
+	int y = coords.y % height;
+
+	coords.x = x < 0 ? width + x : x;
+	coords.y = y < 0 ? height + y : y;
 }
 
 void Sample::wrapCoords(cv::Vec2f& coords)
