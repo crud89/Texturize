@@ -168,7 +168,7 @@ cv::Mat DescriptorExtractor::getPixelNeighborhoods(const Sample& exemplar, const
 		std::copy(rowDesc.begin(), rowDesc.end(), row);
 	});
 
-	// Finally, transpose the neighborhood descriptor matrix, so that each column stores one descriptor.
+	// Finally, transpose the neighborhood descriptor matrix, so that each row stores one descriptor.
 	return neighborhoods.t();
 }
 

@@ -84,7 +84,7 @@ bool RandomWalkIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv:
 				// Compute the distance between the corrected pixel and the current best match.
 				cv::Point2i pixelCoords(static_cast<int>(candidatePos[0] * static_cast<CoordinateType>(exemplar->width())), static_cast<int>(candidatePos[1] * static_cast<CoordinateType>(exemplar->height())));
 				int descriptorIndex = pixelCoords.x * exemplar->width() + pixelCoords.y;
-				DistanceType distance = static_cast<DistanceType>(cv::norm(this->getDescriptor(level, descriptorIndex), targetDescriptor, _normType));
+				DistanceType distance = static_cast<DistanceType>(cv::norm(this->getDescriptor(descriptorIndex), targetDescriptor, _normType));
 
 				// If the distance is lower than the one found within the coherent search, replace the candidate and continue.
 				if (distance < candidate.second)

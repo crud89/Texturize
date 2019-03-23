@@ -410,7 +410,7 @@ namespace Texturize {
 		public SearchIndex
 	{
 	private:
-		std::vector<cv::Mat> _exemplarDescriptors, _candidates;
+		cv::Mat _candidates, _exemplarDescriptors;
 		const std::optional<const Sample> _guidanceMap;
 		const unsigned int _candidatesPerDescriptor;
 
@@ -422,16 +422,14 @@ namespace Texturize {
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
 		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const int k = 10);
-		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const int k = 10);
+		CoherentIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const int k = 3);
 
 	private:
 		void init(const int& k);
 
 	protected:
-		void getCoherentCandidate(const int level, const cv::Point2i& exemplarCoords, int& candidate) const;
-		void getCoherentCandidate(const int level, const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int& candidate) const;
-		//void getCoherentCandidates(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, int k, std::vector<int>& candidates) const;
-		cv::Mat getDescriptor(const int level, const int index) const;
+		cv::Mat getDescriptor(int index) const;
+		void getCoherentCandidates(const cv::Point2i& exemplarCoords, const cv::Vec2i& delta, std::vector<int>& candidates) const;
 
 		// ISearchIndex
 	public:
@@ -457,7 +455,7 @@ namespace Texturize {
 		/// \param searchSpace A reference of a search space instance.
 		/// \param distanceMeasure The type of norm to use to measure similarity between a candidate and a descriptor.
 		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const int k = 10);
-		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const int k = 10);
+		RandomWalkIndex(std::shared_ptr<ISearchSpace> searchSpace, const Sample& guidanceMap, const int k = 3);
 
 	private:
 		PositionType getRandomPixelAround(const PositionType& point, int radius, int dominantDimensionExtent) const;
