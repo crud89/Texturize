@@ -99,7 +99,7 @@ void CoherentIndex::init(const int& k)
 						_guidanceMap.value().at(candidatePos, targetGuidance);
 
 						for (size_t i(0); i < sourceGuidance.size(); ++i)
-							distance *= abs(sourceGuidance[i] - targetGuidance[i]);
+							distance += abs(sourceGuidance[i] - targetGuidance[i]);
 					}
 
 					// If the current candidate is better, keep it.
@@ -207,6 +207,7 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 		TEXTURIZE_ASSERT(targetDescriptor.size() == exemplar->channels() + _guidanceMap.value().channels());
 
 		// Furthermore, divide the target descriptor in two parts: The actual descriptor values and the appended guidance values.
+		// NOTE: Order matters here!
 		targetGuidance = std::vector<float>(targetDescriptor.begin() + exemplar->channels(), targetDescriptor.end());
 		targetDescriptor = std::vector<float>(targetDescriptor.begin(), targetDescriptor.begin() + exemplar->channels());
 	}
@@ -233,13 +234,8 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 			TEXTURIZE_ASSERT(sourceGuidance.size() == targetGuidance.size());
 
 			// Get the distance between each channel.
-			DistanceType guidanceDistance;
-
 			for (size_t i(0); i < sourceGuidance.size(); ++i)
-				guidanceDistance += abs(sourceGuidance[i] - targetGuidance[i]);
-
-			//distance = guidanceDistance;
-			distance *= guidanceDistance;
+				distance += abs(sourceGuidance[i] - targetGuidance[i]);
 		}
 
 		// Discard candidates that are too similar.
