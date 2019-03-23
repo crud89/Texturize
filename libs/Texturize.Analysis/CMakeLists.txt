@@ -64,8 +64,6 @@ ELSE()
   MESSAGE(FATAL_ERROR "  ERROR: Required OpenCV modules have not been found.")
 ENDIF()
 
-# NOTE: Remapping RelWithDebInfo/MinSizeRel to Release is done before GET_PACKAGE_INFO.
-
 ###################################################################################################
 ##### Find TBB.                                                                               #####
 ###################################################################################################
