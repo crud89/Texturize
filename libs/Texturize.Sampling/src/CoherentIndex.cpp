@@ -92,15 +92,15 @@ void CoherentIndex::init(const int& k)
 					Sample::Texel candidateNeighborhood = _exemplarDescriptors.row(index);
 					DistanceType distance = cv::norm(neighborhood, candidateNeighborhood, _normType);
 
-					// If required, factor in guidance channels.
-					if (_guidanceMap.has_value()) {
-						Sample::Texel sourceGuidance, targetGuidance;
-						_guidanceMap.value().at(cv::Point2i(x, y), sourceGuidance);
-						_guidanceMap.value().at(candidatePos, targetGuidance);
+					//// If required, factor in guidance channels.
+					//if (_guidanceMap.has_value()) {
+					//	Sample::Texel sourceGuidance, targetGuidance;
+					//	_guidanceMap.value().at(cv::Point2i(x, y), sourceGuidance);
+					//	_guidanceMap.value().at(candidatePos, targetGuidance);
 
-						for (size_t i(0); i < sourceGuidance.size(); ++i)
-							distance += abs(sourceGuidance[i] - targetGuidance[i]);
-					}
+					//	for (size_t i(0); i < sourceGuidance.size(); ++i)
+					//		distance += abs(sourceGuidance[i] - targetGuidance[i]);
+					//}
 
 					// If the current candidate is better, keep it.
 					if (candidateDistance > distance) {
