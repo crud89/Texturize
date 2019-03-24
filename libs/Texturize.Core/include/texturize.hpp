@@ -20,7 +20,7 @@
 //#define TEXTURIZE_API /*__declspec(dllimport)*/
 //#endif
 
-
+// TODO: Implement pImpl based architecture to get rid of those warnings.
 #pragma warning(disable:4275)	// Exporting STL types as base interface.
 #pragma warning(disable:4251)	// Usage of STL types in class interfaces.
 
