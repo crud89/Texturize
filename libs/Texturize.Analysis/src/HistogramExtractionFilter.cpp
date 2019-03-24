@@ -45,7 +45,7 @@ void HistogramExtractionFilter::apply(Sample& result, const Sample& sample) cons
 		for (size_t x = range.cols().begin(); x < range.cols().end(); x += range.cols().grainsize()) {
 			for (size_t y = range.rows().begin(); y < range.rows().end(); y += range.cols().grainsize()) {
 				// Generate a mask for a 49x49 pixel kernel at [x, y].
-				auto mask = this->mask(source.size(), cv::Point2i(x, y), this->_kernel);
+				auto mask = this->mask(source.size(), cv::Point2i(static_cast<int>(x), static_cast<int>(y)), this->_kernel);
 
 				// Calculate the histogram at this point.
 				cv::Mat descriptor;
@@ -56,7 +56,7 @@ void HistogramExtractionFilter::apply(Sample& result, const Sample& sample) cons
 				// Store the descriptor.
 				//auto row = y * source.cols + x;
 				auto row = (((y / _stride) * stepsX) + (x / _stride));
-				descriptor.copyTo(histogram.row(row));
+				descriptor.copyTo(histogram.row(static_cast<int>(row)));
 			}
 		}
 	});

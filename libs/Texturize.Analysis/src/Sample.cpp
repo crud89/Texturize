@@ -276,7 +276,7 @@ void Sample::merge(const Sample& with, Sample& to) const
 	for (int c(0); c < with.channels(); ++c)
 	{
 		channelMap[c * 2] = c;
-		channelMap[c * 2 + 1] = _channels.size() + c;
+		channelMap[c * 2 + 1] = static_cast<int>(_channels.size()) + c;
 	}
 
 	with.extract(channelMap, result);
@@ -394,7 +394,7 @@ void Sample::sample(const Sample& sample, const cv::Mat& uv, std::initializer_li
 		for (size_t x = range.cols().begin(); x < range.cols().end(); ++x) {
 			for (size_t y = range.rows().begin(); y < range.rows().end(); ++y) {
 				// Get the coordinates and the texel.
-				cv::Point2i pos = cv::Point2i(x, y);
+				cv::Point2i pos = cv::Point2i(static_cast<int>(x), static_cast<int>(y));
 				cv::Vec2f coords = uv.at<cv::Vec2f>(pos);
 				std::vector<float> texel;
 				sample.at(coords, texel);

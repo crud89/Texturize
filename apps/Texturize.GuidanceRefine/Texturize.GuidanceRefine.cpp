@@ -76,8 +76,12 @@ int main(int argc, const char** argv) {
 		toGrey.apply(referenceSample, referenceSample);
 
 	// Comput the coarsest (smallest) level of the pyramid from the maximum possible number of levels, skipping the 3 coarsest ones.
-	int inputLevel = (inputSample.width() >= inputSample.height() ? log2(inputSample.width()) : log2(inputSample.height())) - 3;
-	int referenceLevel = (referenceSample.width() >= referenceSample.height() ? log2(referenceSample.width()) : log2(referenceSample.height())) - 3;
+	int inputLevel = (inputSample.width() >= inputSample.height() ? 
+		static_cast<int>(log2(inputSample.width())) : 
+		static_cast<int>(log2(inputSample.height()))) - 3;
+	int referenceLevel = (referenceSample.width() >= referenceSample.height() ? 
+		static_cast<int>(log2(referenceSample.width())) : 
+		static_cast<int>(log2(referenceSample.height()))) - 3;
 
 	if (inputLevel < 0)
 	{

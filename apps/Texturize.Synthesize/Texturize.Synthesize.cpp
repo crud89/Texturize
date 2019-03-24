@@ -99,7 +99,7 @@ int main(int argc, const char** argv) {
 	std::string sourceProgressionFileName = parser.get<std::string>("srcprog");
 	std::string targetProgressionFileName = parser.get<std::string>("trgprog");
 	std::string albedoFileName = parser.get<std::string>("albedo");
-	uint64_t seed = parser.get<uint64_t>("seed");
+	unsigned int seed = parser.get<unsigned int>("seed");
 	float inhomogeneity = parser.get<float>("inhomogeneity");
 	float jitterIntensity = parser.get<float>("chaos");
 
@@ -194,7 +194,7 @@ int main(int argc, const char** argv) {
 
 	// Randomness Selector Function
 	// TODO: This should go into the framework.
-	int depth = log2(width);
+	int depth = static_cast<int>(log2(width));
 	PyramidSynthesisSettings::RandomnessSelectorFunction randomnessSelector([&exemplar, &jitterIntensity, &depth](int level, const cv::Mat& uv) -> float {
 		// Sample the exemplar.
 		Sample currentSample;
@@ -212,11 +212,11 @@ int main(int argc, const char** argv) {
 		// Calculate average variances.
 		cv::multiply(devSample, devSample, devSample);
 		cv::multiply(devEx, devEx, devEx);
-		float avgVarSample = cv::sum(devSample).val[0];
-		float avgVarEx = cv::sum(devEx).val[0];
+		double avgVarSample = cv::sum(devSample).val[0];
+		double avgVarEx = cv::sum(devEx).val[0];
 
 		// Set jitter amplitude to difference of variances.
-		return jitterIntensity * std::abs(avgVarSample - avgVarEx);
+		return jitterIntensity * static_cast<float>(std::abs(avgVarSample - avgVarEx));
 	});
 
 	PyramidSynthesisSettings config(1.f, cv::Point2f(0.f, 0.f), randomnessSelector, kernel, seed);

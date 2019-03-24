@@ -38,7 +38,7 @@ void gauss1d(cv::Mat& points, const int phase, const float sigma, const float me
 		// Compute gaussian (order 0).
 		val -= mean;
 		const float squared = (val *= val);
-		val = exp(-val / denominator) / sqrt(M_PI * denominator);
+		val = exp(-val / denominator) / sqrtf(static_cast<float>(M_PI) * denominator);
 
 		// Depending on the phase, compute the 1st or 2nd order derivative.
 		switch (phase) {
@@ -55,7 +55,7 @@ void gauss1d(cv::Mat& points, const int phase, const float sigma, const float me
 /// \private
 float laplacianOfGaussian(const int x, const int y, const float sigma) {
 	float scale = ((x * x) + (y * y)) / (2 * (sigma * sigma));
-	return -1.f / (M_PI * pow(sigma, 4)) * (1 - scale) * exp(-scale);
+	return -1.f / (static_cast<float>(M_PI) * pow(sigma, 4)) * (1 - scale) * exp(-scale);
 }
 
 /// \private
@@ -110,12 +110,12 @@ cv::Mat getDerivGaussianKernel(int ksize, float scale, float mean = 0, float phi
 	const float cosine	= cosf(phi);
 	std::vector<float> rotations = { -sine, cosine, cosine, sine };
 	cv::Mat rotator = cv::Mat(2, 2, CV_32FC1, rotations.data());
-	cv::Mat rotatedPoints(2, pts.size(), CV_32FC1);
+	cv::Mat rotatedPoints(2, static_cast<int>(pts.size()), CV_32FC1);
 
 	for (std::vector<cv::Point2f>::size_type i(0); i < pts.size(); ++i)
 	{
 		cv::Mat rt = rotator * cv::Mat(pts[i]);
-		rt.copyTo(rotatedPoints.col(i));
+		rt.copyTo(rotatedPoints.col(static_cast<int>(i)));
 	}
 
 	// Calculate horizontal gaussian kernel.
@@ -169,7 +169,7 @@ void MaxResponseFilterBank::computeRootFilterSet(Sample& bank, const int kernelS
 	// The three scale coefficients for edge and bar filter kernels.
 	constexpr float scales[] = { 1.f, 2.f, 4.f };
 	// The angle between two kernels at the same scale (6 discrete steps = 1/6*Pi)
-	constexpr float angularDifference = (1.f / 6.f) * M_PI;
+	constexpr float angularDifference = (1.f / 6.f) * static_cast<float>(M_PI);
 	std::vector<cv::Mat> edgeKernels, barKernels;
 	float phi(0.f);
 

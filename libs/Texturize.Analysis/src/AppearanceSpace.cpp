@@ -35,16 +35,15 @@ cv::Mat AppearanceSpace::getComponents(const Sample& exemplar, int ks)
 	// Extract all neighborhoods into individual texton descriptors.
 	tbb::parallel_for(tbb::blocked_range2d<size_t>(0, exemplar.height(), 0, exemplar.width()),
 		[&exemplar, &appearanceSpace, dimensionality, ks](const tbb::blocked_range2d<size_t>& range) {
-		for (size_t x = range.cols().begin(); x < range.cols().end(); ++x) {
-			for (size_t y = range.rows().begin(); y < range.rows().end(); ++y) {
-				// Get the neighborhood texton.
-				std::vector<float> neighborhood(dimensionality);
-				exemplar.getNeighborhood(x, y, ks, neighborhood, true);
+		for (int x = static_cast<int>(range.cols().begin()); x < range.cols().end(); ++x)
+		for (int y = static_cast<int>(range.rows().begin()); y < range.rows().end(); ++y) {
+			// Get the neighborhood texton.
+			std::vector<float> neighborhood(dimensionality);
+			exemplar.getNeighborhood(x, y, ks, neighborhood, true);
 
-				// Store each component into a separate channel.
-				for (size_t d(0); d < dimensionality; ++d)
-					appearanceSpace[d].at<float>(y, x) = neighborhood[d];
-			}
+			// Store each component into a separate channel.
+			for (size_t d(0); d < dimensionality; ++d)
+				appearanceSpace[d].at<float>(y, x) = neighborhood[d];
 		}
 	});
 
@@ -82,7 +81,7 @@ void AppearanceSpace::calculate(const Sample& exemplar, std::unique_ptr<Appearan
 		channels.push_back(projected.row(c));
 
 	cv::merge(channels, projected);
-	projected = projected.reshape(channels.size(), exemplar.height());
+	projected = projected.reshape(static_cast<int>(channels.size()), exemplar.height());
 
 	// Setup and return a new descriptor.
 	TEXTURIZE_ASSERT(projected.channels() == channels.size());
@@ -112,7 +111,7 @@ void AppearanceSpace::calculate(const Sample& exemplar, std::unique_ptr<Appearan
 		channels.push_back(projected.row(c));
 
 	cv::merge(channels, projected);
-	projected = projected.reshape(channels.size(), exemplar.height());
+	projected = projected.reshape(static_cast<int>(channels.size()), exemplar.height());
 
 	// Setup and return a new descriptor.
 	TEXTURIZE_ASSERT(projected.channels() == channels.size());
@@ -148,19 +147,21 @@ void AppearanceSpace::getKernel(int& kernel) const
 
 void AppearanceSpace::transform(const std::vector<float>& texel, std::vector<float>& desc) const
 {
-	TEXTURIZE_ASSERT(texel.size() == _projection->mean.rows);				// The number of texel components must equal the number of components used to calculate the projector.
+	// The number of texel components must equal the number of components used to calculate the projector.
+	TEXTURIZE_ASSERT(static_cast<int>(texel.size()) == _projection->mean.rows);
 
 	// Transpose the input array to fit the DATA_AS_COL initialization.
-	cv::Mat data = cv::Mat(texel.size(), 1, CV_32FC1, const_cast<float*>(texel.data()));
+	cv::Mat data = cv::Mat(static_cast<int>(texel.size()), 1, CV_32FC1, const_cast<float*>(texel.data()));
 	desc = _projection->project(data);
 }
 
 void AppearanceSpace::transform(const Sample& sample, const int x, const int y, std::vector<float>& desc) const
 {
 	// Calculate the number of components.
-	int components = _kernelSize * _kernelSize * sample.channels();
+	int components = _kernelSize * _kernelSize * static_cast<int>(sample.channels());
 	
-	TEXTURIZE_ASSERT_DBG(components == _projection->mean.rows);				// The number of channels of the indexed sample must match the number of channels of the original exemplar.
+	// The number of channels of the indexed sample must match the number of channels of the original exemplar.
+	TEXTURIZE_ASSERT_DBG(components == _projection->mean.rows);
 
 	// Get the pixel neighborhood.
 	std::vector<float> kernel(components);
@@ -172,9 +173,10 @@ void AppearanceSpace::transform(const Sample& sample, const int x, const int y, 
 void AppearanceSpace::transform(const Sample& sample, const cv::Point& texelCoords, std::vector<float>& desc) const
 {
 	// Calculate the number of components.
-	int components = _kernelSize * _kernelSize * sample.channels();
+	int components = _kernelSize * _kernelSize * static_cast<int>(sample.channels());
 
-	TEXTURIZE_ASSERT_DBG(components == _projection->mean.rows);				// The number of channels of the indexed sample must match the number of channels of the original exemplar.
+	// The number of channels of the indexed sample must match the number of channels of the original exemplar.
+	TEXTURIZE_ASSERT_DBG(components == _projection->mean.rows);
 
 	// Get the pixel neighborhood.
 	std::vector<float> kernel(components);
@@ -193,7 +195,7 @@ void AppearanceSpace::transform(const Sample& sample, Sample& to, const int ks) 
 		channels.push_back(projected.row(c));
 
 	cv::merge(channels, projected);
-	projected = projected.reshape(channels.size(), sample.height());
+	projected = projected.reshape(static_cast<int>(channels.size()), sample.height());
 
 	TEXTURIZE_ASSERT(projected.channels() == channels.size());
 	TEXTURIZE_ASSERT(projected.rows == sample.height());

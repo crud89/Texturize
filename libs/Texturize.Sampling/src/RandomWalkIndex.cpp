@@ -44,7 +44,7 @@ bool RandomWalkIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::
 	return true;
 }
 
-bool RandomWalkIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k, DistanceType minDist) const
+bool RandomWalkIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const unsigned int k, DistanceType minDist) const
 {
 	// Get the target descriptor in order to calculate the distance later on.
 	// NOTE: The descriptors are indexed by their UV-coordinates (i.e. one descriptor for each point in UV-space).
@@ -57,8 +57,8 @@ bool RandomWalkIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv:
 		return false;
 
 	// If the candidate is somewhere near the edge of the sample, do not search further. This is since candidates are not well defined at edges.
-	uint32_t level = log2(static_cast<uint32_t>(uv.cols));
-	uint32_t threshold = pow(2, level);
+	unsigned int level = log2(static_cast<unsigned int>(uv.cols));
+	int threshold = static_cast<int>(pow(2, level));
 
 	// Refine search for pixels inside the threshold.
 	std::vector<MatchType> refinedCandidates;

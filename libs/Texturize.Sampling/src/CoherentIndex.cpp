@@ -41,7 +41,7 @@ void CoherentIndex::init(const int& k)
 	_searchSpace->sample(sample);
 	_searchSpace->kernel(kernel);
 	kernelDev = (kernel - 1) / 2;
-	int sampleLevel = log2(sample->width());
+	int sampleLevel = static_cast<int>(log2(sample->width()));
 
 	//TEXTURIZE_ASSERT(sample->width() == sample->height());
 	TEXTURIZE_ASSERT_DBG(kernel % 2 == 1);						// The kernel must be an odd number of pixels.
@@ -57,8 +57,8 @@ void CoherentIndex::init(const int& k)
 
 	// Calculate the k-coherent candidates for each pixel.
 	tbb::parallel_for(tbb::blocked_range2d<size_t>(0, sample->width(), 0, sample->height()), [this, &sample, &distribution, k](const tbb::blocked_range2d<size_t>& range) {
-		for (size_t x = range.cols().begin(); x < range.cols().end(); ++x)
-		for (size_t y = range.rows().begin(); y < range.rows().end(); ++y) {
+		for (int x = static_cast<int>(range.cols().begin()); x < range.cols().end(); ++x)
+		for (int y = static_cast<int>(range.rows().begin()); y < range.rows().end(); ++y) {
 			// Get the neighborhood descriptor for the pixel at the current position.
 			Sample::Texel neighborhood = _exemplarDescriptors.row(y * sample->width() + x);
 
@@ -161,7 +161,7 @@ bool CoherentIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::Ma
 	return true;
 }
 
-bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& mtch, const int k, DistanceType minDist) const
+bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& mtch, const unsigned int k, DistanceType minDist) const
 {
 	TEXTURIZE_ASSERT(uv.channels() == 2);                                      // The UV map should contain two channels, one for u and one for v coordinates.
 	TEXTURIZE_ASSERT(uv.depth() == cv::DataType<CoordinateType>::type);        // The type of the uv map should match the position type.
@@ -174,7 +174,7 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 	_searchSpace->sample(exemplar);
 	CoordinateType width = static_cast<CoordinateType>(exemplar->width());
 	CoordinateType height = static_cast<CoordinateType>(exemplar->height());
-	int level = log2(uv.cols);
+	int level = static_cast<int>(log2(uv.cols));
 
 	// For each neighboring pixel, request the coherent candidate coordinates.
 	std::vector<int> candidates;
@@ -191,7 +191,7 @@ bool CoherentIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::M
 		PositionType uvCoords = uv.at<PositionType>(coords);
 
 		// Make them absolute.
-		coords = cv::Point2i(uvCoords[0] * width, uvCoords[1] * height);
+		coords = cv::Point2i(static_cast<int>(uvCoords[0] * width), static_cast<int>(uvCoords[1] * height));
 
 		// Get a candidate for the neighbor and remember it.
 		std::vector<int> c;

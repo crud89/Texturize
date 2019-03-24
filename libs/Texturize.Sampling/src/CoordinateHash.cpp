@@ -13,12 +13,7 @@ using namespace Texturize;
 ///// Perlin's 2d gradient vector hash implementation                                         /////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-CoordinateHash::CoordinateHash(int maskSize) :
-	CoordinateHash(0, maskSize)
-{
-}
-
-CoordinateHash::CoordinateHash(uint64_t seed, int maskSize) :
+CoordinateHash::CoordinateHash(unsigned int seed, int maskSize) :
 	_permutation(maskSize), _gradients(maskSize), _mask(maskSize - 1)
 {
 	TEXTURIZE_ASSERT(isPoT(maskSize));							// The mask size must be a PoT-number in order to allow bit masking.
@@ -26,12 +21,12 @@ CoordinateHash::CoordinateHash(uint64_t seed, int maskSize) :
 	this->init(seed);
 }
 
-void CoordinateHash::init(uint64_t seed)
+void CoordinateHash::init(unsigned int seed)
 {
 	std::mt19937 rng(seed);
-	size_t ps = _permutation.size();
+	unsigned int ps = static_cast<unsigned int>(_permutation.size());
 
-	for (size_t i(0); i < ps; ++i)
+	for (unsigned int i(0); i < ps; ++i)
 	{
 		float angle = static_cast<float>(i) / static_cast<float>(ps);
 
@@ -41,7 +36,7 @@ void CoordinateHash::init(uint64_t seed)
 			_permutation[i] = _permutation[other];
 
 		_permutation[other] = i;
-		_gradients[i] = cv::Vec2f(cosf(2.f * angle * M_PI), sinf(2.f * angle * M_PI));
+		_gradients[i] = cv::Vec2f(cosf(2.f * angle * static_cast<float>(M_PI)), sinf(2.f * angle * static_cast<float>(M_PI)));
 	}
 
 	// Shuffle in order for hashes to be distributed non-regularily.

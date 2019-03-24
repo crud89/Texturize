@@ -136,7 +136,7 @@ cv::Mat DescriptorExtractor::getPixelNeighborhoods(const Sample& exemplar, const
 	const cv::Size size = uv.size();
 
 	// Create a matrix that stores 4 proxy pixels of each pixel of the sample in a row.
-	cv::Mat neighborhoods(uv.rows * uv.cols, exemplar.channels() * 4, CV_32FC1);
+	cv::Mat neighborhoods(uv.rows * uv.cols, static_cast<int>(exemplar.channels()) * 4, CV_32FC1);
 
 	// TODO: This should be re-written and can probably be ported to a GPU-implementation. Something like:
 	//	For each pixel in uv: Get 5x5 neighborhood and spawn new thread.

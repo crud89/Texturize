@@ -76,12 +76,12 @@ void PyramidSynthesizerState::sample(cv::Mat& sample) const
 	sample = _sample;
 }
 
-int PyramidSynthesizerState::level() const
+unsigned int PyramidSynthesizerState::level() const
 {
 	return _level;
 }
 
-void PyramidSynthesizerState::level(int& level) const
+void PyramidSynthesizerState::level(unsigned int& level) const
 {
 	level = _level;
 }

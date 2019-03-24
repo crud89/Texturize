@@ -733,7 +733,7 @@ void H5FileWriter::write(const std::string &name, const cv::Mat &data)
 		block[0] = 1;
 		mspace.selectHyperslab(H5S_SELECT_SET, count, offset, NULL, block);
 
-		dataset.write(data.ptr(i, 0), type, mspace, fspace);
+		dataset.write(data.ptr(static_cast<int>(i), 0), type, mspace, fspace);
 	}
 }
 

@@ -184,7 +184,7 @@ namespace Texturize {
 		///
 		/// \see Texturize::ISearchSpace
 		/// \see Texturize::ISearchIndex::findNearestNeighbor
-		virtual bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const = 0;
+		virtual bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const unsigned int k = 1, DistanceType minDist = 0) const = 0;
 	};
 
 	/// \brief A search index interface that uses single precision distances and coordinates.
@@ -367,7 +367,7 @@ namespace Texturize {
 		// ISearchIndex
 	public:
 		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const override;
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const unsigned int k = 1, DistanceType minDist = 0) const override;
 	};
 
 	/// \brief A search index implementation that clusters the search space using a quantized kd-tree, which allows for fast neighborhood queries.
@@ -434,7 +434,7 @@ namespace Texturize {
 		// ISearchIndex
 	public:
 		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const override;
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const unsigned int k = 1, DistanceType minDist = 0) const override;
 	};
 
 	// class TEXTURIZE_API kCoherentIndex : public SearchIndex { };
@@ -464,7 +464,7 @@ namespace Texturize {
 		// ISearchIndex
 	public:
 		bool findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, MatchType& match, DistanceType minDist = 0) const override;
-		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k = 1, DistanceType minDist = 0) const override;
+		bool findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const unsigned int k = 1, DistanceType minDist = 0) const override;
 	};
 
 	/// \brief Generates a permutation vector from a set of coordinates.
@@ -481,16 +481,12 @@ namespace Texturize {
 
 	public:
 		/// \brief Creates a new coordinate hash function.
-		/// \param maskSize The size of the permutation vector, i.e. the number of possible combinations that can be produced.
-		CoordinateHash(int maskSize = 256);
-
-		/// \brief Creates a new coordinate hash function.
 		/// \param seed The seed used to initialize the random number generator, filling the hash table.
 		/// \param maskSize The size of the permutation vector, i.e. the number of possible combinations that can be produced.
-		CoordinateHash(uint64_t seed, int maskSize = 256);
+		CoordinateHash(unsigned int seed = 0, int maskSize = 256);
 
 	private:
-		void init(uint64_t seed);
+		void init(unsigned int seed);
 
 	public:
 		/// \brief Calculates a offset vector from a set of x and y coordinates.
@@ -524,18 +520,18 @@ namespace Texturize {
 		int _seedKernel;
 
 		/// \brief The seed to initialize random number generators with, in order to create reproducible results.
-		uint64_t _rngState;
+		unsigned int _rngState;
 
 	public:
 		/// \brief Creates a new settings object.
 		/// \param rngState The seed to initialize random number generators with.
-		SynthesisSettings(uint64_t rngState = 0);
+		SynthesisSettings(unsigned int rngState = 0);
 
 		/// \brief Creates a new settings object.
 		/// \param seedCoords The u and v coordinates of the pixel, the result will be initialized with.
 		/// \param kernel The size of the runtime neighborhood window, used to generate descriptors.
 		/// \param rngState The seed to initialize random number generators with.
-		SynthesisSettings(cv::Point2f seedCoords, int kernel = 5, uint64_t rngState = 0);
+		SynthesisSettings(cv::Point2f seedCoords, int kernel = 5, unsigned int rngState = 0);
 
 	public:
 		/// \brief Checks if the settings match constraints required by the synthesizer.
@@ -547,7 +543,7 @@ namespace Texturize {
 		/// \param kernel The size of the runtime neighborhood window, used to generate descriptors.
 		/// \param state The seed to initialize random number generators with.
 		/// \returns A settings object, initialized with a random set of coordinates and the provided parameters.
-		static SynthesisSettings random(int kernel = 5, uint64_t state = time(nullptr));
+		static SynthesisSettings random(int kernel = 5, unsigned int state = 0);
 	};
 
 	/// \brief A set of settings to initialize instances of \ref `Texturize::PyramidSynthesizer` with.
@@ -649,14 +645,14 @@ namespace Texturize {
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
 		/// \param randomness A constant randomness value, that defines the jitter amplitude at each pyramid level.
 		/// \param rngState A seed to initialize random number generators with.
-		PyramidSynthesisSettings(float scale, float randomness = 0.5f, uint64_t rngState = 0);
+		PyramidSynthesisSettings(float scale, float randomness = 0.5f, unsigned int rngState = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
 		/// \param randomness A vector of randomness values, that define the jitter amplitude at each pyramid level. In case the vector is too short, a value of 0 is 
 		///		   assumed for the missing levels.
 		/// \param rngState A seed to initialize random number generators with.
-		PyramidSynthesisSettings(float scale, const std::vector<float>& randomness, uint64_t rngState = 0);
+		PyramidSynthesisSettings(float scale, const std::vector<float>& randomness, unsigned int rngState = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
@@ -664,7 +660,7 @@ namespace Texturize {
 		/// \param rngState A seed to initialize random number generators with.
 		///
 		/// \see Texturize::PyramidSynthesisSettings::RandomnessSelectorFunction
-		PyramidSynthesisSettings(float scale, RandomnessSelectorFunction fn, uint64_t rngState = 0);
+		PyramidSynthesisSettings(float scale, RandomnessSelectorFunction fn, unsigned int rngState = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
@@ -672,7 +668,7 @@ namespace Texturize {
 		/// \param randomness A constant randomness value, that defines the jitter amplitude at each pyramid level.
 		/// \param kernel The size of the neighborhood window used for matching pixel neighborhoods.
 		/// \param rngState A seed to initialize random number generators with.
-		PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, float randomness = 0.5f, int kernel = 5, uint64_t rngState = 0);
+		PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, float randomness = 0.5f, int kernel = 5, unsigned int rngState = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
@@ -681,7 +677,7 @@ namespace Texturize {
 		///		   assumed for the missing levels.
 		/// \param kernel The size of the neighborhood window used for matching pixel neighborhoods.
 		/// \param rngState A seed to initialize random number generators with.
-		PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, const std::vector<float>& randomness, int kernel = 5, uint64_t rngState = 0);
+		PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, const std::vector<float>& randomness, int kernel = 5, unsigned int rngState = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
@@ -691,7 +687,7 @@ namespace Texturize {
 		/// \param rngState A seed to initialize random number generators with.
 		///
 		/// \see Texturize::PyramidSynthesisSettings::RandomnessSelectorFunction
-		PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, RandomnessSelectorFunction fn, int kernel = 5, uint64_t rngState = 0);
+		PyramidSynthesisSettings(float scale, cv::Point2f seedCoords, RandomnessSelectorFunction fn, int kernel = 5, unsigned int rngState = 0);
 		
 	public:
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers, based on a randomly selected seed coordinate.
@@ -699,7 +695,7 @@ namespace Texturize {
 		/// \param randomness A constant randomness value, that defines the jitter amplitude at each pyramid level.
 		/// \param kernel The size of the neighborhood window used for matching pixel neighborhoods.
 		/// \param state A seed to initialize random number generators with.
-		static PyramidSynthesisSettings random(float scale, float randomness = 0.5f, int kernel = 5, uint64_t state = time(nullptr));
+		static PyramidSynthesisSettings random(float scale, float randomness = 0.5f, int kernel = 5, unsigned int state = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers, based on a randomly selected seed coordinate.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
@@ -707,14 +703,14 @@ namespace Texturize {
 		///		   assumed for the missing levels.
 		/// \param kernel The size of the neighborhood window used for matching pixel neighborhoods.
 		/// \param state A seed to initialize random number generators with.
-		static PyramidSynthesisSettings random(float scale, const std::vector<float>& randomness, int kernel = 5, uint64_t state = time(nullptr));
+		static PyramidSynthesisSettings random(float scale, const std::vector<float>& randomness, int kernel = 5, unsigned int state = 0);
 
 		/// \brief Creates a new configuration instance for pyramid-based synthesizers, based on a randomly selected seed coordinate.
 		/// \param scale The scale factor that is used to align the output spacing within scale-invariant algorithms.
 		/// \param fn A function that gets passed an integer value, containing a pyramid level and returns the jitter amplitude at this level.
 		/// \param kernel The size of the neighborhood window used for matching pixel neighborhoods.
 		/// \param state A seed to initialize random number generators with.
-		static PyramidSynthesisSettings random(float scale, RandomnessSelectorFunction fn, int kernel = 5, uint64_t state = time(nullptr));
+		static PyramidSynthesisSettings random(float scale, RandomnessSelectorFunction fn, int kernel = 5, unsigned int state = 0);
 	};
 
 	/// \brief The runtime state of a synthesizer, persistent between multiple synthesis passes.
@@ -786,7 +782,7 @@ namespace Texturize {
 
 	private:
 		cv::Mat _sample = cv::Mat();
-		int _level = 0;
+		unsigned int _level = 0;
 		float _randomness = 0.f;
 
 	public:
@@ -809,11 +805,11 @@ namespace Texturize {
 
 		/// \brief Returns the pyramid level, the current synthesizer pass is working on.
 		/// \returns The pyramid level, the current synthesizer pass is working on.
-		int level() const;
+		unsigned int level() const;
 
 		/// \brief Gets the pyramid level, the current synthesizer pass is working on.
 		/// \param level The pyramid level, the current synthesizer pass is working on.
-		void level(int& level) const;
+		void level(unsigned int& level) const;
 	};
 
 	/// \brief The base interface for synthesizer implementations.

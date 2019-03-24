@@ -57,7 +57,7 @@ void ANNIndex::init(const cv::flann::IndexParams& indexParams, std::optional<std
 		// Validate the weight map pixel count against the number of descriptors.
 		auto map = weightMap.value().get();
 		TEXTURIZE_ASSERT(_descriptors.rows == (map.height() * map.width()));
-		weightChannels = map.channels();
+		weightChannels = static_cast<int>(map.channels());
 
 		// Transpose descriptors, so that each column represents one descriptor.
 		_descriptors = _descriptors.t();
@@ -72,7 +72,7 @@ void ANNIndex::init(const cv::flann::IndexParams& indexParams, std::optional<std
 
 	// Create the index instance and initialize it.
 	TMatrix dataset((TElement*)_descriptors.data, _descriptors.rows, _descriptors.cols);
-	_index = std::make_unique<TIndex>(dataset, *(cvflann::IndexParams*)(indexParams.params), DistanceType(weightChannels));
+	_index = std::make_unique<TIndex>(dataset, *(cvflann::IndexParams*)(indexParams.params), weightChannels);
 	_index->buildIndex();
 }
 
@@ -139,7 +139,7 @@ bool ANNIndex::findNearestNeighbor(const cv::Mat& descriptors, const cv::Mat& uv
 	return this->findNearestNeighbor(targetDescriptor, match, minDist);
 }
 
-bool ANNIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const int k, DistanceType minDist) const
+bool ANNIndex::findNearestNeighbors(const cv::Mat& descriptors, const cv::Mat& uv, const cv::Point2i& at, std::vector<MatchType>& matches, const unsigned int k, DistanceType minDist) const
 {
 	std::vector<float> targetDescriptor = descriptors.row(at.y * uv.cols + at.x);
 

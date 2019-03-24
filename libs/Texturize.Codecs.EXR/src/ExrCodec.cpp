@@ -37,6 +37,7 @@ void EXRCodec::load(std::istream& stream, Sample& sample) const
 	int height = dw.max.y - dw.min.y + 1;
 	
 	// Setup a frame buffer.
+	// TODO: Remove raw pointer here.
 	const ChannelList& channels = header.channels();
 	std::vector<char*> frames;
 	FrameBuffer buffer;
@@ -94,7 +95,7 @@ void EXRCodec::load(std::istream& stream, Sample& sample) const
 	for (size_t f(0); f < frames.size(); ++f)
 	{
 		// NOTE: The channel is assumed to be of 32 bit floating point precision.
-		result.setChannel(f, cv::Mat(height, width, CV_32F, reinterpret_cast<void*>(frames[f])));
+		result.setChannel(static_cast<int>(f), cv::Mat(height, width, CV_32F, reinterpret_cast<void*>(frames[f])));
 				
 		// Delete the frame buffer.
 		delete[] frames[f];
@@ -130,7 +131,7 @@ void EXRCodec::save(std::ostream& stream, const Sample& sample, const int depth)
 	for (size_t c(0); c < sample.channels(); ++c)
 	{
 		// Get the current channel.
-		cv::Mat channel = sample.getChannel(c);
+		cv::Mat channel = sample.getChannel(static_cast<int>(c));
 
 		TEXTURIZE_ASSERT(channel.isContinuous());							// Required in order to interpret the data directly.
 
