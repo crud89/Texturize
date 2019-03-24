@@ -42,6 +42,10 @@ ADD_DEFINITIONS(
 
 ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 
+# This disables the warning STL4009 about std::allocator<void> beeing deprecated for now. Not sure
+# if this warning is actually telling the truth here, for now just disable it.
+ADD_DEFINITIONS(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+
 ###################################################################################################
 ##### Define build output.                                                                    #####
 ###################################################################################################
