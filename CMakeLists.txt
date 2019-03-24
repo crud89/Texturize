@@ -30,15 +30,28 @@ STRING(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 
 # Set compiler flags
 IF(MSVC)
-  IF(MSVC_VERSION GREATER_EQUAL "1900")
+  IF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.00)
     INCLUDE(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("/std:c++latest" _cpp_latest_flag_supported)
+    
     IF(_cpp_latest_flag_supported)
       ADD_COMPILE_OPTIONS("/std:c++latest")
     ENDIF(_cpp_latest_flag_supported)
-  ELSEIF(MSVC_VERSION GREATER_EQUAL "1900")
-    MESSAGE(FATAL_ERROR "Microsoft Visual Studio version \"1900\" or newer is required, but only \"${MSVC_VERSION}\" was detected.")
-  ENDIF(MSVC_VERSION GREATER_EQUAL "1900")
+  ELSEIF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.00)
+    MESSAGE(FATAL_ERROR "Microsoft Visual Studio version \"1900\" or newer is required, but only \"${CMAKE_CXX_COMPILER_VERSION}\" was detected.")
+  ENDIF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.00)
+
+  # For Visual Studio 19.6 or newer, use "/external:I " before 3rd party includes in order to suppress warnings.
+  IF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.14)
+    # For now, only do this in release modes.
+    IF(NOT ${BUILD_TYPE} EQUAL "DEBUG")
+      # TODO: This probably changes with newer versions...
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /experimental:external /external:W0 ")
+      SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I ")
+    ENDIF(NOT ${BUILD_TYPE} EQUAL "DEBUG")
+  ELSE(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.14)
+    SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX " ")
+  ENDIF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.14)
 
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W3 /Od /EHsc")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /GL /Oi /Gy /EHsc")
