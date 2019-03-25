@@ -34,7 +34,7 @@ void DefaultCodec::save(const std::string& fileName, const Sample& sample, const
 	float alpha = depth == CV_16U ? static_cast<float>(USHRT_MAX) : static_cast<float>(UCHAR_MAX);
 
 	// If the image is a grayscale image, fill in the RGB channels required for the load-method.
-	if (sample.channels() == 3)
+	if (sample.channels() == 3 || sample.channels() == 4)
 	{
 		((cv::Mat)sample).convertTo(s, depth, alpha);
 	}
@@ -56,7 +56,8 @@ void DefaultCodec::save(const std::string& fileName, const Sample& sample, const
 	}
 	else
 	{
-		TEXTURIZE_ERROR(TEXTURIZE_ERROR_IO, "Unsupported number of channels for default codec.");
+		std::string msg = cv::format("Unsupported number of channels (%d) for default codec.", sample.channels());
+		TEXTURIZE_ERROR(TEXTURIZE_ERROR_IO, msg.c_str());
 	}
 
 	if (!cv::imwrite(fileName, s))
